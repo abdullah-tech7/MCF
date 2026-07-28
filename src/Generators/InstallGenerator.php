@@ -52,10 +52,6 @@ class InstallGenerator
 
         $this->updateBootstrapApp($basePath);
 
-        $this->configureMigrationPath($basePath);
-
-        $this->configureGeneratorPaths($basePath);
-
         $this->configureNamespaces($basePath);
 
         $this->createReadme($basePath);
