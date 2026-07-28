@@ -1,5 +1,8 @@
 # MCF Framework
 
+> ⚠️ **Experimental:** This package is under active development. Use it for testing and evaluation only until a stable release is available.
+> 
+
 > **MCF (Modular Code Framework)** is a modular architecture built on top of Laravel 12 that helps developers build scalable, maintainable, and well-organized applications using a feature-based structure.
 
 ---
