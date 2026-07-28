@@ -19,6 +19,7 @@ use MCF\Commands\InstallCommand;
 use MCF\Commands\MakeModuleCommand;
 use MCF\Commands\MakeWorkflowCommand;
 use MCF\Commands\MakeWorkflowCrudCommand;
+use MCF\Commands\RemoveWorkFlowCommand;
 use MCF\Commands\MakeWorkflowLayoutCommand;
 use MCF\Commands\MakeMiddlewareCommand;
 
@@ -75,6 +76,7 @@ class MCFServiceProvider extends ServiceProvider
             MakeWorkflowCommand::class,
             MakeWorkflowCrudCommand::class,
             MakeWorkflowLayoutCommand::class,
+            RemoveWorkFlowCommand::class,
             MakeMiddlewareCommand::class,
             MakeMigrationCommand::class,
             MakeModelCommand::class,
