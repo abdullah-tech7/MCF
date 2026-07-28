@@ -74,7 +74,7 @@ class MCFServiceProvider extends ServiceProvider
             MakeModuleCommand::class,
             MakeWorkflowCommand::class,
             MakeWorkflowCrudCommand::class,
-            MakeWorkflowLayoutCommand:class,
+            MakeWorkflowLayoutCommand::class,
             MakeMiddlewareCommand::class,
             MakeMigrationCommand::class,
             MakeModelCommand::class,
