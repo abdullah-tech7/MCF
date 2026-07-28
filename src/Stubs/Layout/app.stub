@@ -1,0 +1,39 @@
+{{--
+|--------------------------------------------------------------------------
+| MCF Layout
+|--------------------------------------------------------------------------
+|
+| This is the main layout entry point for all generated workflows.
+|
+| The Components folder is an optional suggested structure.
+| You may:
+| - Keep everything in this file.
+| - Split the layout into components.
+| - Delete the Components folder completely.
+| - Replace it with your own architecture.
+|
+| It is recommended to keep this file named "app.blade.php"
+| so generated workflows continue using:
+|
+|     @extends('Shared.Layout.app')
+|
+|--------------------------------------------------------------------------
+--}}
+
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+
+    @includeIf('Shared.Layout.Components.head')
+
+</head>
+<body>
+
+    @includeIf('Shared.Layout.Components.header')
+
+    @yield('content')
+
+    @includeIf('Shared.Layout.Components.footer')
+
+</body>
+</html>

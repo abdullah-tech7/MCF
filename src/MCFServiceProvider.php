@@ -19,6 +19,7 @@ use MCF\Commands\InstallCommand;
 use MCF\Commands\MakeModuleCommand;
 use MCF\Commands\MakeWorkflowCommand;
 use MCF\Commands\MakeWorkflowCrudCommand;
+use MCF\Commands\MakeWorkflowLayoutCommand;
 use MCF\Commands\MakeMiddlewareCommand;
 
 class MCFServiceProvider extends ServiceProvider
@@ -73,6 +74,7 @@ class MCFServiceProvider extends ServiceProvider
             MakeModuleCommand::class,
             MakeWorkflowCommand::class,
             MakeWorkflowCrudCommand::class,
+            MakeWorkflowLayoutCommand:class,
             MakeMiddlewareCommand::class,
             MakeMigrationCommand::class,
             MakeModelCommand::class,
@@ -80,7 +82,8 @@ class MCFServiceProvider extends ServiceProvider
             MakeSeederCommand::class,
             MakeMailCommand::class,
             MakeRuleCommand::class,
-            MakeNotificationCommand::class,
+            MakeNotificationCommand::class
+   
         ]);
     }
 }
