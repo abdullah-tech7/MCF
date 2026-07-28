@@ -44,42 +44,39 @@ class MCFServiceProvider extends ServiceProvider
         });
     }
 
-    public function boot(): void
-    {
-        
+   public function boot(): void
+{
     $filesystem = new Filesystem();
 
     $modulesPath = app_path('MCF/Modules');
 
-    if ($filesystem->missing($modulesPath)) {
-        return;
-    }
+    if ($filesystem->exists($modulesPath)) {
+        foreach ($filesystem->directories($modulesPath) as $modulePath) {
+            $module = basename($modulePath);
 
-    foreach ($filesystem->directories($modulesPath) as $modulePath) {
-        $module = basename($modulePath);
+            $viewsPath = $modulePath . DIRECTORY_SEPARATOR . 'Views';
 
-        $viewsPath = $modulePath . DIRECTORY_SEPARATOR . 'Views';
-
-        if ($filesystem->isDirectory($viewsPath)) {
-            $this->loadViewsFrom($viewsPath, $module);
+            if ($filesystem->isDirectory($viewsPath)) {
+                $this->loadViewsFrom($viewsPath, $module);
+            }
         }
     }
-        
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                \MCF\Commands\InstallCommand::class,
-                \MCF\Commands\MakeModuleCommand::class,
-                \MCF\Commands\MakeWorkflowCommand::class,
-                \MCF\Commands\MakeWorkflowCrudCommand::class,
-                \MCF\Commands\MakeMiddlewareCommand::class,
-                MakeMigrationCommand::class,
-                MakeModelCommand::class,
-                MakeFactoryCommand::class,
-                MakeSeederCommand::class,
-                MakeMailCommand::class,
-                MakeRuleCommand::class,
-                MakeNotificationCommand::class,
-            ]);
-        }
+
+    if ($this->app->runningInConsole()) {
+        $this->commands([
+            InstallCommand::class,
+            MakeModuleCommand::class,
+            MakeWorkflowCommand::class,
+            MakeWorkflowCrudCommand::class,
+            MakeMiddlewareCommand::class,
+            MakeMigrationCommand::class,
+            MakeModelCommand::class,
+            MakeFactoryCommand::class,
+            MakeSeederCommand::class,
+            MakeMailCommand::class,
+            MakeRuleCommand::class,
+            MakeNotificationCommand::class,
+        ]);
     }
+}
 }
