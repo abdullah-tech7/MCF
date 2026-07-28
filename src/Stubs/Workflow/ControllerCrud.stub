@@ -1,0 +1,44 @@
+<?php
+
+namespace {{ ControllerNamespace }};
+
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
+
+class {{ WorkflowName }}Controller
+{
+    public function index(): View
+    {
+        return view('{{ ModuleName }}::{{ WorkflowName }}.index');
+    }
+
+    public function create(): View
+    {
+        return view('{{ ModuleName }}::{{ WorkflowName }}.create');
+    }
+
+    public function store({{ WorkflowName }}Request $request): RedirectResponse
+    {
+        //
+    }
+
+    public function details(int $id): View
+    {
+        return view('{{ ModuleName }}::{{ WorkflowName }}.details');
+    }
+
+    public function edit(int $id): View
+    {
+        return view('{{ ModuleName }}::{{ WorkflowName }}.edit');
+    }
+
+    public function update({{ WorkflowName }}Request $request, int $id): RedirectResponse
+    {
+        //
+    }
+
+    public function destroy(int $id): RedirectResponse
+    {
+        //
+    }
+}

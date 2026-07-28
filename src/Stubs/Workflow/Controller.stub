@@ -1,0 +1,13 @@
+<?php
+
+namespace {{ ControllerNamespace }};
+
+use Illuminate\Contracts\View\View;
+
+class {{ WorkflowName }}Controller
+{
+    public function index(): View
+    {
+        return view('{{ ModuleName }}::{{ WorkflowName }}.index');
+    }
+}

@@ -1,0 +1,6 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use {{ ControllerNamespace }}\{{ WorkflowName }}Controller;
+
+Route::get('/', [{{ WorkflowName }}Controller::class, 'index']);
