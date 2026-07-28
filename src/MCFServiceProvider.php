@@ -15,6 +15,11 @@ use MCF\Commands\MakeNotificationCommand;
 use MCF\Commands\MakeRuleCommand;
 use MCF\Support\MCFFileLoader;
 use MCF\Support\TranslationLoader;
+use MCF\Commands\InstallCommand;
+use MCF\Commands\MakeModuleCommand;
+use MCF\Commands\MakeWorkflowCommand;
+use MCF\Commands\MakeWorkflowCrudCommand;
+use MCF\Commands\MakeMiddlewareCommand;
 
 class MCFServiceProvider extends ServiceProvider
 {
