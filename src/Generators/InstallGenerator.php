@@ -52,8 +52,6 @@ class InstallGenerator
 
         $this->updateBootstrapApp($basePath);
 
-        $this->configureNamespaces($basePath);
-
         $this->createReadme($basePath);
         $this->createQuickStart($basePath);
     }
