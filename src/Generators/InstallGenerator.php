@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MCF\Generators;
 
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Artisan;
 
 class InstallGenerator
 {
@@ -34,8 +35,6 @@ class InstallGenerator
             'app/MCF/Database/Seeders',
             'app/MCF/Database/Factories',
 
-            'app/MCF/Assets',
-            'app/MCF/Layouts',
             'app/MCF/Middleware',
             'app/MCF/Notifications',
             'app/MCF/Rules',
@@ -54,6 +53,16 @@ class InstallGenerator
 
         $this->createReadme($basePath);
         $this->createQuickStart($basePath);
+
+        Artisan::call('mcf:make:module', [
+    'name' => 'Shared',
+]);
+
+Artisan::call('mcf:make:workflow:layout', [
+    'module' => 'Shared',
+    'workflow' => 'Layout',
+]);
+
     }
 
     protected function publishConfig(string $basePath): void
