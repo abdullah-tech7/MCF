@@ -1,12 +1,16 @@
 # Contributing
 
-## Overview
+---
+
+# Overview
 
 Thank you for your interest in contributing to MCF.
 
-MCF aims to remain a clean, modular, and Laravel-compatible framework. Every contribution should align with the project's architecture and design philosophy.
+MCF is a Workflow-driven framework built on top of Laravel. Its goal is to provide a clean, modular, and predictable architecture while remaining fully compatible with Laravel.
 
-Please read this document before submitting changes.
+Every contribution should preserve the framework's design philosophy and architectural consistency.
+
+Please read this guide before submitting changes.
 
 ---
 
@@ -15,33 +19,38 @@ Please read this document before submitting changes.
 Before opening a Pull Request, ensure that you have:
 
 - Read the project documentation.
-- Understood the architecture.
-- Followed the coding standards.
-- Reviewed the generator rules.
+- Understood the MCF architecture.
+- Followed the Coding Standards.
+- Followed the CLI conventions.
 - Tested your changes.
+- Verified generated output.
+
+Contributions should integrate naturally with the existing framework.
 
 ---
 
 # Types of Contributions
 
-Contributions may include:
+MCF welcomes contributions including:
 
-- Bug fixes
-- Performance improvements
-- Documentation improvements
-- New generators
-- Framework enhancements
-- Refactoring
-- Test improvements
+- Bug fixes.
+- Performance improvements.
+- Documentation improvements.
+- Workflow enhancements.
+- New Artisan generators.
+- Framework improvements.
+- Refactoring.
+- Test improvements.
 
-Every contribution should provide clear value to the framework.
+Every contribution should provide measurable value to the framework.
 
 ---
 
 # Design Philosophy
 
-All contributions should respect the core principles of MCF.
+Every contribution should follow the core principles of MCF.
 
+- Workflow-Driven Architecture
 - Single Responsibility
 - Modular Design
 - Laravel Compatibility
@@ -49,40 +58,67 @@ All contributions should respect the core principles of MCF.
 - Minimal Boilerplate
 - Clean Architecture
 
-Do not introduce features that conflict with these principles.
+Avoid introducing features that conflict with these principles.
+
+---
+
+# Workflow-First Development
+
+MCF applications are organized around Workflows.
+
+New features should integrate naturally into the existing Workflow architecture.
+
+Avoid introducing structures that bypass or duplicate the Workflow system.
+
+Business capabilities should remain inside Workflows.
 
 ---
 
 # Coding Standards
 
-All submitted code must follow the project's coding standards.
+All submitted code must follow the official MCF Coding Standards.
 
-In particular:
+This includes:
 
-- PSR-12 formatting
-- Consistent naming
-- Proper namespaces
-- Explicit visibility
-- Strong typing where appropriate
-- Clear, readable code
+- PSR-12 formatting.
+- Laravel coding conventions.
+- Consistent naming.
+- Proper namespaces.
+- Explicit visibility.
+- Strong typing where appropriate.
+- Readable, maintainable code.
 
-Consistency is more important than personal style preferences.
+Project consistency is more important than personal coding style.
 
 ---
 
 # Generator Contributions
 
-New generators should follow the existing conventions.
+New generators should follow existing MCF conventions.
 
 Requirements:
 
 - One responsibility per generator.
-- Predictable output location.
+- Predictable output.
 - Laravel-compatible implementation.
 - Consistent command naming.
 - Minimal generated code.
+- No unexpected side effects.
 
-Avoid generators that create large collections of unrelated files.
+Avoid generators that create unrelated components automatically.
+
+---
+
+# Workflow Generator Contributions
+
+If contributing to Workflow generators:
+
+- Follow the existing Workflow structure.
+- Preserve generated file naming.
+- Preserve generated directory layout.
+- Keep generated components consistent across all Workflows.
+
+Generated Workflows should always remain predictable.
 
 ---
 
@@ -94,33 +130,36 @@ Whenever possible:
 
 - Extend existing behavior.
 - Preserve public APIs.
-- Keep command behavior stable.
+- Preserve CLI behavior.
+- Keep generated structures compatible.
 
-Breaking changes should be introduced only when necessary.
+Breaking changes should only be introduced when absolutely necessary.
 
 ---
 
 # Documentation
 
-Any feature that changes framework behavior should include documentation updates.
+Documentation is considered part of every feature.
 
-Relevant documentation should be updated alongside the implementation.
+Whenever framework behavior changes, update the relevant documentation.
 
 Examples include:
 
 - README
 - Quick Start
-- CLI Specification
 - Architecture
+- CLI Specification
+- Coding Standards
+- Best Practices
 - Folder Reference
 
-Documentation is considered part of the feature.
+Implementation and documentation should evolve together.
 
 ---
 
 # Pull Requests
 
-A Pull Request should:
+Each Pull Request should:
 
 - Focus on a single topic.
 - Be easy to review.
@@ -128,27 +167,31 @@ A Pull Request should:
 - Explain the motivation.
 - Avoid unrelated changes.
 
-Large mixed Pull Requests are discouraged.
+Small, focused Pull Requests are preferred over large mixed submissions.
 
 ---
 
 # Commit Messages
 
-Write clear and descriptive commit messages.
+Write descriptive commit messages.
 
 Good examples:
 
 ```text
-Add notification generator
+Add Layout Workflow generator
 
-Improve workflow generation
+Improve Workflow generation
 
-Refactor module creation
+Refactor module registration
 
-Fix migration namespace
+Fix workflow route discovery
+
+Update CLI documentation
 ```
 
-Avoid vague messages such as:
+Avoid vague messages.
+
+Examples:
 
 ```text
 Update
@@ -168,7 +211,9 @@ Before submitting a Pull Request, verify that:
 
 - The framework builds successfully.
 - All Artisan commands execute correctly.
-- Generated files are placed in the correct directories.
+- Generated files are placed in the expected locations.
+- Workflow generation behaves correctly.
+- Route registration works correctly.
 - Existing functionality remains unaffected.
 
 Contributors are responsible for validating their own changes.
@@ -177,22 +222,28 @@ Contributors are responsible for validating their own changes.
 
 # Discussions
 
-For major architectural changes, open a discussion before beginning implementation.
+Major architectural proposals should begin with a discussion before implementation.
 
-This helps avoid duplicated work and ensures that the proposed solution aligns with the project's direction.
+This helps:
+
+- Avoid duplicated work.
+- Preserve architectural consistency.
+- Ensure alignment with the project's direction.
 
 ---
 
 # Code Reviews
 
-Every contribution may be reviewed for:
+Contributions may be reviewed for:
 
-- Architecture
-- Maintainability
-- Readability
-- Compatibility
-- Documentation
-- Consistency
+- Architecture.
+- Workflow consistency.
+- Maintainability.
+- Readability.
+- Laravel compatibility.
+- Documentation.
+- Coding standards.
+- Predictability.
 
 Requested revisions should be addressed before merging.
 
@@ -200,16 +251,27 @@ Requested revisions should be addressed before merging.
 
 # Code of Conduct
 
-Contributors are expected to communicate respectfully and constructively.
+Contributors are expected to communicate respectfully and professionally.
 
-Technical discussions should focus on improving the framework.
+Discussions should focus on improving the framework.
 
-Professionalism and collaboration are expected throughout the contribution process.
+Constructive collaboration is expected throughout the contribution process.
 
 ---
 
 # Thank You
 
-Every contribution, whether it is a bug report, documentation improvement, code enhancement, or new feature, helps improve MCF.
+Every contribution helps improve MCF.
 
-Thank you for contributing to the project.
+Whether you contribute:
+
+- Bug fixes.
+- Documentation.
+- New generators.
+- Performance improvements.
+- Architectural enhancements.
+- Tests.
+
+your effort helps make MCF a more reliable and maintainable framework.
+
+Thank you for contributing to MCF.

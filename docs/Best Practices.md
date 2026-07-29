@@ -1,83 +1,220 @@
 # Best Practices
 
-## Overview
+---
+
+# Overview
 
 This document describes the recommended practices for developing applications with MCF.
 
-These guidelines are not strict requirements, but following them will result in cleaner, more maintainable, and more scalable applications.
+These recommendations are not strict rules.
+
+They represent the architectural philosophy of MCF and help applications remain predictable, maintainable, and scalable as they grow.
 
 ---
 
-# Organize by Business Features
+# Build Around Workflows
 
-Modules should represent business capabilities rather than technical layers.
+MCF is a Workflow-driven framework.
+
+Every business capability should be implemented as a Workflow.
+
+Think about what the application does rather than what the database stores.
 
 Good examples:
 
 ```text
-Users
-Orders
+Authentication
+User Management
+Checkout
 Inventory
-Products
 Reports
 ```
 
-Avoid creating modules based on implementation details.
+Avoid creating Workflows that simply mirror database tables.
 
 Poor examples:
 
 ```text
-Controllers
-Services
-Repositories
-Helpers
+User
+Product
+Order
+Role
 ```
-
-A module should answer the question:
-
-> "What business capability does this provide?"
 
 ---
 
-# Keep Modules Independent
+# Group Workflows into Modules
 
-Each module should own its own business logic.
+A Module is an organizational boundary.
 
-Avoid unnecessary dependencies between modules.
+Modules group related Workflows that belong to the same business domain.
 
-When communication is required, prefer well-defined interfaces or services instead of directly accessing another module's internals.
+Example:
 
-Low coupling makes applications easier to maintain.
+```text
+Users
+├── Authentication
+├── Profile
+└── User Management
+
+Shop
+├── Products
+├── Cart
+└── Checkout
+```
+
+Modules organize Workflows.
+
+They should not contain business logic themselves.
+
+---
+
+# Keep Workflows Independent
+
+Every Workflow should own its own implementation.
+
+A Workflow should contain everything required to implement its business capability.
+
+- Controller
+- Service
+- Request
+- Policy
+- Views
+- Routes
+- Lang
+- README
+
+Avoid unnecessary dependencies between Workflows.
+
+When communication is required, expose clear interfaces rather than accessing another Workflow's internal implementation.
 
 ---
 
 # Keep Business Logic Out of Controllers
 
-Controllers should coordinate requests.
+Controllers should coordinate HTTP requests.
 
-Business rules belong inside services, workflows, or dedicated business classes.
+Their responsibilities are limited to:
 
-Controllers should remain lightweight.
+- Receive requests.
+- Validate input.
+- Call the Service.
+- Return responses.
+
+Business rules should always live inside the Workflow's Service.
+
+Controllers should remain small and predictable.
+
+---
+
+# Keep Services Focused
+
+Each Workflow owns one Service.
+
+That Service contains the business logic for the Workflow.
+
+Avoid splitting one Workflow across multiple unrelated Services unless there is a clear architectural reason.
+
+Keeping Workflow logic together improves discoverability.
+
+---
+
+# Keep Requests Centralized
+
+Each Workflow owns a single Request class.
+
+Instead of generating multiple Request classes for every action, centralize Workflow validation in one predictable location.
+
+This makes validation easier to maintain.
+
+---
+
+# Keep Policies Close to the Workflow
+
+Authorization belongs to the Workflow.
+
+Each Workflow should own its own Policy.
+
+Keeping authorization together with the business capability makes security rules easier to understand and maintain.
+
+---
+
+# Keep Views Inside the Workflow
+
+Every Workflow owns its own Views directory.
+
+Avoid creating one large global collection of Blade files.
+
+Generated Workflows extend the application's Layout Workflow.
+
+```blade
+@extends('Shared.Layout.app')
+```
+
+Keeping Views inside the Workflow keeps every feature self-contained.
+
+---
+
+# Treat Layout as a Workflow
+
+Layout is implemented as a normal Workflow.
+
+The default installation creates:
+
+```text
+Shared
+└── Layout
+```
+
+Developers are free to:
+
+- Rename it.
+- Replace it.
+- Delete it.
+- Recreate it.
+- Create multiple Layout Workflows.
+
+MCF does not reserve Layout as a special framework component.
+
+---
+
+# Use Laravel's Native Assets and Storage
+
+MCF does not provide a custom asset management system.
+
+Use Laravel's standard locations.
+
+Public assets:
+
+```text
+public/
+```
+
+Uploaded files:
+
+```text
+storage/
+```
+
+Following Laravel's conventions simplifies deployment and maintenance.
 
 ---
 
 # Keep Models Focused
 
-Models should represent application data.
+Models represent application data.
 
-Avoid placing unrelated business logic inside Eloquent models.
+Avoid placing business processes inside Eloquent Models whenever possible.
 
-Business processes should live outside the model whenever possible.
+Business logic belongs inside Workflow Services.
 
 ---
 
 # Use Validation Rules
 
-When validation logic becomes reusable, extract it into dedicated Rule classes.
+When validation becomes reusable across multiple Workflows, extract it into dedicated Rule classes.
 
-Instead of repeating validation logic across multiple requests, create a reusable rule.
-
-Example:
+Examples:
 
 ```text
 StrongPassword
@@ -87,85 +224,89 @@ ValidPhoneNumber
 NationalId
 ```
 
+Reusable Rules reduce duplication and improve consistency.
+
 ---
 
 # Use Middleware for Cross-Cutting Concerns
 
-Middleware should handle concerns that apply to multiple requests.
+Middleware should handle concerns shared across multiple Workflows.
 
 Examples:
 
 - Authentication
 - Authorization
-- Request logging
 - Localization
-- Maintenance mode
+- Request Logging
+- Maintenance Mode
 
-Avoid placing these concerns inside controllers.
+Avoid implementing these concerns inside Controllers.
 
 ---
 
-# Keep Notifications Independent
+# Keep Notifications Focused
 
-Notifications should be responsible only for delivering notifications.
+Notifications should only deliver notifications.
 
-Avoid embedding unrelated business logic inside notification classes.
+Business decisions should already be completed before a Notification is created.
 
 ---
 
 # Keep Mail Classes Focused
 
-Mail classes should prepare email messages.
+Mail classes prepare email messages.
 
-Business decisions should occur before the mail is created.
+They should not contain business rules.
 
-A Mailable should not determine whether an email should be sent.
+A Mailable should never decide whether an email should be sent.
 
 ---
 
 # Generate Only What You Need
 
-MCF intentionally provides focused generators.
+MCF generators intentionally generate focused components.
 
-Avoid generating components that are not required by the application.
+Avoid creating components that are never used.
 
-Keeping the project small improves maintainability.
+Smaller projects are easier to understand and maintain.
 
 ---
 
 # Prefer Composition Over Duplication
 
-When functionality is shared across multiple modules, extract it into reusable services or utilities.
+If functionality is shared across multiple Workflows, extract it into reusable components or shared services.
 
-Avoid copying the same implementation between modules.
+Avoid copying implementations between Workflows.
 
 ---
 
 # Use Consistent Naming
 
-Use meaningful names that describe business intent.
+Names should describe business intent.
 
-Good:
+Good examples:
 
 ```text
-Customer
+Authentication
 
-PurchaseOrder
+User Management
 
-InventoryReport
+Product Catalog
 
-InvoiceNotification
+Inventory Report
+
+Invoice Notification
 ```
 
-Avoid vague or abbreviated names.
+Avoid abbreviations and vague names.
 
 ---
 
 # Follow Laravel Conventions
 
-MCF extends Laravel rather than replacing it.
+MCF extends Laravel.
 
-Whenever possible, follow Laravel's established conventions for:
+Whenever possible, follow Laravel's conventions for:
 
 - Naming
 - Routing
@@ -174,51 +315,53 @@ Whenever possible, follow Laravel's established conventions for:
 - Service Container
 - Events
 - Queues
+- Blade
 
-This reduces the learning curve for developers.
+This reduces the learning curve for Laravel developers.
 
 ---
 
-# Keep Generators Predictable
+# Keep Generated Structure Intact
 
-Do not manually move generated files into unrelated directories.
+Avoid moving generated files into unrelated directories.
 
-Generated components should remain in their intended locations.
+Every generated component has a predictable location.
 
-This keeps the project structure consistent across the application.
+Keeping the generated structure intact improves consistency across the application.
 
 ---
 
 # Minimize Global State
 
-Avoid relying on static state or globally shared mutable data.
+Avoid static mutable state whenever possible.
 
-Prefer dependency injection and explicit dependencies.
+Prefer dependency injection.
 
-This improves testing and maintainability.
+Explicit dependencies improve testing, maintainability and readability.
 
 ---
 
 # Write Maintainable Code
 
-Before adding new functionality, consider whether the implementation is:
+Before adding new functionality, ask whether the implementation is:
 
 - Simple
 - Readable
 - Reusable
+- Predictable
 - Testable
 
 Favor clarity over unnecessary abstraction.
 
 ---
 
-# Think Long-Term
+# Design for Growth
 
 Applications evolve over time.
 
-Design modules and workflows with future growth in mind.
+Design Modules and Workflows so they can grow without major restructuring.
 
-A solution that is slightly more structured today often prevents major refactoring later.
+A well-designed Workflow today often prevents significant refactoring later.
 
 ---
 
@@ -226,11 +369,13 @@ A solution that is slightly more structured today often prevents major refactori
 
 Applications built with MCF should strive to be:
 
+- Workflow-Driven
 - Modular
 - Predictable
 - Maintainable
 - Loosely Coupled
+- Highly Cohesive
 - Easy to Navigate
 - Consistent with Laravel
 
-Following these practices helps ensure that projects remain manageable as they grow in size and complexity.
+Following these practices helps keep applications understandable, scalable, and maintainable throughout their lifecycle.

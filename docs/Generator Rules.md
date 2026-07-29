@@ -1,24 +1,29 @@
 # Coding Standards
 
-## Overview
+---
 
-This document defines the coding standards used throughout the MCF codebase.
+# Overview
 
-Following consistent conventions improves readability, maintainability, and long-term project stability.
+This document defines the official coding standards used throughout the MCF codebase.
 
-All framework code should comply with these standards.
+These standards ensure that every MCF project remains consistent, predictable, maintainable, and fully compatible with Laravel.
+
+All framework code and generated components should comply with these guidelines.
 
 ---
 
 # General Principles
 
-MCF follows these principles.
+MCF follows these core principles.
 
 - Readability over cleverness.
 - Consistency over personal preference.
 - Explicit behavior over hidden magic.
 - Simplicity over unnecessary abstraction.
+- Workflow-Driven Architecture.
 - Laravel conventions whenever practical.
+
+Framework code should be easy to understand before it is easy to optimize.
 
 ---
 
@@ -30,13 +35,13 @@ MCF targets:
 PHP 8.4+
 ```
 
-Framework code may use language features available in the minimum supported PHP version.
+Framework code may freely use language features available in the minimum supported PHP version.
 
 ---
 
 # Laravel Version
 
-MCF is designed for:
+MCF targets:
 
 ```text
 Laravel 12+
@@ -44,11 +49,13 @@ Laravel 12+
 
 Generated code should remain compatible with supported Laravel releases.
 
+MCF extends Laravel rather than replacing it.
+
 ---
 
 # PSR Standards
 
-MCF follows the PHP-FIG standards whenever applicable.
+MCF follows PHP-FIG standards whenever applicable.
 
 Including:
 
@@ -56,32 +63,40 @@ Including:
 - PSR-4
 - PSR-12
 
-Namespaces, autoloading, formatting, and file organization should comply with these standards.
+Namespaces, formatting, autoloading, and file organization should comply with these standards.
 
 ---
 
-# File Structure
+# File Organization
 
-Each PHP file should contain a single class, interface, trait, or enum.
+Each PHP file should contain exactly one:
 
-Example:
+- Class
+- Interface
+- Trait
+- Enum
+
+Examples:
 
 ```text
 User.php
-UserFactory.php
+
+AuthenticationService.php
+
 StrongPassword.php
+
 WelcomeMail.php
 ```
 
-Avoid defining multiple classes in the same file.
+Avoid defining multiple classes in a single file.
 
 ---
 
 # Namespace Organization
 
-Namespaces should reflect the directory structure.
+Namespaces should always match the physical directory structure.
 
-Example:
+Examples:
 
 ```php
 namespace App\MCF\Database\Models;
@@ -95,7 +110,15 @@ namespace App\MCF\Notifications;
 namespace App\MCF\Rules;
 ```
 
-Namespace names should never diverge from their physical location.
+Workflow components should follow the same convention.
+
+Example:
+
+```php
+namespace App\MCF\Modules\Users\Authentication\Services;
+```
+
+Namespaces should never diverge from their directory location.
 
 ---
 
@@ -108,18 +131,80 @@ Examples:
 ```text
 User
 
-Product
+AuthenticationController
 
-OrderService
-
-WelcomeMail
+AuthenticationService
 
 StrongPassword
+
+WelcomeMail
 
 AuthenticateAdmin
 ```
 
-Avoid abbreviations unless they are widely accepted.
+Avoid abbreviations unless they are universally recognized.
+
+---
+
+# Module Naming
+
+Modules should:
+
+- Use PascalCase.
+- Represent a business domain.
+- Be concise.
+
+Examples:
+
+```text
+Users
+
+Reports
+
+Inventory
+
+Accounting
+```
+
+Avoid:
+
+```text
+UsersModule
+
+MyUsers
+```
+
+---
+
+# Workflow Naming
+
+Workflow names describe business capabilities.
+
+Examples:
+
+```text
+Authentication
+
+UserManagement
+
+Checkout
+
+Profile
+
+PasswordReset
+```
+
+Avoid names based on database tables.
+
+Poor examples:
+
+```text
+User
+
+Product
+
+Order
+```
 
 ---
 
@@ -132,14 +217,14 @@ Examples:
 ```php
 createUser()
 
-sendNotification()
+registerWorkflow()
 
-registerModule()
+removeWorkflow()
 
-buildWorkflow()
+publishModule()
 ```
 
-Method names should describe actions clearly.
+Method names should describe actions.
 
 ---
 
@@ -150,14 +235,16 @@ Properties should also use camelCase.
 Examples:
 
 ```php
-$userRepository
-
 $modulePath
 
+$workflowName
+
 $routeFile
+
+$serviceClass
 ```
 
-Avoid unnecessary abbreviations.
+Avoid vague names whenever possible.
 
 ---
 
@@ -165,21 +252,21 @@ Avoid unnecessary abbreviations.
 
 Constants should use uppercase with underscores.
 
-Example:
+Examples:
 
 ```php
+FRAMEWORK_VERSION
+
 DEFAULT_NAMESPACE
 
-DEFAULT_STUB
-
-FRAMEWORK_VERSION
+DEFAULT_LAYOUT
 ```
 
 ---
 
 # Imports
 
-Always import classes instead of using fully qualified names throughout the file.
+Always import classes instead of repeatedly using fully qualified class names.
 
 Preferred:
 
@@ -190,22 +277,18 @@ use Illuminate\Support\Str;
 Avoid:
 
 ```php
-Str::studly(...)
+\Illuminate\Support\Str::studly(...);
 ```
 
-with fully qualified namespaces inline.
-
-Unused imports should be removed.
+Remove unused imports.
 
 ---
 
 # Type Declarations
 
-Use strict typing whenever possible.
+Use explicit type declarations whenever possible.
 
-Prefer explicit parameter and return types.
-
-Example:
+Prefer:
 
 ```php
 public function handle(): int
@@ -217,69 +300,120 @@ instead of:
 public function handle()
 ```
 
+Use typed properties and typed parameters.
+
+---
+
+# Strict Typing
+
+Every PHP file should begin with:
+
+```php
+declare(strict_types=1);
+```
+
+unless there is a documented reason not to.
+
+MCF favors explicit typing.
+
 ---
 
 # Visibility
 
 Always declare visibility explicitly.
 
-Preferred:
+Examples:
 
 ```php
-private
+public
 
 protected
 
-public
+private
 ```
 
-Avoid relying on default visibility.
+Never rely on PHP defaults.
+
+---
+
+# Constructor Injection
+
+Prefer constructor dependency injection.
+
+Example:
+
+```php
+public function __construct(
+    AuthenticationService $service
+) {}
+```
+
+Avoid resolving dependencies manually.
+
+```php
+app(AuthenticationService::class);
+```
+
+Use manual resolution only when required.
+
+---
+
+# Static Methods
+
+Avoid unnecessary static methods.
+
+Prefer dependency injection and object instances.
+
+Static methods should be limited to stateless utility scenarios.
 
 ---
 
 # Documentation
 
-Public classes and methods should be self-explanatory.
+Public APIs should be self-explanatory.
 
-Use PHPDoc only when it provides meaningful information beyond what type declarations already express.
+Use PHPDoc only when it adds information that type declarations cannot express.
 
-Avoid redundant comments.
-
-Poor example:
+Avoid comments like:
 
 ```php
 // Gets the user.
 ```
 
-Better code is preferred over unnecessary comments.
+Good names reduce the need for comments.
 
 ---
 
 # Formatting
 
-Use four spaces for indentation.
+Follow Laravel's coding style.
 
-Do not use tabs.
+Rules:
 
-Keep blank lines meaningful.
+- Four spaces.
+- No tabs.
+- Meaningful blank lines.
+- Consistent spacing.
 
-Avoid excessive vertical spacing.
+Avoid excessive vertical whitespace.
 
 ---
 
 # Line Length
 
-Favor readability over strict line limits.
+Favor readability.
 
-Break long expressions across multiple lines when they become difficult to read.
+Long expressions should be split across multiple lines when necessary.
+
+No strict maximum line length is enforced.
 
 ---
 
 # Conditionals
 
-Prefer early returns over deeply nested conditions.
+Prefer early returns.
 
-Preferred:
+Good:
 
 ```php
 if (! $moduleExists) {
@@ -287,7 +421,7 @@ if (! $moduleExists) {
 }
 ```
 
-instead of multiple nested blocks.
+Avoid deeply nested conditional structures.
 
 ---
 
@@ -298,14 +432,16 @@ Use descriptive variable names.
 Good:
 
 ```php
+$workflowDirectory
+
+$controllerClass
+
 $moduleName
 
-$workflowPath
-
-$migrationFile
+$routeFile
 ```
 
-Avoid vague names such as:
+Avoid:
 
 ```php
 $temp
@@ -315,7 +451,120 @@ $data
 $value
 ```
 
-unless their purpose is immediately obvious.
+unless the context is immediately obvious.
+
+---
+
+# Controllers
+
+Controllers coordinate HTTP requests.
+
+Controllers should:
+
+- Receive Requests.
+- Call Services.
+- Return Responses.
+
+Controllers should never contain:
+
+- Business logic.
+- Database queries.
+- Complex calculations.
+
+Controllers should remain thin.
+
+---
+
+# Services
+
+Workflow Services contain business logic.
+
+Responsibilities include:
+
+- Business rules.
+- Transactions.
+- Database coordination.
+- Event dispatching.
+
+Services should never return Blade Views.
+
+---
+
+# Requests
+
+Workflow Requests handle:
+
+- Validation.
+- Basic authorization.
+
+Reusable validation belongs inside:
+
+```text
+app/MCF/Rules
+```
+
+---
+
+# Policies
+
+Policies contain authorization logic.
+
+Responsibilities include:
+
+- Permissions.
+- Role checks.
+- Access rules.
+
+Policies should never contain business logic.
+
+---
+
+# Views
+
+Views handle presentation only.
+
+Views should never contain:
+
+- Business logic.
+- Database queries.
+- Service calls.
+
+Generated Workflow Views extend:
+
+```blade
+@extends('Shared.Layout.app')
+```
+
+---
+
+# Layout Workflow
+
+Layout is implemented as a Workflow.
+
+Responsibilities include:
+
+- Shared layouts.
+- Navigation.
+- Sidebar.
+- Header.
+- Footer.
+- Shared Blade Components.
+
+Business logic must never appear inside Layouts.
+
+---
+
+# Routes
+
+Each Workflow owns one Route file.
+
+Route files should contain only route definitions.
+
+Workflow Routes are automatically registered through:
+
+```text
+app/MCF/mcf_routes.php
+```
 
 ---
 
@@ -323,19 +572,21 @@ unless their purpose is immediately obvious.
 
 Generator implementations should remain lightweight.
 
-Business logic should be extracted into dedicated classes whenever complexity grows.
+Command classes should coordinate generation.
 
-Command classes should primarily coordinate generation rather than contain extensive implementation details.
+Complex implementation should be extracted into dedicated classes whenever necessary.
+
+Each generator should have one responsibility.
 
 ---
 
 # Dependencies
 
-Avoid unnecessary third-party dependencies.
+Avoid unnecessary third-party packages.
 
 Reuse Laravel components whenever possible.
 
-Prefer framework-native solutions over introducing external packages.
+Prefer framework-native solutions.
 
 ---
 
@@ -343,43 +594,50 @@ Prefer framework-native solutions over introducing external packages.
 
 Error messages should be:
 
-- Clear
-- Actionable
-- Consistent
+- Clear.
+- Actionable.
+- Consistent.
 
-Avoid exposing implementation details in user-facing console output.
+Avoid exposing implementation details through console output.
 
 ---
 
 # Backward Compatibility
 
-Changes should preserve backward compatibility whenever practical.
+Preserve backward compatibility whenever practical.
 
-Breaking changes should be introduced only when justified and documented.
+Breaking changes should be:
+
+- Intentional.
+- Documented.
+- Justified.
 
 ---
 
-# Code Review Principles
+# Code Review Checklist
 
-Before merging changes, verify that the implementation:
+Before merging, verify that the implementation:
 
-- Follows the project structure.
+- Follows the MCF architecture.
 - Uses the correct namespace.
-- Respects generator responsibilities.
-- Produces predictable output.
-- Maintains Laravel compatibility.
-- Adheres to these coding standards.
+- Respects Workflow organization.
+- Generates predictable output.
+- Preserves Laravel compatibility.
+- Follows the Coding Standards.
+- Includes documentation when required.
 
 ---
 
 # Summary
 
-The objective of these standards is to ensure that every part of MCF remains:
+The objective of these standards is to ensure that every MCF project remains:
 
+- Workflow-Driven
 - Consistent
 - Readable
-- Maintainable
 - Predictable
+- Maintainable
 - Extensible
+- Compatible with Laravel
 
 Consistency is considered more valuable than individual coding style preferences.

@@ -1,7 +1,6 @@
 # MCF Framework
 
 > ⚠️ **Experimental:** This package is under active development. Use it for testing and evaluation only until a stable release is available.
-> 
 
 > **MCF (Modular Code Framework)** is a modular architecture built on top of Laravel 12 that helps developers build scalable, maintainable, and well-organized applications using a feature-based structure.
 
@@ -20,6 +19,8 @@ app/MCF
 This keeps the application clean, modular, and easier to maintain as projects grow.
 
 MCF follows Laravel conventions whenever possible while introducing a structured modular architecture and a dedicated set of Artisan generators.
+
+MCF does **not** replace Laravel's built-in asset or storage systems. Static assets should be stored using Laravel's standard `public/` directory, while uploaded files should use Laravel's standard `storage/` filesystem.
 
 ---
 
@@ -40,20 +41,19 @@ MCF follows Laravel conventions whenever possible while introducing a structured
 
 ```text
 app/MCF
-├── Assets/
 ├── Database/
 │   ├── Factories/
 │   ├── Migrations/
 │   ├── Models/
 │   └── Seeders/
-├── Layouts/
 ├── Mail/
 ├── Middleware/
 ├── Modules/
 ├── Notifications/
 ├── Rules/
 ├── mcf_routes.php
-└── README.md
+├── README.md
+└── Quick Start.md
 ```
 
 ---
@@ -72,6 +72,18 @@ Create a workflow:
 php artisan mcf:make:workflow Users Profile
 ```
 
+Create a layout workflow:
+
+```bash
+php artisan mcf:make:workflow:layout Shared Layout
+```
+
+Remove a workflow:
+
+```bash
+php artisan mcf:remove:workflow Users Profile
+```
+
 Create a model:
 
 ```bash
@@ -83,6 +95,40 @@ Create a migration:
 ```bash
 php artisan mcf:make:migration create_users_table
 ```
+
+---
+
+# Default Layout Workflow
+
+During installation, MCF automatically generates a default layout workflow:
+
+```text
+Module   : Shared
+Workflow : Layout
+```
+
+The layout is **not** a special framework component.
+
+It is simply a normal workflow generated using:
+
+```bash
+php artisan mcf:make:workflow:layout Shared Layout
+```
+
+Developers are free to modify it, rename it, delete it, recreate it, or create additional layout workflows as needed.
+
+---
+
+# Assets & Storage
+
+MCF does not introduce a custom asset or storage system.
+
+Use Laravel's standard locations:
+
+- `public/` for CSS, JavaScript, images, fonts, and other public assets.
+- `storage/` for uploaded files and filesystem storage.
+
+This keeps MCF fully compatible with Laravel's native filesystem and deployment workflow.
 
 ---
 

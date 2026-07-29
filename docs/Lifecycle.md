@@ -1,10 +1,15 @@
+
 # Project Lifecycle
 
-## Overview
+---
 
-This document describes the recommended lifecycle for building an application with MCF.
+# Overview
 
-The lifecycle focuses on how an application grows using MCF's modular architecture while maintaining a clean and predictable project structure.
+This document describes the recommended lifecycle for developing applications with MCF.
+
+MCF follows a Workflow-driven architecture that allows applications to grow incrementally while maintaining a clean, predictable, and modular structure.
+
+Rather than organizing projects around technical layers, MCF encourages developers to build applications around business capabilities.
 
 ---
 
@@ -26,20 +31,23 @@ Create Modules
 Create Workflows
         │
         ▼
-Generate Required Components
+Generate Additional Components
         │
         ▼
 Implement Business Logic
         │
         ▼
-Test & Deploy
+Test
+        │
+        ▼
+Deploy
 ```
+
+Every stage builds upon the previous one.
 
 ---
 
-# Stage 1
-
-## Create a Laravel Project
+# Stage 1 — Create a Laravel Project
 
 Create a standard Laravel application.
 
@@ -47,106 +55,124 @@ Create a standard Laravel application.
 composer create-project laravel/laravel MyProject
 ```
 
-At this point, the application is a standard Laravel installation.
+At this stage the project is a normal Laravel installation.
 
 ---
 
-# Stage 2
+# Stage 2 — Install MCF
 
-## Install MCF
-
-Install the framework using Composer.
+Install MCF using Composer.
 
 ```bash
 composer require mcf/framework
 ```
 
-This installs the framework into the Laravel application.
+MCF integrates with the existing Laravel application without replacing Laravel's architecture.
 
 ---
 
-# Stage 3
+# Stage 3 — Initialize MCF
 
-## Initialize MCF
-
-Run:
+Initialize the framework.
 
 ```bash
 php artisan mcf:install
 ```
 
-MCF creates its working structure inside:
-
-```text
-app/MCF
-```
+The installer creates the MCF working structure.
 
 Example:
 
 ```text
 app/MCF
-├── Assets
 ├── Database
 │   ├── Factories
 │   ├── Migrations
 │   ├── Models
 │   └── Seeders
-├── Layouts
 ├── Mail
 ├── Middleware
 ├── Modules
 ├── Notifications
 ├── Rules
-└── mcf_routes.php
+├── mcf_routes.php
+└── README.md
 ```
 
-The framework is now ready for development.
+The installer also creates the default shared Layout Workflow.
+
+```text
+Modules
+└── Shared
+    └── Layout
+```
+
+Internally this is equivalent to:
+
+```bash
+php artisan mcf:make:module Shared
+
+php artisan mcf:make:workflow:layout Shared Layout
+```
+
+The project is now ready for development.
 
 ---
 
-# Stage 4
+# Stage 4 — Create Modules
 
-## Create Modules
-
-Modules represent business capabilities.
+Modules organize related business capabilities.
 
 Examples:
 
 ```text
 Users
-Products
-Orders
+Shop
 Inventory
 Reports
+Accounting
 ```
 
-Each module should encapsulate a single business domain.
+A Module represents one business domain.
+
+It does not contain business logic.
 
 ---
 
-# Stage 5
+# Stage 5 — Create Workflows
 
-## Create Workflows
+Create Workflows inside Modules.
 
-Workflows organize business processes inside a module.
-
-Examples:
+Example:
 
 ```text
-Authentication
-Profile
-Checkout
-Invoices
-Reporting
+Users
+├── Authentication
+├── Profile
+└── UserManagement
+
+Shop
+├── Products
+├── Cart
+└── Checkout
 ```
 
-A workflow represents a specific application use case.
+Each Workflow represents one complete business capability.
+
+A Workflow owns:
+
+- Controller
+- Service
+- Request
+- Policy
+- Views
+- Routes
+- Lang
+- README
 
 ---
 
-# Stage 6
-
-## Generate Required Components
+# Stage 6 — Generate Additional Components
 
 Generate only the components required by the application.
 
@@ -159,41 +185,89 @@ Examples include:
 - Middleware
 - Notifications
 - Mail
-- Rules
+- Validation Rules
 
-MCF follows explicit generation.
+MCF intentionally generates components only when explicitly requested.
 
-Components are created only when requested.
-
----
-
-# Stage 7
-
-## Implement Business Logic
-
-After the application structure is in place, implement the business logic.
-
-Business logic should remain:
-
-- Modular
-- Maintainable
-- Independent
-- Easy to test
-
-Modules should collaborate through well-defined interfaces rather than tightly coupling implementation details.
+This keeps projects small and maintainable.
 
 ---
 
-# Growth
+# Stage 7 — Implement Business Logic
 
-As the application evolves:
+After the project structure has been established, implement the application's business logic.
+
+Business logic belongs inside Workflow Services.
+
+Other components have focused responsibilities.
+
+| Component | Responsibility |
+|-----------|----------------|
+| Controller | Coordinate HTTP requests |
+| Request | Validation |
+| Policy | Authorization |
+| Service | Business logic |
+| Views | Presentation |
+
+Keeping responsibilities separated improves maintainability.
+
+---
+
+# Stage 8 — Test
+
+Verify that:
+
+- Workflows behave correctly.
+- Validation rules work as expected.
+- Authorization rules are correct.
+- Routes are registered.
+- Business logic is functioning correctly.
+
+Testing should occur before deployment.
+
+---
+
+# Stage 9 — Deploy
+
+Deploy the application using Laravel's normal deployment process.
+
+MCF introduces no special deployment requirements.
+
+Applications continue using Laravel's ecosystem for:
+
+- Configuration
+- Storage
+- Assets
+- Queues
+- Caching
+- Scheduling
+
+---
+
+# Growing the Application
+
+As new requirements appear, extend the application by creating new Modules or Workflows.
 
 ```text
-New Business Requirement
+New Requirement
 
 ↓
 
-New Module or Workflow
+Existing Module?
+
+↓
+
+Yes ─────► Create Workflow
+
+No
+
+↓
+
+Create Module
+
+↓
+
+Create Workflow
 
 ↓
 
@@ -204,22 +278,39 @@ Generate Required Components
 Implement Business Logic
 ```
 
-No architectural restructuring should be required.
-
-MCF is designed to scale by extending modules and workflows rather than reorganizing the entire project.
+Existing architecture should rarely require restructuring.
 
 ---
 
-# Maintenance
+# Maintaining the Application
 
-As new features are introduced:
+As the project evolves:
 
-- Reuse existing modules whenever appropriate.
-- Create new workflows for new business processes.
-- Generate only the required framework components.
-- Keep responsibilities isolated.
+- Reuse existing Modules whenever appropriate.
+- Create new Workflows for new business capabilities.
+- Generate only the components you need.
+- Keep business logic inside Services.
+- Keep Workflows independent.
 
-Avoid unnecessary duplication.
+Avoid duplicating functionality between Workflows.
+
+---
+
+# Removing Features
+
+When a business capability is no longer required, remove its Workflow.
+
+```bash
+php artisan mcf:remove:workflow Users Authentication
+```
+
+This removes:
+
+- Workflow files.
+- Route registration.
+- Generated structure.
+
+The rest of the application remains unaffected.
 
 ---
 
@@ -267,12 +358,15 @@ Deploy
 
 The recommended development order is:
 
-1. Install the framework.
-2. Initialize the project structure.
-3. Define business modules.
-4. Organize workflows.
-5. Generate required components.
-6. Implement business logic.
-7. Test and deploy.
+1. Install Laravel.
+2. Install MCF.
+3. Initialize the framework.
+4. Define business Modules.
+5. Create Workflows.
+6. Generate required components.
+7. Implement business logic.
+8. Test.
+9. Deploy.
 
-Following this lifecycle helps maintain a modular, predictable, and scalable application architecture.
+Following this lifecycle keeps applications modular, predictable, maintainable, and easy to scale as they evolve.
+

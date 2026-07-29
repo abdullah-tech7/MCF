@@ -1,22 +1,26 @@
 # CLI Specification
 
-## Overview
+---
 
-MCF provides a dedicated set of Artisan commands for generating framework components.
+# Overview
 
-All commands are prefixed with:
+MCF provides a dedicated collection of Artisan commands for generating framework components.
+
+Every command is prefixed with:
 
 ```text
 mcf:
 ```
 
-This prevents conflicts with Laravel's native Artisan commands while clearly identifying MCF-generated components.
+This clearly distinguishes MCF commands from Laravel's native Artisan commands while preventing naming conflicts.
+
+All commands follow Laravel's command style and behavior whenever possible.
 
 ---
 
 # Command Naming Convention
 
-All generators follow a consistent naming convention.
+MCF generators follow a consistent naming pattern.
 
 ```text
 mcf:make:<component>
@@ -25,14 +29,16 @@ mcf:make:<component>
 Examples:
 
 ```text
-mcf:make:model
 mcf:make:module
 mcf:make:workflow
+mcf:make:workflow:crud
+mcf:make:workflow:layout
+mcf:make:model
 mcf:make:mail
 mcf:make:notification
 ```
 
-This convention mirrors Laravel's Artisan style while remaining isolated.
+Commands are intentionally descriptive and predictable.
 
 ---
 
@@ -40,17 +46,19 @@ This convention mirrors Laravel's Artisan style while remaining isolated.
 
 | Command | Description |
 |----------|-------------|
-| `mcf:make:module` | Create a new module. |
-| `mcf:make:workflow` | Create a workflow inside a module. |
-| `mcf:make:workflow:crud` | Generate a CRUD workflow. |
-| `mcf:make:model` | Create an Eloquent model. |
-| `mcf:make:migration` | Create a migration. |
-| `mcf:make:factory` | Create a model factory. |
-| `mcf:make:seeder` | Create a database seeder. |
-| `mcf:make:middleware` | Create middleware. |
-| `mcf:make:rule` | Create a validation rule. |
-| `mcf:make:notification` | Create a notification. |
-| `mcf:make:mail` | Create a mailable. |
+| `mcf:make:module` | Create a new Module. |
+| `mcf:make:workflow` | Create a standard Workflow. |
+| `mcf:make:workflow:crud` | Create a CRUD Workflow. |
+| `mcf:make:workflow:layout` | Create a Layout Workflow. |
+| `mcf:remove:workflow` | Remove an existing Workflow. |
+| `mcf:make:model` | Create an Eloquent Model. |
+| `mcf:make:migration` | Create a Migration. |
+| `mcf:make:factory` | Create a Model Factory. |
+| `mcf:make:seeder` | Create a Database Seeder. |
+| `mcf:make:middleware` | Create Middleware. |
+| `mcf:make:rule` | Create a Validation Rule. |
+| `mcf:make:notification` | Create a Notification. |
+| `mcf:make:mail` | Create a Mailable. |
 
 ---
 
@@ -59,20 +67,24 @@ This convention mirrors Laravel's Artisan style while remaining isolated.
 ## Command
 
 ```bash
-php artisan mcf:make:module {name}
+php artisan mcf:make:module {module}
 ```
 
-## Example
+Example:
 
 ```bash
 php artisan mcf:make:module Users
 ```
 
-Creates a new business module inside:
+Creates a new Module.
+
+Generated location:
 
 ```text
-app/MCF/Modules
+app/MCF/Modules/Users
 ```
+
+Modules act as containers for related Workflows.
 
 ---
 
@@ -84,13 +96,13 @@ app/MCF/Modules
 php artisan mcf:make:workflow {module} {workflow}
 ```
 
-## Example
+Example:
 
 ```bash
-php artisan mcf:make:workflow Users Profile
+php artisan mcf:make:workflow Users Authentication
 ```
 
-Creates a workflow inside an existing module.
+Creates a standard Workflow inside the specified Module.
 
 ---
 
@@ -102,13 +114,82 @@ Creates a workflow inside an existing module.
 php artisan mcf:make:workflow:crud {module} {workflow}
 ```
 
-## Example
+Example:
 
 ```bash
-php artisan mcf:make:workflow:crud Users Profile
+php artisan mcf:make:workflow:crud Users UserManagement
 ```
 
-Generates a CRUD-oriented workflow structure.
+Creates a Workflow preconfigured for CRUD operations.
+
+---
+
+# Layout Workflow Generator
+
+## Command
+
+```bash
+php artisan mcf:make:workflow:layout {module} {workflow}
+```
+
+Example:
+
+```bash
+php artisan mcf:make:workflow:layout Shared Layout
+```
+
+Creates a Layout Workflow.
+
+Generated structure includes:
+
+```text
+Views
+└── Layout
+    ├── app.blade.php
+    └── Components
+        ├── head.blade.php
+        ├── header.blade.php
+        ├── navbar.blade.php
+        ├── sidebar.blade.php
+        ├── footer.blade.php
+        ├── guest.blade.php
+        └── auth.blade.php
+```
+
+This command is also used internally by the MCF installer.
+
+Layout is treated like any other Workflow and is not reserved.
+
+---
+
+# Remove Workflow
+
+## Command
+
+```bash
+php artisan mcf:remove:workflow {module} {workflow}
+```
+
+Example:
+
+```bash
+php artisan mcf:remove:workflow Users Authentication
+```
+
+Removes the specified Workflow.
+
+The command:
+
+- Deletes the Workflow directory.
+- Removes its route registration from `app/MCF/mcf_routes.php`.
+
+Force mode:
+
+```bash
+php artisan mcf:remove:workflow Users Authentication --force
+```
+
+Skips the confirmation prompt.
 
 ---
 
@@ -117,20 +198,36 @@ Generates a CRUD-oriented workflow structure.
 ## Command
 
 ```bash
-php artisan mcf:make:model {name}
+php artisan mcf:make:model {model}
 ```
 
-## Example
+Example:
 
 ```bash
 php artisan mcf:make:model User
 ```
 
-Creates an Eloquent model inside:
+Creates an Eloquent Model inside:
 
 ```text
 app/MCF/Database/Models
 ```
+
+Supported options:
+
+```bash
+-m
+-f
+-s
+```
+
+These generate:
+
+- Migration
+- Factory
+- Seeder
+
+respectively.
 
 ---
 
@@ -142,17 +239,19 @@ app/MCF/Database/Models
 php artisan mcf:make:migration {name}
 ```
 
-## Example
+Example:
 
 ```bash
 php artisan mcf:make:migration create_users_table
 ```
 
-Creates a migration inside:
+Creates a Migration inside:
 
 ```text
 app/MCF/Database/Migrations
 ```
+
+Supports Laravel's native migration options.
 
 ---
 
@@ -164,16 +263,22 @@ app/MCF/Database/Migrations
 php artisan mcf:make:factory {name}
 ```
 
-## Example
+Example:
 
 ```bash
 php artisan mcf:make:factory UserFactory
 ```
 
-Creates a factory inside:
+Creates a Factory inside:
 
 ```text
 app/MCF/Database/Factories
+```
+
+Supports:
+
+```bash
+--model=User
 ```
 
 ---
@@ -186,13 +291,13 @@ app/MCF/Database/Factories
 php artisan mcf:make:seeder {name}
 ```
 
-## Example
+Example:
 
 ```bash
 php artisan mcf:make:seeder UserSeeder
 ```
 
-Creates a seeder inside:
+Creates a Seeder inside:
 
 ```text
 app/MCF/Database/Seeders
@@ -208,13 +313,13 @@ app/MCF/Database/Seeders
 php artisan mcf:make:middleware {name}
 ```
 
-## Example
+Example:
 
 ```bash
 php artisan mcf:make:middleware AuthenticateAdmin
 ```
 
-Creates middleware inside:
+Creates Middleware inside:
 
 ```text
 app/MCF/Middleware
@@ -230,13 +335,13 @@ app/MCF/Middleware
 php artisan mcf:make:rule {name}
 ```
 
-## Example
+Example:
 
 ```bash
 php artisan mcf:make:rule StrongPassword
 ```
 
-Creates a validation rule inside:
+Creates a Validation Rule inside:
 
 ```text
 app/MCF/Rules
@@ -252,13 +357,13 @@ app/MCF/Rules
 php artisan mcf:make:notification {name}
 ```
 
-## Example
+Example:
 
 ```bash
 php artisan mcf:make:notification WelcomeNotification
 ```
 
-Creates a notification inside:
+Creates a Notification inside:
 
 ```text
 app/MCF/Notifications
@@ -276,7 +381,7 @@ Only the Notification class is generated.
 php artisan mcf:make:mail {name}
 ```
 
-## Example
+Example:
 
 ```bash
 php artisan mcf:make:mail WelcomeMail
@@ -294,7 +399,7 @@ Only the Mailable class is generated.
 
 # Design Principles
 
-All MCF commands follow the same principles:
+Every MCF command follows the same design philosophy.
 
 - Consistent naming.
 - Single responsibility.
@@ -303,4 +408,12 @@ All MCF commands follow the same principles:
 - Minimal boilerplate.
 - No hidden side effects.
 
-Each command generates only the component it is responsible for unless explicitly documented otherwise.
+Commands generate only the component they are responsible for unless explicitly documented otherwise.
+
+---
+
+# Summary
+
+MCF's CLI is intentionally small, predictable, and focused.
+
+Every command has one clear responsibility, follows Laravel conventions, and generates components within the MCF architecture without introducing unnecessary complexity.
