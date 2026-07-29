@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use {{ ControllerNamespace }}\{{ WorkflowName }}Controller;
+use {{ ControllerNamespace }}\Backend\{{ WorkflowName }}Controller;
 
 Route::get('/{{ WorkflowRoute }}', [{{ WorkflowName }}Controller::class, 'index'])
     ->name('{{ ModuleRoute }}.{{ WorkflowRoute }}.index');

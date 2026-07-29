@@ -153,10 +153,10 @@ class WorkflowGenerator
             $workflowName,
             lcfirst($moduleName),
             lcfirst($workflowName),
-            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
-            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
-            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
-            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
+            "App\\MCF\\Modules\\{$moduleName}\\Backend\\{$workflowName}",
+            "App\\MCF\\Modules\\{$moduleName}\\Backend\\{$workflowName}",
+            "App\\MCF\\Modules\\{$moduleName}\\Backend\\{$workflowName}",
+            "App\\MCF\\Modules\\{$moduleName}\\Backend\\{$workflowName}",
         ], $content);
 
         $this->files->put($destination, $content);

@@ -1,5 +1,5 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use {{ ControllerNamespace }}\{{ WorkflowName }}Controller;
+use {{ ControllerNamespace }}\Backend\{{ WorkflowName }}Controller;
 
