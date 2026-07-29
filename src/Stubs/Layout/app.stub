@@ -24,16 +24,16 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
 
-    @includeIf('Shared.Layout.Components.head')
+    @includeIf('Shared::Layout.Components.head')
 
 </head>
 <body>
 
-    @includeIf('Shared.Layout.Components.header')
+    @includeIf('Shared::Layout.Components.header')
 
     @yield('content')
 
-    @includeIf('Shared.Layout.Components.footer')
+    @includeIf('Shared::Layout.Components.footer')
 
 </body>
 </html>

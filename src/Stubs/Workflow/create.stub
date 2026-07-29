@@ -1,4 +1,4 @@
-@extends('Shared.Layout.app')
+@extends('Shared::Layout.app')
 
 @section('content')
 

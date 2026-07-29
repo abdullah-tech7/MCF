@@ -1,7 +1,7 @@
 <?php
 
-namespace {{ Namespace }};
+namespace {{ PolicyNamespace }};
 
-class {{ Class }}
+class {{ WorkflowName }}Policy
 {
 }

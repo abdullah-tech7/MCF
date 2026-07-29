@@ -1,7 +1,10 @@
 <?php
 
-namespace {{ Namespace }};
+namespace {{ ControllerNamespace }};
 
-class {{ Class }}
+use Illuminate\Contracts\View\View;
+
+class {{ WorkflowName }}Controller
 {
+ 
 }

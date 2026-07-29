@@ -1,10 +1,10 @@
 <?php
 
-namespace {{ Namespace }};
+namespace {{ RequestNamespace }};
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class {{ Class }} extends FormRequest
+class {{ WorkflowName }}Request extends FormRequest
 {
     public function authorize(): bool
     {

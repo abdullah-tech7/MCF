@@ -41,13 +41,9 @@ class WorkflowGenerator
     protected function createDirectories(string $modulePath, string $workflowName): void
     {
         $directories = [
-            'Controllers',
-            'Services',
-            'Requests',
-            'Policies',
-            'Routes',
-            "Lang/{$workflowName}",
-            "Views/{$workflowName}",
+            $workflowName,
+            "{$workflowName}/Views",
+            "{$workflowName}/Lang",
         ];
 
         foreach ($directories as $directory) {
@@ -57,15 +53,14 @@ class WorkflowGenerator
         }
     }
 
-
-        protected function generateController(
+    protected function generateController(
         string $modulePath,
         string $moduleName,
         string $workflowName
     ): void {
         $this->copyStub(
             'Controller.stub',
-            "{$modulePath}/Controllers/{$workflowName}Controller.php",
+            "{$modulePath}/{$workflowName}/{$workflowName}Controller.php",
             $moduleName,
             $workflowName
         );
@@ -78,7 +73,7 @@ class WorkflowGenerator
     ): void {
         $this->copyStub(
             'Service.stub',
-            "{$modulePath}/Services/{$workflowName}Service.php",
+            "{$modulePath}/{$workflowName}/{$workflowName}Service.php",
             $moduleName,
             $workflowName
         );
@@ -91,7 +86,7 @@ class WorkflowGenerator
     ): void {
         $this->copyStub(
             'Request.stub',
-            "{$modulePath}/Requests/{$workflowName}Request.php",
+            "{$modulePath}/{$workflowName}/{$workflowName}Request.php",
             $moduleName,
             $workflowName
         );
@@ -104,7 +99,7 @@ class WorkflowGenerator
     ): void {
         $this->copyStub(
             'Policy.stub',
-            "{$modulePath}/Policies/{$workflowName}Policy.php",
+            "{$modulePath}/{$workflowName}/{$workflowName}Policy.php",
             $moduleName,
             $workflowName
         );
@@ -117,12 +112,11 @@ class WorkflowGenerator
     ): void {
         $this->copyStub(
             'Route.stub',
-            "{$modulePath}/Routes/{$workflowName}.php",
+            "{$modulePath}/{$workflowName}/{$workflowName}Routes.php",
             $moduleName,
             $workflowName
         );
     }
-
 
     protected function generateIndexView(
         string $modulePath,
@@ -130,7 +124,7 @@ class WorkflowGenerator
     ): void {
         $this->files->copy(
             __DIR__ . '/../Stubs/Workflow/index.stub',
-            "{$modulePath}/Views/{$workflowName}/index.blade.php"
+            "{$modulePath}/{$workflowName}/Views/index.blade.php"
         );
     }
 
@@ -155,36 +149,35 @@ class WorkflowGenerator
         ], [
             $moduleName,
             $workflowName,
-            "App\\MCF\\Modules\\{$moduleName}\\Controllers",
-            "App\\MCF\\Modules\\{$moduleName}\\Services",
-            "App\\MCF\\Modules\\{$moduleName}\\Requests",
-            "App\\MCF\\Modules\\{$moduleName}\\Policies",
+            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
+            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
+            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
+            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
         ], $content);
 
         $this->files->put($destination, $content);
     }
 
     protected function registerRoute(
-    string $moduleName,
-    string $workflowName
-): void {
-    $routesFile = app_path('MCF/mcf_routes.php');
+        string $moduleName,
+        string $workflowName
+    ): void {
+        $routesFile = app_path('MCF/mcf_routes.php');
 
-    if (! $this->files->exists($routesFile)) {
-        throw new RuntimeException('MCF routes file not found.');
+        if (! $this->files->exists($routesFile)) {
+            throw new RuntimeException('MCF routes file not found.');
+        }
+
+        $content = $this->files->get($routesFile);
+
+        $require = "require_once __DIR__.'/Modules/{$moduleName}/{$workflowName}/{$workflowName}Routes.php';";
+
+        if (str_contains($content, $require)) {
+            return;
+        }
+
+        $content .= PHP_EOL . $require . PHP_EOL;
+
+        $this->files->put($routesFile, $content);
     }
-
-    $content = $this->files->get($routesFile);
-
-    $require = "require_once __DIR__.'/Modules/{$moduleName}/Routes/{$workflowName}.php';";
-
-    if (str_contains($content, $require)) {
-        return;
-    }
-
-    $content .= PHP_EOL . $require . PHP_EOL;
-
-    $this->files->put($routesFile, $content);
-}
-
 }
