@@ -1,643 +1,493 @@
-# Coding Standards
+# Generator Rules
 
 ---
 
 # Overview
 
-This document defines the official coding standards used throughout the MCF codebase.
+This document defines the official rules that every MCF code generator must follow.
 
-These standards ensure that every MCF project remains consistent, predictable, maintainable, and fully compatible with Laravel.
+All generators must produce predictable, consistent, and maintainable output while preserving Laravel conventions and MCF's Workflow-driven architecture.
 
-All framework code and generated components should comply with these guidelines.
-
----
-
-# General Principles
-
-MCF follows these core principles.
-
-- Readability over cleverness.
-- Consistency over personal preference.
-- Explicit behavior over hidden magic.
-- Simplicity over unnecessary abstraction.
-- Workflow-Driven Architecture.
-- Laravel conventions whenever practical.
-
-Framework code should be easy to understand before it is easy to optimize.
+These rules apply to every current and future generator provided by MCF.
 
 ---
 
-# PHP Version
+# Core Principles
 
-MCF targets:
+Every generator must follow these principles:
 
-```text
-PHP 8.4+
-```
+- Predictable output.
+- Single responsibility.
+- Consistent architecture.
+- Laravel compatibility.
+- Idempotent behavior.
+- Minimal boilerplate.
 
-Framework code may freely use language features available in the minimum supported PHP version.
-
----
-
-# Laravel Version
-
-MCF targets:
-
-```text
-Laravel 12+
-```
-
-Generated code should remain compatible with supported Laravel releases.
-
-MCF extends Laravel rather than replacing it.
+Generated code should be immediately usable without additional restructuring.
 
 ---
 
-# PSR Standards
+# One Generator, One Responsibility
 
-MCF follows PHP-FIG standards whenever applicable.
-
-Including:
-
-- PSR-1
-- PSR-4
-- PSR-12
-
-Namespaces, formatting, autoloading, and file organization should comply with these standards.
-
----
-
-# File Organization
-
-Each PHP file should contain exactly one:
-
-- Class
-- Interface
-- Trait
-- Enum
+Every generator is responsible for generating exactly one type of component.
 
 Examples:
 
-```text
-User.php
+| Generator | Responsibility |
+|-----------|----------------|
+| `mcf:make:module` | Create a Module |
+| `mcf:make:workflow` | Create a Workflow |
+| `mcf:make:workflow:crud` | Create a CRUD Workflow |
+| `mcf:make:workflow:layout` | Create a Layout Workflow |
+| `mcf:make:model` | Create an Eloquent Model |
+| `mcf:make:migration` | Create a Migration |
+| `mcf:make:factory` | Create a Factory |
+| `mcf:make:seeder` | Create a Seeder |
+| `mcf:make:middleware` | Create Middleware |
+| `mcf:make:rule` | Create a Validation Rule |
+| `mcf:make:notification` | Create a Notification |
+| `mcf:make:mail` | Create a Mailable |
 
-AuthenticationService.php
-
-StrongPassword.php
-
-WelcomeMail.php
-```
-
-Avoid defining multiple classes in a single file.
+Generators should never perform unrelated work.
 
 ---
 
-# Namespace Organization
+# Predictable Output
 
-Namespaces should always match the physical directory structure.
+Every execution of the same generator should produce the same directory structure and file naming convention.
 
-Examples:
-
-```php
-namespace App\MCF\Database\Models;
-```
-
-```php
-namespace App\MCF\Notifications;
-```
-
-```php
-namespace App\MCF\Rules;
-```
-
-Workflow components should follow the same convention.
+Developers should always know where generated files will be located.
 
 Example:
 
-```php
-namespace App\MCF\Modules\Users\Authentication\Services;
+```bash
+php artisan mcf:make:workflow Users Authentication
 ```
 
-Namespaces should never diverge from their directory location.
-
----
-
-# Class Naming
-
-Classes should use PascalCase.
-
-Examples:
+Always generates:
 
 ```text
-User
-
-AuthenticationController
-
-AuthenticationService
-
-StrongPassword
-
-WelcomeMail
-
-AuthenticateAdmin
-```
-
-Avoid abbreviations unless they are universally recognized.
-
----
-
-# Module Naming
-
-Modules should:
-
-- Use PascalCase.
-- Represent a business domain.
-- Be concise.
-
-Examples:
-
-```text
-Users
-
-Reports
-
-Inventory
-
-Accounting
-```
-
-Avoid:
-
-```text
-UsersModule
-
-MyUsers
+app/
+└── MCF/
+    └── Modules/
+        └── Users/
+            └── Authentication/
 ```
 
 ---
 
-# Workflow Naming
+# Workflow Structure
 
-Workflow names describe business capabilities.
-
-Examples:
+Every Workflow generator must create the complete Workflow structure.
 
 ```text
 Authentication
-
-UserManagement
-
-Checkout
-
-Profile
-
-PasswordReset
+├── AuthenticationController.php
+├── AuthenticationRequest.php
+├── AuthenticationService.php
+├── AuthenticationPolicy.php
+├── AuthenticationRoutes.php
+├── Views
+├── Lang
+└── README.md
 ```
 
-Avoid names based on database tables.
+Every Workflow must remain self-contained.
 
-Poor examples:
+---
+
+# Shared Base Classes
+
+Generated Workflow components must inherit from the shared MCF base classes.
+
+Controller:
+
+```php
+class AuthenticationController extends MfcController
+```
+
+Request:
+
+```php
+class AuthenticationRequest extends MfcRequest
+```
+
+Service:
+
+```php
+class AuthenticationService extends MfcService
+```
+
+Policy:
+
+```php
+class AuthenticationPolicy extends MfcPolicy
+```
+
+Base classes are located in:
 
 ```text
-User
-
-Product
-
-Order
+app/MCF/Base
 ```
 
 ---
 
-# Method Naming
+# Generated Controllers
 
-Methods should use camelCase.
+Controllers should contain only HTTP coordination.
 
-Examples:
+Generated Controllers should:
+
+- Receive requests.
+- Delegate work to the Service.
+- Return responses.
+- Return Workflow Views.
+
+Generated example:
 
 ```php
-createUser()
-
-registerWorkflow()
-
-removeWorkflow()
-
-publishModule()
+return view('Users::Authentication.index');
 ```
 
-Method names should describe actions.
+Business logic must never be generated inside Controllers.
 
 ---
 
-# Property Naming
+# Generated Services
 
-Properties should also use camelCase.
+Services are responsible for business logic.
 
-Examples:
+Generators should never place business logic in:
 
-```php
-$modulePath
+- Controllers
+- Requests
+- Policies
+- Views
 
-$workflowName
-
-$routeFile
-
-$serviceClass
-```
-
-Avoid vague names whenever possible.
+Generated Services should be intentionally lightweight and ready for implementation.
 
 ---
 
-# Constants
+# Generated Requests
 
-Constants should use uppercase with underscores.
+Every Workflow owns exactly one Request.
 
-Examples:
+Generated Requests should inherit from:
 
-```php
-FRAMEWORK_VERSION
-
-DEFAULT_NAMESPACE
-
-DEFAULT_LAYOUT
+```text
+MfcRequest
 ```
+
+Validation belongs here.
 
 ---
 
-# Imports
+# Generated Policies
 
-Always import classes instead of repeatedly using fully qualified class names.
+Every Workflow owns exactly one Policy.
 
-Preferred:
+Generated Policies inherit from:
 
-```php
-use Illuminate\Support\Str;
+```text
+MfcPolicy
 ```
 
-Avoid:
+Generated Policies should contain authorization placeholders only.
 
-```php
-\Illuminate\Support\Str::studly(...);
-```
-
-Remove unused imports.
+Business authorization implementation belongs to the developer.
 
 ---
 
-# Type Declarations
+# Generated Views
 
-Use explicit type declarations whenever possible.
+Workflow generators create a dedicated Views directory.
 
-Prefer:
-
-```php
-public function handle(): int
-```
-
-instead of:
-
-```php
-public function handle()
-```
-
-Use typed properties and typed parameters.
-
----
-
-# Strict Typing
-
-Every PHP file should begin with:
-
-```php
-declare(strict_types=1);
-```
-
-unless there is a documented reason not to.
-
-MCF favors explicit typing.
-
----
-
-# Visibility
-
-Always declare visibility explicitly.
-
-Examples:
-
-```php
-public
-
-protected
-
-private
-```
-
-Never rely on PHP defaults.
-
----
-
-# Constructor Injection
-
-Prefer constructor dependency injection.
+Controllers should reference Workflow Views using the MCF namespace.
 
 Example:
 
 ```php
-public function __construct(
-    AuthenticationService $service
-) {}
+return view('Users::Authentication.index');
 ```
 
-Avoid resolving dependencies manually.
+Views remain inside their Workflow.
 
-```php
-app(AuthenticationService::class);
+---
+
+# Layout Generator
+
+The Layout generator follows exactly the same Workflow architecture.
+
+Example:
+
+```bash
+php artisan mcf:make:workflow:layout Shared Layout
 ```
 
-Use manual resolution only when required.
-
----
-
-# Static Methods
-
-Avoid unnecessary static methods.
-
-Prefer dependency injection and object instances.
-
-Static methods should be limited to stateless utility scenarios.
-
----
-
-# Documentation
-
-Public APIs should be self-explanatory.
-
-Use PHPDoc only when it adds information that type declarations cannot express.
-
-Avoid comments like:
-
-```php
-// Gets the user.
-```
-
-Good names reduce the need for comments.
-
----
-
-# Formatting
-
-Follow Laravel's coding style.
-
-Rules:
-
-- Four spaces.
-- No tabs.
-- Meaningful blank lines.
-- Consistent spacing.
-
-Avoid excessive vertical whitespace.
-
----
-
-# Line Length
-
-Favor readability.
-
-Long expressions should be split across multiple lines when necessary.
-
-No strict maximum line length is enforced.
-
----
-
-# Conditionals
-
-Prefer early returns.
-
-Good:
-
-```php
-if (! $moduleExists) {
-    return;
-}
-```
-
-Avoid deeply nested conditional structures.
-
----
-
-# Variables
-
-Use descriptive variable names.
-
-Good:
-
-```php
-$workflowDirectory
-
-$controllerClass
-
-$moduleName
-
-$routeFile
-```
-
-Avoid:
-
-```php
-$temp
-
-$data
-
-$value
-```
-
-unless the context is immediately obvious.
-
----
-
-# Controllers
-
-Controllers coordinate HTTP requests.
-
-Controllers should:
-
-- Receive Requests.
-- Call Services.
-- Return Responses.
-
-Controllers should never contain:
-
-- Business logic.
-- Database queries.
-- Complex calculations.
-
-Controllers should remain thin.
-
----
-
-# Services
-
-Workflow Services contain business logic.
-
-Responsibilities include:
-
-- Business rules.
-- Transactions.
-- Database coordination.
-- Event dispatching.
-
-Services should never return Blade Views.
-
----
-
-# Requests
-
-Workflow Requests handle:
-
-- Validation.
-- Basic authorization.
-
-Reusable validation belongs inside:
+Generated structure:
 
 ```text
-app/MCF/Rules
+Layout
+├── LayoutController.php
+├── LayoutRequest.php
+├── LayoutService.php
+├── LayoutPolicy.php
+├── LayoutRoutes.php
+├── Views
+│   ├── index.blade.php
+│   └── Components
+│       ├── head.blade.php
+│       ├── header.blade.php
+│       ├── navbar.blade.php
+│       ├── sidebar.blade.php
+│       ├── footer.blade.php
+│       ├── guest.blade.php
+│       └── auth.blade.php
+├── Lang
+└── README.md
 ```
 
----
+Generated Layout Controllers return:
 
-# Policies
+```php
+return view('Shared::Layout.index');
+```
 
-Policies contain authorization logic.
-
-Responsibilities include:
-
-- Permissions.
-- Role checks.
-- Access rules.
-
-Policies should never contain business logic.
-
----
-
-# Views
-
-Views handle presentation only.
-
-Views should never contain:
-
-- Business logic.
-- Database queries.
-- Service calls.
-
-Generated Workflow Views extend:
+Shared Blade components are referenced using:
 
 ```blade
-@extends('Shared.Layout.app')
+@include('Shared::Layout.Components.head')
 ```
 
----
-
-# Layout Workflow
-
-Layout is implemented as a Workflow.
-
-Responsibilities include:
-
-- Shared layouts.
-- Navigation.
-- Sidebar.
-- Header.
-- Footer.
-- Shared Blade Components.
-
-Business logic must never appear inside Layouts.
+Layout is treated like any other Workflow.
 
 ---
 
-# Routes
+# Route Registration
 
-Each Workflow owns one Route file.
-
-Route files should contain only route definitions.
-
-Workflow Routes are automatically registered through:
+Workflow generators must automatically register Workflow Routes through:
 
 ```text
 app/MCF/mcf_routes.php
 ```
 
----
-
-# Generator Design
-
-Generator implementations should remain lightweight.
-
-Command classes should coordinate generation.
-
-Complex implementation should be extracted into dedicated classes whenever necessary.
-
-Each generator should have one responsibility.
+No manual registration should be required.
 
 ---
 
-# Dependencies
+# Language Support
 
-Avoid unnecessary third-party packages.
+Every generated Workflow must include:
 
-Reuse Laravel components whenever possible.
+```text
+Lang/
+```
 
-Prefer framework-native solutions.
+MCF automatically discovers Workflow translation files recursively.
 
----
-
-# Error Handling
-
-Error messages should be:
-
-- Clear.
-- Actionable.
-- Consistent.
-
-Avoid exposing implementation details through console output.
+No additional configuration should be generated.
 
 ---
 
-# Backward Compatibility
+# CRUD Generator
 
-Preserve backward compatibility whenever practical.
+The CRUD generator follows the same Workflow architecture as the standard Workflow generator.
 
-Breaking changes should be:
+It additionally creates the files and scaffolding required for CRUD operations.
 
-- Intentional.
-- Documented.
-- Justified.
+The generated structure must remain fully compatible with standard Workflows.
 
 ---
 
-# Code Review Checklist
+# Model Generator
 
-Before merging, verify that the implementation:
+The Model generator creates Models inside:
 
-- Follows the MCF architecture.
-- Uses the correct namespace.
-- Respects Workflow organization.
-- Generates predictable output.
-- Preserves Laravel compatibility.
-- Follows the Coding Standards.
-- Includes documentation when required.
+```text
+app/MCF/Database/Models
+```
+
+Supported options:
+
+```text
+-m
+-f
+-s
+```
+
+Each option generates only the requested additional component.
+
+---
+
+# Migration Generator
+
+Migration generators create files only inside:
+
+```text
+app/MCF/Database/Migrations
+```
+
+They should behave consistently with Laravel's migration generator.
+
+---
+
+# Factory Generator
+
+Factories belong to:
+
+```text
+app/MCF/Database/Factories
+```
+
+The generator should support:
+
+```bash
+--model=User
+```
+
+---
+
+# Seeder Generator
+
+Seeders belong to:
+
+```text
+app/MCF/Database/Seeders
+```
+
+Generators should not modify `DatabaseSeeder`.
+
+---
+
+# Middleware Generator
+
+Middleware belongs to:
+
+```text
+app/MCF/Middleware
+```
+
+Generators create Middleware only.
+
+They should never modify routing or configuration automatically.
+
+---
+
+# Rule Generator
+
+Validation Rules belong to:
+
+```text
+app/MCF/Rules
+```
+
+Generated Rules should contain only validation scaffolding.
+
+---
+
+# Notification Generator
+
+Notifications belong to:
+
+```text
+app/MCF/Notifications
+```
+
+Only the Notification class should be generated.
+
+---
+
+# Mail Generator
+
+Mailables belong to:
+
+```text
+app/MCF/Mail
+```
+
+Only the Mailable class should be generated.
+
+---
+
+# Naming Rules
+
+Generators must preserve consistent naming.
+
+Examples:
+
+```text
+AuthenticationController
+AuthenticationRequest
+AuthenticationService
+AuthenticationPolicy
+AuthenticationRoutes
+```
+
+Generated directories must use the Workflow name.
+
+---
+
+# Existing Files
+
+Generators must never overwrite existing files without explicit user confirmation.
+
+If a conflict is detected, generation should stop with a clear error message.
+
+---
+
+# Idempotency
+
+Running the same generator multiple times should never silently corrupt an existing project.
+
+Generators must fail safely when conflicts occur.
+
+---
+
+# Laravel Compatibility
+
+Generators should follow Laravel conventions whenever possible.
+
+Generated code should:
+
+- Follow PSR-12.
+- Follow Laravel Coding Style.
+- Use dependency injection.
+- Use Blade.
+- Use Laravel routing.
+- Use Laravel localization.
+
+MCF extends Laravel rather than replacing it.
+
+---
+
+# Future Compatibility
+
+Every generator should produce output compatible with future MCF versions whenever possible.
+
+Generated projects should require minimal changes during framework upgrades.
+
+---
+
+# Design Principles
+
+Every MCF generator follows these principles:
+
+- Single Responsibility.
+- Predictable Output.
+- Consistent Naming.
+- Workflow-Driven Architecture.
+- Modular Structure.
+- Laravel Compatibility.
+- No Hidden Side Effects.
+- Safe Generation.
+- Minimal Boilerplate.
 
 ---
 
 # Summary
 
-The objective of these standards is to ensure that every MCF project remains:
+Every MCF generator exists to automate project structure—not application behavior.
 
-- Workflow-Driven
-- Consistent
-- Readable
-- Predictable
-- Maintainable
-- Extensible
-- Compatible with Laravel
+Generators create a predictable foundation by following the same architecture, naming conventions, and directory layout across every project.
 
-Consistency is considered more valuable than individual coding style preferences.
+The result is a consistent development experience where every generated component integrates naturally with the MCF architecture while remaining fully compatible with Laravel.

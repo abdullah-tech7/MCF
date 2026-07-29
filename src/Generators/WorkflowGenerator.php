@@ -141,6 +141,7 @@ class WorkflowGenerator
         $content = str_replace([
             '{{ ModuleName }}',
             '{{ WorkflowName }}',
+            '{{ ModuleRoute }}',
             '{{ WorkflowRoute }}',
             '{{ ControllerNamespace }}',
             '{{ ServiceNamespace }}',
@@ -149,6 +150,7 @@ class WorkflowGenerator
         ], [
             $moduleName,
             $workflowName,
+            lcfirst($moduleName),
             lcfirst($workflowName),
             "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
             "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",

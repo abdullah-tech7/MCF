@@ -1,4 +1,3 @@
-
 # Project Lifecycle
 
 ---
@@ -55,7 +54,7 @@ Create a standard Laravel application.
 composer create-project laravel/laravel MyProject
 ```
 
-At this stage the project is a normal Laravel installation.
+At this stage the project is a normal Laravel 13 installation.
 
 ---
 
@@ -85,6 +84,11 @@ Example:
 
 ```text
 app/MCF
+├── Base
+│   ├── MfcController.php
+│   ├── MfcRequest.php
+│   ├── MfcService.php
+│   └── MfcPolicy.php
 ├── Database
 │   ├── Factories
 │   ├── Migrations
@@ -159,16 +163,28 @@ Shop
 
 Each Workflow represents one complete business capability.
 
-A Workflow owns:
+A generated Workflow owns:
 
 - Controller
-- Service
 - Request
+- Service
 - Policy
-- Views
 - Routes
+- Views
 - Lang
 - README
+
+Generated components inherit from the shared MCF base classes located in:
+
+```text
+app/MCF/Base
+```
+
+Workflow Routes are automatically registered through:
+
+```text
+app/MCF/mcf_routes.php
+```
 
 ---
 
@@ -199,15 +215,27 @@ After the project structure has been established, implement the application's bu
 
 Business logic belongs inside Workflow Services.
 
-Other components have focused responsibilities.
+Other generated components have focused responsibilities.
 
 | Component | Responsibility |
 |-----------|----------------|
-| Controller | Coordinate HTTP requests |
-| Request | Validation |
-| Policy | Authorization |
-| Service | Business logic |
+| Controller (`MfcController`) | Coordinate HTTP requests |
+| Request (`MfcRequest`) | Validation |
+| Policy (`MfcPolicy`) | Authorization |
+| Service (`MfcService`) | Business logic |
 | Views | Presentation |
+
+Generated Controllers should return Workflow Views using:
+
+```php
+return view('Users::Authentication.index');
+```
+
+Shared Layout components should be referenced using:
+
+```blade
+@include('Shared::Layout.Components.head')
+```
 
 Keeping responsibilities separated improves maintainability.
 
@@ -220,7 +248,7 @@ Verify that:
 - Workflows behave correctly.
 - Validation rules work as expected.
 - Authorization rules are correct.
-- Routes are registered.
+- Workflow Routes are registered correctly.
 - Business logic is functioning correctly.
 
 Testing should occur before deployment.
@@ -289,7 +317,9 @@ As the project evolves:
 - Reuse existing Modules whenever appropriate.
 - Create new Workflows for new business capabilities.
 - Generate only the components you need.
-- Keep business logic inside Services.
+- Keep business logic inside Workflow Services.
+- Keep validation inside Workflow Requests.
+- Keep authorization inside Workflow Policies.
 - Keep Workflows independent.
 
 Avoid duplicating functionality between Workflows.
@@ -307,8 +337,8 @@ php artisan mcf:remove:workflow Users Authentication
 This removes:
 
 - Workflow files.
-- Route registration.
-- Generated structure.
+- Workflow route registration.
+- Generated Workflow structure.
 
 The rest of the application remains unaffected.
 
@@ -358,15 +388,14 @@ Deploy
 
 The recommended development order is:
 
-1. Install Laravel.
+1. Install Laravel 13.
 2. Install MCF.
 3. Initialize the framework.
 4. Define business Modules.
 5. Create Workflows.
 6. Generate required components.
-7. Implement business logic.
+7. Implement business logic inside Workflow Services.
 8. Test.
 9. Deploy.
 
 Following this lifecycle keeps applications modular, predictable, maintainable, and easy to scale as they evolve.
-

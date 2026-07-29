@@ -79,8 +79,8 @@ Users
 Every Workflow owns its own:
 
 - Controller
-- Service
 - Request
+- Service
 - Policy
 - Views
 - Routes
@@ -151,6 +151,7 @@ Laravel Application
 ├── app/
 │   │
 │   └── MCF/
+│       ├── Base
 │       ├── Database
 │       ├── Mail
 │       ├── Middleware
@@ -179,6 +180,7 @@ Examples:
 - Rules contain reusable validation logic.
 - Middleware processes HTTP requests.
 - Modules organize Workflows.
+- Base contains the shared foundation classes used by every generated Workflow.
 
 Responsibilities are intentionally separated to reduce coupling.
 
@@ -251,8 +253,6 @@ Nothing else.
 ---
 
 # Framework Layers
-
-MCF separates responsibilities into several logical layers.
 
 ```text
 Presentation
@@ -341,30 +341,29 @@ Internally this is equivalent to:
 php artisan mcf:make:workflow:layout Shared Layout
 ```
 
-The generated Layout Workflow contains the application's default Blade layout.
+The generated Layout Workflow contains the application's default layout and optional Blade components.
 
 Example:
 
 ```text
 Shared
 └── Layout
-    ├── Controllers
-    ├── Services
-    ├── Requests
-    ├── Policies
-    ├── Routes
+    ├── LayoutController.php
+    ├── LayoutRequest.php
+    ├── LayoutService.php
+    ├── LayoutPolicy.php
+    ├── LayoutRoutes.php
     ├── Lang
     └── Views
-        └── Layout
-            ├── app.blade.php
-            └── Components
-                ├── head.blade.php
-                ├── header.blade.php
-                ├── navbar.blade.php
-                ├── sidebar.blade.php
-                ├── footer.blade.php
-                ├── guest.blade.php
-                └── auth.blade.php
+        ├── index.blade.php
+        └── Components
+            ├── head.blade.php
+            ├── header.blade.php
+            ├── navbar.blade.php
+            ├── sidebar.blade.php
+            ├── footer.blade.php
+            ├── guest.blade.php
+            └── auth.blade.php
 ```
 
 Layout is not reserved.
@@ -426,15 +425,15 @@ Keeping database components together improves discoverability and maintenance.
 
 # Routing
 
-Every Workflow owns its own Route file.
+Every Workflow owns its own route definition.
 
-All generated Workflow routes are registered through:
+MCF automatically registers all generated Workflow routes through:
 
 ```text
 app/MCF/mcf_routes.php
 ```
 
-This prevents route files from becoming unnecessarily large.
+Each Workflow is responsible only for its own routes, keeping routing modular and maintainable.
 
 ---
 
@@ -442,7 +441,7 @@ This prevents route files from becoming unnecessarily large.
 
 MCF is designed for future expansion.
 
-New generators, Modules and Workflows can be introduced without changing the overall project structure.
+New generators, Modules, and Workflows can be introduced without changing the overall project structure.
 
 Because every feature follows the same architecture, extending the framework remains predictable.
 
@@ -501,6 +500,8 @@ MCF follows these architectural principles.
 - Separation of Concerns
 
 These principles guide both the framework itself and applications built with MCF.
+
+---
 
 # Workflow Design
 
@@ -589,37 +590,44 @@ The generated structure looks like:
 ```text
 Shared
 └── Layout
-    ├── Controllers
-    ├── Services
-    ├── Requests
-    ├── Policies
-    ├── Routes
+    ├── LayoutController.php
+    ├── LayoutRequest.php
+    ├── LayoutService.php
+    ├── LayoutPolicy.php
+    ├── LayoutRoutes.php
     ├── Lang
     └── Views
-        └── Layout
-            ├── app.blade.php
-            └── Components
-                ├── head.blade.php
-                ├── header.blade.php
-                ├── navbar.blade.php
-                ├── sidebar.blade.php
-                ├── footer.blade.php
-                ├── guest.blade.php
-                └── auth.blade.php
+        ├── index.blade.php
+        └── Components
+            ├── head.blade.php
+            ├── header.blade.php
+            ├── navbar.blade.php
+            ├── sidebar.blade.php
+            ├── footer.blade.php
+            ├── guest.blade.php
+            └── auth.blade.php
 ```
 
 Layout is not reserved by the framework.
 
-Developers are free to rename it, remove it, recreate it or create additional Layout Workflows.
+Developers are free to:
 
-Generated Workflow views extend the default layout:
+- Rename it.
+- Delete it.
+- Recreate it.
+- Create additional Layout Workflows.
+- Customize it freely.
+
+Generated Workflow controllers return:
+
+```php
+return view('Users::Authentication.index');
+```
+
+Layout components are referenced using:
 
 ```blade
-@extends('Shared.Layout.app')
-
-@section('content')
-
-@endsection
+@include('Shared::Layout.Components.head')
 ```
 
 ---
@@ -646,17 +654,12 @@ MCF generates:
 Users
 └── Authentication
     ├── AuthenticationController.php
-    ├── Requests
-    │   └── AuthenticationRequest.php
-    ├── Services
-    │   └── AuthenticationService.php
-    ├── Policies
-    │   └── AuthenticationPolicy.php
+    ├── AuthenticationRequest.php
+    ├── AuthenticationService.php
+    ├── AuthenticationPolicy.php
+    ├── AuthenticationRoutes.php
     ├── Views
-    ├── Routes
-    │   └── Authentication.php
     ├── Lang
-    │   └── Authentication/
     └── README.md
 ```
 
@@ -707,7 +710,7 @@ The Service contains the business logic.
 
 Example:
 
-AuthenticationService
+**AuthenticationService**
 
 - login()
 - logout()
@@ -730,10 +733,16 @@ Authorization rules remain together with the Workflow instead of being scattered
 
 Each Workflow owns its own Views directory.
 
-Generated views extend:
+Generated Workflow controllers return:
+
+```php
+return view('Users::Authentication.index');
+```
+
+Layout components are referenced using:
 
 ```blade
-@extends('Shared.Layout.app')
+@include('Shared::Layout.Components.head')
 ```
 
 All Blade files remain together with the Workflow.
@@ -742,14 +751,13 @@ All Blade files remain together with the Workflow.
 
 ## Routes
 
-Each Workflow owns its own Route file.
+Each Workflow owns its own route definition.
 
 ```text
-Routes
-└── Authentication.php
+AuthenticationRoutes.php
 ```
 
-MCF automatically registers Workflow routes through:
+MCF automatically registers all Workflow routes through:
 
 ```text
 app/MCF/mcf_routes.php
@@ -763,27 +771,13 @@ Each Workflow owns its own language directory.
 
 ```text
 Lang
-└── Authentication
 ```
 
 Translation files are optional.
 
+MCF recursively discovers translation files inside every Workflow's `Lang` directory.
+
 Keeping translations beside the Workflow improves discoverability.
-
----
-
-## README
-
-Each Workflow contains its own README.
-
-The README documents:
-
-- Business rules
-- Technical decisions
-- Development notes
-- Feature documentation
-
-Documentation remains next to the implementation.
 
 ---
 
@@ -791,7 +785,7 @@ Documentation remains next to the implementation.
 
 As applications grow, code becomes scattered across multiple directories.
 
-Finding the Controller, Request, Service, Routes, translations and documentation for one feature becomes increasingly difficult.
+Finding the Controller, Request, Service, Policy, Routes, translations, and documentation for one feature becomes increasingly difficult.
 
 MCF solves this by keeping every business capability completely self-contained.
 
@@ -847,7 +841,7 @@ Each Workflow should own one business responsibility.
 
 Example:
 
-Authentication
+**Authentication**
 
 - Login
 - Logout
@@ -942,7 +936,7 @@ It may be:
 - Replaced
 - Duplicated
 
-The default Shared/Layout exists only because the installer creates it.
+The default `Shared/Layout` exists only because the installer creates it.
 
 ---
 
@@ -969,6 +963,23 @@ Workflows describe business capabilities.
 ## Rule 10 — The Name Should Explain Itself
 
 A Workflow name should immediately describe its responsibility.
+
+---
+
+## Rule 11 — Every Workflow Uses the Same Foundation
+
+Every generated Workflow inherits from the MCF base classes.
+
+```text
+app/MCF/Base
+
+├── MfcController.php
+├── MfcRequest.php
+├── MfcService.php
+└── MfcPolicy.php
+```
+
+Every generated Workflow uses these base classes to provide a consistent architecture across the framework.
 
 ---
 
@@ -999,20 +1010,33 @@ Every MCF application follows the same structure.
 ```text
 Module
 └── Workflow
-    ├── Controller
-    ├── Request
-    ├── Service
-    ├── Policy
-    ├── Routes
+    ├── WorkflowController.php
+    ├── WorkflowRequest.php
+    ├── WorkflowService.php
+    ├── WorkflowPolicy.php
+    ├── WorkflowRoutes.php
     ├── Views
     ├── Lang
-    └── README
+    └── README.md
 ```
 
-Build applications around business capabilities.
+Every generated Workflow inherits from:
+
+```text
+MfcController
+MfcRequest
+MfcService
+MfcPolicy
+```
 
 Keep Workflows focused.
 
 Keep business logic inside Services.
 
+Keep validation inside Requests.
+
+Keep authorization inside Policies.
+
 Keep related functionality together.
+
+Build applications around business capabilities—not database tables.

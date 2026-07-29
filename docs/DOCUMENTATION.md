@@ -131,6 +131,11 @@ This keeps generated code predictable.
 
 ```text
 app/MCF
+├── Base
+│   ├── MfcController.php
+│   ├── MfcRequest.php
+│   ├── MfcService.php
+│   └── MfcPolicy.php
 ├── Database
 │   ├── Factories
 │   ├── Migrations
@@ -367,7 +372,7 @@ MCF registers framework routes through:
 app/MCF/mcf_routes.php
 ```
 
-Each Workflow contributes its own Route file.
+Each Workflow contributes its own route definition.
 
 Laravel's default route files remain clean.
 
@@ -392,14 +397,21 @@ using:
 php artisan mcf:make:workflow:layout Shared Layout
 ```
 
-Generated Workflows extend:
+Generated Workflow controllers return:
 
-```blade
-@extends('Shared.Layout.app')
+```php
+return view('Shared::Layout.index');
 ```
 
-Developers may rename, replace or recreate the Layout Workflow at any time.
+Generated Workflow views reference Layout components using:
 
+```blade
+@include('Shared::Layout.Components.head')
+```
+
+Developers may rename, replace, delete, recreate, or customize the Layout Workflow at any time.
+
+---
 
 ### Workflow Documentation
 
@@ -433,18 +445,14 @@ A Module groups related Workflows into a business domain.
 Example:
 
 ```text
-Users
-├── Authentication
-├── Profile
-└── User Management
-
-Shop
-├── Products
-├── Cart
-└── Checkout
+Modules
+├── Users
+├── Shop
+├── Reports
+└── System
 ```
 
-Modules organize Workflows.
+A Module organizes Workflows.
 
 Business logic belongs inside Workflows.
 
@@ -481,6 +489,10 @@ This keeps every feature completely self-contained.
 
 Layout is implemented exactly like every other Workflow.
 
+# Layout Workflow
+
+Layout is implemented exactly like every other Workflow.
+
 The installer creates:
 
 ```text
@@ -499,33 +511,34 @@ Generated structure:
 ```text
 Shared
 └── Layout
-    ├── Controllers
-    ├── Services
-    ├── Requests
-    ├── Policies
-    ├── Routes
+    ├── LayoutController.php
+    ├── LayoutRequest.php
+    ├── LayoutService.php
+    ├── LayoutPolicy.php
+    ├── LayoutRoutes.php
     ├── Lang
     └── Views
-        └── Layout
-            ├── app.blade.php
-            └── Components
-                ├── head.blade.php
-                ├── header.blade.php
-                ├── navbar.blade.php
-                ├── sidebar.blade.php
-                ├── footer.blade.php
-                ├── guest.blade.php
-                └── auth.blade.php
+        ├── index.blade.php
+        └── Components
+            ├── head.blade.php
+            ├── header.blade.php
+            ├── navbar.blade.php
+            ├── sidebar.blade.php
+            ├── footer.blade.php
+            ├── guest.blade.php
+            └── auth.blade.php
 ```
 
-Generated Workflow views extend:
+Generated Workflow controllers return:
+
+```php
+return view('Shared::Layout.index');
+```
+
+Generated Workflow views reference Layout components using:
 
 ```blade
-@extends('Shared.Layout.app')
-
-@section('content')
-
-@endsection
+@include('Shared::Layout.Components.head')
 ```
 
 Layout is not reserved.
@@ -560,21 +573,17 @@ MCF generates:
 Users
 └── Authentication
     ├── AuthenticationController.php
-    ├── Requests
-    │   └── AuthenticationRequest.php
-    ├── Services
-    │   └── AuthenticationService.php
-    ├── Policies
-    │   └── AuthenticationPolicy.php
+    ├── AuthenticationRequest.php
+    ├── AuthenticationService.php
+    ├── AuthenticationPolicy.php
+    ├── AuthenticationRoutes.php
     ├── Views
-    ├── Routes
-    │   └── Authentication.php
     ├── Lang
-    │   └── Authentication/
     └── README.md
 ```
 
----
+
+
 
 # Generated Components
 
@@ -590,15 +599,28 @@ Returns responses.
 
 Business logic belongs inside the Service.
 
+Every generated controller extends:
+
+
+```php
+MfcController
+```
+
 ---
 
 ## Service
 
 Contains the complete business logic for the Workflow.
 
+Every generated Service extends:
+
+```php
+MfcService
+```
+
 Example:
 
-AuthenticationService
+**AuthenticationService**
 
 - login()
 - logout()
@@ -613,6 +635,12 @@ Each Workflow owns one Request.
 
 Validation remains centralized.
 
+Every generated Request extends:
+
+```php
+MfcRequest
+```
+
 ---
 
 ## Policy
@@ -621,25 +649,37 @@ Authorization belongs to the Workflow.
 
 Every Workflow owns its own Policy.
 
+Every generated Policy extends:
+
+```php
+MfcPolicy
+```
+
 ---
 
 ## Views
 
 Every Workflow owns its own Views.
 
-Generated views extend:
+Generated controllers return:
+
+```php
+return view('Users::Authentication.index');
+```
+
+Layout components are referenced using:
 
 ```blade
-@extends('Shared.Layout.app')
+@include('Shared::Layout.Components.head')
 ```
 
 ---
 
 ## Routes
 
-Every Workflow owns one Route file.
+Every Workflow owns one route definition.
 
-MCF automatically registers every Workflow Route through:
+MCF automatically registers every Workflow route through:
 
 ```text
 app/MCF/mcf_routes.php
@@ -651,20 +691,12 @@ app/MCF/mcf_routes.php
 
 Every Workflow owns its own language directory.
 
+MCF automatically discovers translation files recursively from every Workflow's `Lang` directory.
+
 Translation files remain beside the Workflow.
 
 ---
 
-## README
-
-Every Workflow contains documentation describing:
-
-- Business rules
-- Development notes
-- Technical decisions
-- Feature documentation
-
----
 
 # Why This Architecture?
 
@@ -726,6 +758,7 @@ Avoid Workflows such as:
 
 These belong inside another Workflow.
 
+---
 
 ## Rule 4 — Follow the User Journey
 
@@ -777,6 +810,21 @@ Avoid:
 
 Workflow names should clearly describe their responsibility.
 
+## Rule 11 — Every Workflow Uses the Same Foundation
+
+Every generated Workflow inherits from the MCF base classes.
+
+```text
+app/MCF/Base
+
+├── MfcController.php
+├── MfcRequest.php
+├── MfcService.php
+└── MfcPolicy.php
+```
+
+This provides a consistent architecture across every generated Workflow.
+
 ---
 
 # The Golden Rule
@@ -788,13 +836,12 @@ Before creating a Workflow ask yourself:
 If the answer is a business capability, the Workflow is probably correct.
 
 If the answer is merely an action, it probably belongs inside another Workflow.
-````
+
+
+
 
 # Artisan Commands
 
-MCF provides dedicated Artisan generators.
-
----
 
 ## Create Module
 
@@ -987,14 +1034,18 @@ For the best development experience:
 - Build applications around Workflows.
 - Group Workflows into Modules.
 - Keep business logic inside Workflow Services.
-- Keep validation inside Requests and reusable Rules.
-- Keep authorization inside Policies.
+- Keep validation inside Workflow Requests and reusable Rules.
+- Keep authorization inside Workflow Policies.
 - Keep Workflow Views together.
 - Use the Layout Workflow for application layouts.
 - Use Laravel's `public/` directory for assets.
 - Use Laravel's `storage/` directory for uploaded files.
 - Register Workflow routes through `app/MCF/mcf_routes.php`.
 - Avoid mixing generated MCF components with Laravel's default directories.
+- Inherit generated Controllers from `MfcController`.
+- Inherit generated Requests from `MfcRequest`.
+- Inherit generated Services from `MfcService`.
+- Inherit generated Policies from `MfcPolicy`.
 
 ---
 
@@ -1020,4 +1071,7 @@ MCF extends Laravel with a Workflow-driven architecture centered around Modules 
 
 Rather than replacing Laravel, it builds on Laravel's strengths while providing a predictable, modular structure for large applications.
 
+Every generated Workflow inherits from a shared MCF foundation while remaining organized inside its Module.
+
 The result is an architecture that is easier to navigate, easier to maintain, and easier to scale as applications evolve.
+

@@ -16,6 +16,11 @@ Every directory has one clear responsibility and follows MCF's Workflow-driven a
 
 ```text
 app/MCF
+├── Base
+│   ├── MfcController.php
+│   ├── MfcRequest.php
+│   ├── MfcService.php
+│   └── MfcPolicy.php
 ├── Database
 │   ├── Factories
 │   ├── Migrations
@@ -31,6 +36,30 @@ app/MCF
 ```
 
 MCF intentionally keeps the framework structure compact and predictable.
+
+---
+
+# Base
+
+```text
+app/MCF/Base
+```
+
+## Purpose
+
+Contains the shared base classes used by every generated Workflow.
+
+Structure:
+
+```text
+Base
+├── MfcController.php
+├── MfcRequest.php
+├── MfcService.php
+└── MfcPolicy.php
+```
+
+These classes provide the common architectural foundation for generated Controllers, Requests, Services, and Policies while keeping framework behavior centralized.
 
 ---
 
@@ -273,14 +302,20 @@ Typical structure:
 
 ```text
 Authentication
-├── Controllers
-├── Services
-├── Requests
-├── Policies
-├── Routes
+├── AuthenticationController.php
+├── AuthenticationRequest.php
+├── AuthenticationService.php
+├── AuthenticationPolicy.php
+├── AuthenticationRoutes.php
 ├── Views
 ├── Lang
 └── README.md
+```
+
+Generated components inherit from the shared base classes located in:
+
+```text
+app/MCF/Base
 ```
 
 Each Workflow is completely self-contained.
@@ -304,6 +339,18 @@ Generated using:
 
 ```bash
 php artisan mcf:make:workflow:layout Shared Layout
+```
+
+Generated Controllers return:
+
+```php
+return view('Shared::Layout.index');
+```
+
+Shared Blade components are referenced using:
+
+```blade
+@include('Shared::Layout.Components.head')
 ```
 
 Responsibilities include:
@@ -376,9 +423,17 @@ app/MCF/mcf_routes.php
 
 ## Purpose
 
-Registers every Workflow Route file.
+Registers every Workflow Route definition.
 
-Each generated Workflow automatically registers its Route file through this central entry point.
+Each generated Workflow automatically registers its Route definition through this central entry point.
+
+Route names should follow the MCF naming convention.
+
+Example:
+
+```text
+shared.userManagement.index
+```
 
 Keeping Workflow Routes separate from Laravel's default routing helps large applications remain organized.
 
@@ -433,6 +488,8 @@ Every directory inside MCF follows the same architectural principles.
 - Workflow-Driven Organization
 - Modular Design
 - Laravel Compatibility
+
+Every generated Workflow builds on the shared foundation provided by the `Base` directory while remaining fully self-contained.
 
 Every directory exists for one purpose only.
 

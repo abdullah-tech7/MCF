@@ -21,7 +21,7 @@ The generated **Layout** is a normal Workflow created using:
 php artisan mcf:make:workflow:layout Shared Layout
 ```
 
-It is not reserved by the framework. You may modify it, rename it, delete it, recreate it, or create additional layout workflows whenever needed.
+It is not reserved by the framework. You may modify it, rename it, delete it, recreate it, or create additional Layout Workflows whenever needed.
 
 ---
 
@@ -37,25 +37,25 @@ php artisan mcf:make:module Users
 
 ## Workflows
 
-Create a workflow inside a module:
+Create a Workflow inside a Module:
 
 ```bash
 php artisan mcf:make:workflow Users Profile
 ```
 
-Create a CRUD workflow:
+Create a CRUD Workflow:
 
 ```bash
 php artisan mcf:make:workflow:crud Users UserManagement
 ```
 
-Create a layout workflow:
+Create a Layout Workflow:
 
 ```bash
 php artisan mcf:make:workflow:layout Shared Layout
 ```
 
-Remove a workflow:
+Remove a Workflow:
 
 ```bash
 php artisan mcf:remove:workflow Users Profile
@@ -221,7 +221,7 @@ This keeps MCF fully compatible with Laravel's native filesystem and deployment 
 | `mcf:make:module` | Create a new module |
 | `mcf:make:workflow` | Create a workflow |
 | `mcf:make:workflow:crud` | Create a CRUD workflow |
-| `mcf:make:workflow:layout` | Create a layout workflow |
+| `mcf:make:workflow:layout` | Create a Layout workflow |
 | `mcf:remove:workflow` | Remove a workflow |
 | `mcf:make:model` | Create a model |
 | `mcf:make:migration` | Create a migration |
@@ -314,30 +314,29 @@ Internally this is equivalent to:
 php artisan mcf:make:workflow:layout Shared Layout
 ```
 
-The generated layout contains the standard application layout and optional Blade components.
+The generated Layout Workflow contains the standard application layout and optional Blade components.
 
 Example:
 
 ```text
 Shared
 └── Layout
-    ├── Controllers
-    ├── Services
-    ├── Requests
-    ├── Policies
-    ├── Routes
+    ├── LayoutController.php
+    ├── LayoutRequest.php
+    ├── LayoutService.php
+    ├── LayoutPolicy.php
+    ├── LayoutRoutes.php
     ├── Lang
     └── Views
-        └── Layout
-            ├── app.blade.php
-            └── Components
-                ├── head.blade.php
-                ├── header.blade.php
-                ├── navbar.blade.php
-                ├── sidebar.blade.php
-                ├── footer.blade.php
-                ├── guest.blade.php
-                └── auth.blade.php
+        ├── index.blade.php
+        └── Components
+            ├── head.blade.php
+            ├── header.blade.php
+            ├── navbar.blade.php
+            ├── sidebar.blade.php
+            ├── footer.blade.php
+            ├── guest.blade.php
+            └── auth.blade.php
 ```
 
 The Layout Workflow is **not reserved** by MCF.
@@ -347,7 +346,7 @@ You are free to:
 - Rename it.
 - Delete it.
 - Recreate it.
-- Create multiple layout workflows.
+- Create multiple Layout Workflows.
 - Customize the generated Blade files.
 
 MCF treats Layout exactly like any other Workflow.
@@ -376,15 +375,12 @@ MCF generates the following structure.
 Users
 └── Authentication
     ├── AuthenticationController.php
-    ├── Requests
-    │   └── AuthenticationRequest.php
-    ├── Services
-    │   └── AuthenticationService.php
+    ├── AuthenticationRequest.php
+    ├── AuthenticationService.php
+    ├── AuthenticationPolicy.php
+    ├── AuthenticationRoutes.php
     ├── Views
-    ├── Routes
-    │   └── Authentication.php
     ├── Lang
-    │   └── Authentication/
     └── README.md
 ```
 
@@ -412,7 +408,7 @@ Its responsibilities are to:
 
 - Receive HTTP requests.
 - Coordinate the Workflow.
-- Call the Service.
+- Delegate business logic to the Service.
 - Return the response.
 
 Controllers should remain small.
@@ -425,15 +421,13 @@ Business logic should never be written inside Controllers.
 
 Each Workflow owns one Request class.
 
-Unlike traditional Laravel applications, MCF does not generate one Request for every action.
-
-Instead, every validation related to the Workflow is centralized inside one predictable file.
+All validation related to the Workflow is centralized inside the Workflow Request.
 
 ```text
 AuthenticationRequest.php
 ```
 
-Whether the Workflow contains Login, Logout, Reset Password or any other operation, all validation belongs to the same Request class.
+Whether the Workflow contains Login, Logout, Reset Password, or any other operation, all validation belongs to the same Request class.
 
 This keeps validation easy to locate and avoids unnecessary file fragmentation.
 
@@ -456,38 +450,47 @@ Instead of creating multiple Service classes for one feature, all business logic
 
 ---
 
+## AuthenticationPolicy
+
+Each Workflow owns one Policy class.
+
+The Policy centralizes authorization logic for the Workflow.
+
+Authorization remains predictable and easy to locate.
+
+---
+
 ## Views
 
 Every Workflow owns its own Views directory.
 
 All Blade files related to that Workflow remain together.
 
-Generated workflows extend the default layout:
+Generated Workflows return:
 
-```blade
-@extends('Shared.Layout.app')
-
-@section('content')
-
-@endsection
+```php
+return view('Users::Authentication.index');
 ```
 
-Instead of searching through one large global Views directory, everything for Authentication stays inside the Authentication Workflow.
+Layout components are referenced using:
+
+```blade
+@include('Shared::Layout.Components.head')
+```
+
+Instead of searching through one large global Views directory, everything related to Authentication stays inside the Authentication Workflow.
 
 ---
 
 ## Routes
 
-Each Workflow owns its own Route file.
+Each Workflow owns its own route definition.
 
 ```text
-Routes
-└── Authentication.php
+AuthenticationRoutes.php
 ```
 
-This prevents route files from becoming large and difficult to maintain.
-
-MCF automatically registers every generated Workflow route inside:
+MCF automatically registers every generated Workflow route from:
 
 ```text
 app/MCF/mcf_routes.php
@@ -503,31 +506,11 @@ Each Workflow owns its own language directory.
 
 ```text
 Lang
-└── Authentication
 ```
 
-Translation files are optional.
-
-If your application uses JSON translation files, MCF automatically discovers and merges them into the application's translation system.
+MCF recursively discovers translation files inside Workflow Lang directories.
 
 Keeping translations inside the Workflow allows every feature to remain completely self-contained.
-
----
-
-## README
-
-Every Workflow contains its own README file.
-
-The README documents the feature itself.
-
-It may include:
-
-- Business rules.
-- Development notes.
-- Technical decisions.
-- Feature documentation.
-
-Documentation stays next to the code instead of becoming outdated elsewhere.
 
 ---
 
@@ -535,7 +518,7 @@ Documentation stays next to the code instead of becoming outdated elsewhere.
 
 As applications grow, code often becomes scattered across many unrelated directories.
 
-Finding the Controller, Request, Service, Routes, translations, and documentation for a single feature may require searching the entire project.
+Finding the Controller, Request, Service, Policy, Routes, Views, translations, and documentation for a single feature may require searching the entire project.
 
 MCF eliminates this problem.
 
@@ -548,6 +531,7 @@ Developers always know where to find:
 - Controller
 - Request
 - Service
+- Policy
 - Views
 - Routes
 - Language files
@@ -559,6 +543,7 @@ There is no searching.
 
 Every Workflow follows exactly the same architecture.
 
+---
 
 # Workflow Rules
 
@@ -638,7 +623,7 @@ Since the user starts from **User Management**, Export belongs to that Workflow.
 
 ## Rule 5 — Keep Related Actions Together
 
-If multiple actions share the same business context, permissions, pages or data, they belong to the same Workflow.
+If multiple actions share the same business context, permissions, pages, or data, they belong to the same Workflow.
 
 Example:
 
@@ -688,7 +673,7 @@ This relationship is mandatory throughout MCF.
 
 ## Rule 8 — Layout Is Just Another Workflow
 
-The Layout Workflow follows the same architecture as every other Workflow.
+The Layout Workflow follows exactly the same architecture as every other Workflow.
 
 It can be:
 
@@ -700,7 +685,7 @@ It can be:
 
 MCF does not reserve any special location for layouts.
 
-The default Shared/Layout Workflow exists only because the installer creates it for convenience.
+The default `Shared/Layout` Workflow exists only because the installer creates it for convenience.
 
 ---
 
@@ -733,6 +718,23 @@ Example:
 **Authentication**
 
 A developer immediately understands what business capability this Workflow implements.
+
+---
+
+## Rule 11 — Every Workflow Uses the Same Foundation
+
+Every generated Workflow inherits from the MCF base classes.
+
+```text
+app/MCF/Base
+
+├── MfcController.php
+├── MfcRequest.php
+├── MfcService.php
+└── MfcPolicy.php
+```
+
+Every generated Workflow uses these base classes to provide a consistent architecture across the framework.
 
 ---
 
@@ -771,19 +773,32 @@ Every MCF application follows the same architecture:
 ```text
 Module
 └── Workflow
-    ├── Controller
-    ├── Request
-    ├── Service
-    ├── Policy
-    ├── Routes
+    ├── WorkflowController.php
+    ├── WorkflowRequest.php
+    ├── WorkflowService.php
+    ├── WorkflowPolicy.php
+    ├── WorkflowRoutes.php
     ├── Views
     ├── Lang
-    └── README
+    └── README.md
+```
+
+Every generated Workflow inherits from:
+
+```text
+MfcController
+MfcRequest
+MfcService
+MfcPolicy
 ```
 
 Keep Workflows focused.
 
 Keep business logic inside Services.
+
+Keep validation inside Requests.
+
+Keep authorization inside Policies.
 
 Keep related functionality together.
 

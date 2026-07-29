@@ -94,6 +94,12 @@ When communication is required, expose clear interfaces rather than accessing an
 
 Controllers should coordinate HTTP requests.
 
+Every generated Controller should inherit from:
+
+```text
+MfcController
+```
+
 Their responsibilities are limited to:
 
 - Receive requests.
@@ -111,6 +117,12 @@ Controllers should remain small and predictable.
 
 Each Workflow owns one Service.
 
+Every generated Service should inherit from:
+
+```text
+MfcService
+```
+
 That Service contains the business logic for the Workflow.
 
 Avoid splitting one Workflow across multiple unrelated Services unless there is a clear architectural reason.
@@ -122,6 +134,12 @@ Keeping Workflow logic together improves discoverability.
 # Keep Requests Centralized
 
 Each Workflow owns a single Request class.
+
+Every generated Request should inherit from:
+
+```text
+MfcRequest
+```
 
 Instead of generating multiple Request classes for every action, centralize Workflow validation in one predictable location.
 
@@ -135,6 +153,12 @@ Authorization belongs to the Workflow.
 
 Each Workflow should own its own Policy.
 
+Every generated Policy should inherit from:
+
+```text
+MfcPolicy
+```
+
 Keeping authorization together with the business capability makes security rules easier to understand and maintain.
 
 ---
@@ -145,10 +169,16 @@ Every Workflow owns its own Views directory.
 
 Avoid creating one large global collection of Blade files.
 
-Generated Workflows extend the application's Layout Workflow.
+Generated Controllers should return:
+
+```php
+return view('Users::Authentication.index');
+```
+
+Shared Layout components should be referenced using:
 
 ```blade
-@extends('Shared.Layout.app')
+@include('Shared::Layout.Components.head')
 ```
 
 Keeping Views inside the Workflow keeps every feature self-contained.
@@ -377,5 +407,7 @@ Applications built with MCF should strive to be:
 - Highly Cohesive
 - Easy to Navigate
 - Consistent with Laravel
+
+Follow the generated MCF structure, inherit from the provided base classes, and keep each Workflow self-contained.
 
 Following these practices helps keep applications understandable, scalable, and maintainable throughout their lifecycle.

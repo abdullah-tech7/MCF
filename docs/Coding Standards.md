@@ -87,6 +87,12 @@ Workflow names should describe what the application does, not what the database 
 
 Each Workflow owns one Controller.
 
+Every generated Controller extends:
+
+```text
+MfcController
+```
+
 Controllers coordinate HTTP requests.
 
 Allowed responsibilities:
@@ -105,10 +111,10 @@ Controllers should never contain:
 - Authorization rules.
 - Long conditional logic.
 
-Example:
+Generated Controllers should return Workflow Views using the MCF namespace:
 
-```text
-AuthenticationController
+```php
+return view('Users::Authentication.index');
 ```
 
 Controllers should remain small.
@@ -118,6 +124,12 @@ Controllers should remain small.
 # Services
 
 Every Workflow owns one Service.
+
+Every generated Service extends:
+
+```text
+MfcService
+```
 
 The Service contains all business logic for that Workflow.
 
@@ -141,6 +153,12 @@ Services should never:
 
 Every Workflow owns one Request.
 
+Every generated Request extends:
+
+```text
+MfcRequest
+```
+
 Responsibilities:
 
 - Validation.
@@ -159,6 +177,12 @@ app/MCF/Rules
 # Policies
 
 Every Workflow owns one Policy.
+
+Every generated Policy extends:
+
+```text
+MfcPolicy
+```
 
 Policies determine whether an action is permitted.
 
@@ -209,10 +233,16 @@ Views must never contain:
 - Authorization logic.
 - Service calls.
 
-Generated Workflow views extend:
+Workflow Views are returned using:
+
+```php
+return view('Users::Authentication.index');
+```
+
+Shared Layout components should be referenced using:
 
 ```blade
-@extends('Shared.Layout.app')
+@include('Shared::Layout.Components.head')
 ```
 
 ---
@@ -273,8 +303,9 @@ Example:
 
 ```text
 Lang
-└── Authentication
 ```
+
+MCF automatically discovers translation files recursively from every Workflow's `Lang` directory.
 
 Language keys should be descriptive.
 
@@ -294,7 +325,7 @@ Avoid unnecessary nesting.
 
 # Routes
 
-Each Workflow owns one Route file.
+Each Workflow owns one Route definition.
 
 Route files should contain only route definitions.
 
@@ -304,6 +335,14 @@ Workflow Routes are automatically registered through:
 
 ```text
 app/MCF/mcf_routes.php
+```
+
+Route names should follow the MCF naming convention.
+
+Example:
+
+```text
+shared.userManagement.index
 ```
 
 ---
@@ -450,6 +489,12 @@ Never place business logic inside:
 
 Reusable functionality should be extracted into shared framework components.
 
+Use the shared MCF foundation located in:
+
+```text
+app/MCF/Base
+```
+
 Avoid duplicating business logic across multiple Workflows.
 
 Prefer reuse over duplication.
@@ -485,14 +530,22 @@ MCF extends Laravel conventions rather than replacing them.
 2. One Workflow represents one business capability.
 3. One Workflow owns one Controller.
 4. One Workflow owns one Service.
-5. Controllers remain thin.
-6. Services contain business logic.
-7. Requests contain validation.
-8. Policies contain authorization.
-9. Models represent entities.
-10. Views handle presentation only.
-11. Layout is implemented as a Workflow.
-12. Assets use Laravel's standard `public/` directory.
-13. Uploaded files use Laravel's `storage/` directory.
-14. Shared functionality should never be duplicated.
-15. Every class should have one clear responsibility.
+5. One Workflow owns one Request.
+6. One Workflow owns one Policy.
+7. Generated Controllers inherit from `MfcController`.
+8. Generated Requests inherit from `MfcRequest`.
+9. Generated Services inherit from `MfcService`.
+10. Generated Policies inherit from `MfcPolicy`.
+11. Controllers remain thin.
+12. Services contain business logic.
+13. Requests contain validation.
+14. Policies contain authorization.
+15. Models represent entities.
+16. Views handle presentation only.
+17. Layout is implemented as a Workflow.
+18. Use `Shared::Layout.Components.*` for shared Blade components.
+19. Workflow routes are registered through `app/MCF/mcf_routes.php`.
+20. Assets use Laravel's standard `public/` directory.
+21. Uploaded files use Laravel's `storage/` directory.
+22. Shared functionality should never be duplicated.
+23. Every class should have one clear responsibility.

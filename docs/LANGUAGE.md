@@ -1,32 +1,34 @@
-
 # MCF Language System
 
 MCF provides a modular translation system that allows every Workflow to manage its own language files while remaining fully compatible with Laravel's JSON translation system.
 
-## Directory Structure
+---
 
-After creating a Workflow, simply create a folder with the Workflow name inside `Lang`, then add one or more JSON language files.
+# Directory Structure
+
+Each Workflow owns its own `Lang` directory.
 
 Example:
 
 ```text
 Modules/
 └── Users/
-    └── Lang/
-        ├── Profile/
-        │   ├── ar.json
-        │   └── en.json
-        │
-        └── UserManagement/
+    ├── Profile/
+    │   └── Lang/
+    │       ├── ar.json
+    │       └── en.json
+    │
+    └── UserManagement/
+        └── Lang/
             ├── ar.json
             └── en.json
 ```
 
-Each Workflow owns its own translations independently.
+Each Workflow manages its own translations independently.
 
 ---
 
-## JSON Files
+# JSON Files
 
 Each language file contains standard Laravel JSON translations.
 
@@ -52,23 +54,21 @@ Example (`en.json`):
 
 ---
 
-## Automatic Discovery
+# Automatic Discovery
 
-MCF automatically scans every module and every Workflow under the `Lang` directory.
+MCF automatically scans every Workflow's `Lang` directory recursively during application boot.
 
-All JSON files are discovered recursively and grouped by locale before the application starts. :contentReference[oaicite:0]{index=0}
+No configuration or manual registration is required.
 
-No configuration or registration is required.
-
-Simply create the JSON files and MCF will load them automatically.
+Simply create the JSON files inside a Workflow's `Lang` directory and MCF will discover them automatically.
 
 ---
 
-## Automatic Merge
+# Automatic Merge
 
-All discovered translations are merged into Laravel's JSON translation loader.
+All discovered JSON translation files are grouped by locale and merged into Laravel's native JSON translation loader.
 
-This allows translations from every Workflow to behave exactly like native Laravel JSON language files. :contentReference[oaicite:1]{index=1}
+Translations behave exactly like Laravel's built-in JSON translations.
 
 You can use them normally:
 
@@ -80,11 +80,11 @@ __('Delete');
 
 ---
 
-## Duplicate Keys
+# Duplicate Keys
 
-MCF prevents conflicting translations.
+MCF protects applications from conflicting translations.
 
-If the same translation key exists more than once for the same locale with different values, an exception is thrown during application boot to prevent unexpected behavior. :contentReference[oaicite:2]{index=2}
+If the same translation key exists more than once for the same locale with different values, MCF throws an exception during application boot.
 
 Example (invalid):
 
@@ -104,19 +104,41 @@ Workflow B
 }
 ```
 
-This will generate an exception because the same key has two different values.
+This produces an exception because the same translation key has two different values.
+
+Identical values are allowed.
+
+Example:
+
+Workflow A
+
+```json
+{
+    "Save": "Save"
+}
+```
+
+Workflow B
+
+```json
+{
+    "Save": "Save"
+}
+```
+
+Since both values are identical, no conflict exists.
 
 ---
 
-## Supported Languages
+# Supported Languages
 
 MCF does not require language registration.
 
-Any locale is supported automatically by creating its JSON file.
+Any locale is supported automatically by creating its corresponding JSON file.
 
 Examples:
 
-```
+```text
 ar.json
 en.json
 fr.json
@@ -127,13 +149,37 @@ ja.json
 
 ---
 
-## Benefits
+# Laravel Compatibility
 
-- Modular translations for every Workflow.
-- Automatic Workflow discovery.
-- Recursive language scanning.
+MCF extends Laravel's native JSON translation system.
+
+No custom translation API is introduced.
+
+Laravel helpers continue to work normally.
+
+Examples:
+
+```php
+__('Profile');
+
+trans('Profile');
+
+@lang('Profile');
+```
+
+Existing Laravel localization features continue to function without modification.
+
+---
+
+# Benefits
+
+- Each Workflow owns its own translations.
+- Recursive discovery of every Workflow's `Lang` directory.
+- Automatic locale grouping.
 - Zero manual registration.
 - Fully compatible with Laravel JSON translations.
 - Duplicate key protection.
-- Supports unlimited modules, workflows and languages.
-````
+- Supports unlimited Modules.
+- Supports unlimited Workflows.
+- Supports unlimited languages.
+- Preserves Laravel's native localization workflow.

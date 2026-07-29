@@ -104,6 +104,26 @@ php artisan mcf:make:workflow Users Authentication
 
 Creates a standard Workflow inside the specified Module.
 
+Generated Workflow structure:
+
+```text
+Authentication
+├── AuthenticationController.php
+├── AuthenticationRequest.php
+├── AuthenticationService.php
+├── AuthenticationPolicy.php
+├── AuthenticationRoutes.php
+├── Views
+├── Lang
+└── README.md
+```
+
+Generated components inherit from the shared MCF base classes located in:
+
+```text
+app/MCF/Base
+```
+
 ---
 
 # CRUD Workflow Generator
@@ -121,6 +141,8 @@ php artisan mcf:make:workflow:crud Users UserManagement
 ```
 
 Creates a Workflow preconfigured for CRUD operations.
+
+The generated Workflow follows the same architecture as every standard Workflow while including CRUD scaffolding.
 
 ---
 
@@ -144,16 +166,27 @@ Generated structure includes:
 
 ```text
 Views
-└── Layout
-    ├── app.blade.php
-    └── Components
-        ├── head.blade.php
-        ├── header.blade.php
-        ├── navbar.blade.php
-        ├── sidebar.blade.php
-        ├── footer.blade.php
-        ├── guest.blade.php
-        └── auth.blade.php
+├── index.blade.php
+└── Components
+    ├── head.blade.php
+    ├── header.blade.php
+    ├── navbar.blade.php
+    ├── sidebar.blade.php
+    ├── footer.blade.php
+    ├── guest.blade.php
+    └── auth.blade.php
+```
+
+Generated Controllers return:
+
+```php
+return view('Shared::Layout.index');
+```
+
+Layout components are referenced using:
+
+```blade
+@include('Shared::Layout.Components.head')
 ```
 
 This command is also used internally by the MCF installer.
@@ -408,6 +441,8 @@ Every MCF command follows the same design philosophy.
 - Minimal boilerplate.
 - No hidden side effects.
 
+Workflow generators create components that inherit from the shared MCF foundation classes.
+
 Commands generate only the component they are responsible for unless explicitly documented otherwise.
 
 ---
@@ -416,4 +451,6 @@ Commands generate only the component they are responsible for unless explicitly 
 
 MCF's CLI is intentionally small, predictable, and focused.
 
-Every command has one clear responsibility, follows Laravel conventions, and generates components within the MCF architecture without introducing unnecessary complexity.
+Every command has one clear responsibility, follows Laravel conventions, and generates components within the MCF architecture.
+
+Workflow generators produce a complete self-contained Workflow built on top of the shared MCF base classes while preserving Laravel's conventions and keeping the project structure predictable.
