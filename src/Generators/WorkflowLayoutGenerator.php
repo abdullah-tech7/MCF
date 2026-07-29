@@ -168,10 +168,10 @@ class WorkflowLayoutGenerator
             $moduleName,
             $workflowName,
             lcfirst($workflowName),
-            "App\\MCF\\Modules\\{$moduleName}\\Backend\\{$workflowName}",
-            "App\\MCF\\Modules\\{$moduleName}\\Backend\\{$workflowName}",
-            "App\\MCF\\Modules\\{$moduleName}\\Backend\\{$workflowName}",
-            "App\\MCF\\Modules\\{$moduleName}\\Backend\\{$workflowName}",
+            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}\\Backend",
+            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}\\Backend",
+            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}\\Backend",
+            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}\\Backend",
         ], $content);
 
         $this->files->put($destination, $content);
@@ -191,7 +191,7 @@ class WorkflowLayoutGenerator
 
         $content = $this->files->get($routesFile);
 
-        $require = "require_once __DIR__.'/Modules/{$moduleName}/{$workflowName}/{$workflowName}Routes.php';";
+        $require = "require_once __DIR__.'/Modules/{$moduleName}/{$workflowName}/Backend/{$workflowName}Routes.php';";
 
         if (str_contains($content, $require)) {
             return;

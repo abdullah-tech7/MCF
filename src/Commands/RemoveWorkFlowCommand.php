@@ -88,7 +88,7 @@ class RemoveWorkflowCommand extends Command
 
         $content = $this->files->get($routesFile);
 
-        $require = "require_once __DIR__.'/Modules/{$moduleName}/{$workflowName}/{$workflowName}Routes.php';";
+        $require = "require_once __DIR__.'/Modules/{$moduleName}/{$workflowName}/Backend/{$workflowName}Routes.php';";
 
         $content = str_replace(
             [
