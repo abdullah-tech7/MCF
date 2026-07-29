@@ -2,9 +2,9 @@
 
 namespace {{ RequestNamespace }};
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\MCF\Base\MfcRequest;
 
-class {{ WorkflowName }}Request extends FormRequest
+class {{ WorkflowName }}Request extends MfcRequest
 {
     public function authorize(): bool
     {

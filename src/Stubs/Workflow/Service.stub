@@ -2,6 +2,8 @@
 
 namespace {{ ServiceNamespace }};
 
-class {{ WorkflowName }}Service
+use App\MCF\Base\MfcService;
+
+class {{ WorkflowName }}Service extends MfcService
 {
 }

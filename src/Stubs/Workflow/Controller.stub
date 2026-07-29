@@ -2,10 +2,12 @@
 
 namespace {{ ControllerNamespace }};
 
+use App\MCF\Base\MfcController;
 use Illuminate\Contracts\View\View;
 
-class {{ WorkflowName }}Controller
+class {{ WorkflowName }}Controller extends MfcController
 {
+
     public function index(): View
     {
         return view('{{ ModuleName }}::{{ WorkflowName }}.index');

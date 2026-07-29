@@ -47,6 +47,8 @@ class InstallGenerator
             );
         }
 
+        $this->publishBase($basePath);
+
         $this->publishRoutes($basePath);
 
         $this->updateBootstrapApp($basePath);
@@ -157,6 +159,21 @@ protected function createQuickStart(string $basePath): void
             }
         }
     }
+
+    protected function publishBase(string $basePath): void
+{
+    $source = dirname(__DIR__, 2) . '/src/Base';
+
+    $destination = $basePath . '/app/MCF/Base';
+
+    if (! $this->files->isDirectory($source)) {
+        return;
+    }
+
+    $this->files->ensureDirectoryExists($destination);
+
+    $this->files->copyDirectory($source, $destination);
+}
 
 
 

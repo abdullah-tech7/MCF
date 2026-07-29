@@ -2,6 +2,8 @@
 
 namespace {{ PolicyNamespace }};
 
-class {{ WorkflowName }}Policy
+use App\MCF\Base\MfcPolicy;
+
+class {{ WorkflowName }}Policy extends MfcPolicy
 {
 }

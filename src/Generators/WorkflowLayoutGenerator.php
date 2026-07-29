@@ -133,8 +133,8 @@ class WorkflowLayoutGenerator
             'navbar.stub' => 'Components/navbar.blade.php',
             'sidebar.stub' => 'Components/sidebar.blade.php',
             'footer.stub' => 'Components/footer.blade.php',
-            'guest.stub' => 'guest.blade.php',
-            'auth.stub' => 'auth.blade.php',
+            'guest.stub' => 'Components/guest.blade.php',
+            'auth.stub' => 'Components/auth.blade.php',
         ];
 
         foreach ($views as $stub => $view) {
