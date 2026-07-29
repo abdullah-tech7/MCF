@@ -22,6 +22,8 @@ use MCF\Commands\MakeWorkflowCrudCommand;
 use MCF\Commands\RemoveWorkFlowCommand;
 use MCF\Commands\MakeWorkflowLayoutCommand;
 use MCF\Commands\MakeMiddlewareCommand;
+use MCF\Commands\MakeLangCommand;
+use MCF\Commands\RemoveLangCommand;
 
 class MCFServiceProvider extends ServiceProvider
 {
@@ -84,7 +86,9 @@ class MCFServiceProvider extends ServiceProvider
             MakeSeederCommand::class,
             MakeMailCommand::class,
             MakeRuleCommand::class,
-            MakeNotificationCommand::class
+            MakeNotificationCommand::class,
+            RemoveLangCommand::class,
+            MakeLangCommand::class
    
         ]);
     }
