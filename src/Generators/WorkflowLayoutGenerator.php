@@ -44,14 +44,10 @@ class WorkflowLayoutGenerator
         string $workflowName
     ): void {
         $directories = [
-            'Controllers',
-            'Services',
-            'Requests',
-            'Policies',
-            'Routes',
-            "Lang/{$workflowName}",
-            "Views/{$workflowName}",
-            "Views/{$workflowName}/Components",
+            $workflowName,
+            "{$workflowName}/Lang",
+            "{$workflowName}/Views",
+            "{$workflowName}/Views/Components",
         ];
 
         foreach ($directories as $directory) {
@@ -68,7 +64,7 @@ class WorkflowLayoutGenerator
     ): void {
         $this->copyStub(
             'Controller.stub',
-            "{$modulePath}/Controllers/{$workflowName}Controller.php",
+            "{$modulePath}/{$workflowName}/{$workflowName}Controller.php",
             $moduleName,
             $workflowName
         );
@@ -81,7 +77,7 @@ class WorkflowLayoutGenerator
     ): void {
         $this->copyStub(
             'Service.stub',
-            "{$modulePath}/Services/{$workflowName}Service.php",
+            "{$modulePath}/{$workflowName}/{$workflowName}Service.php",
             $moduleName,
             $workflowName
         );
@@ -94,7 +90,7 @@ class WorkflowLayoutGenerator
     ): void {
         $this->copyStub(
             'Request.stub',
-            "{$modulePath}/Requests/{$workflowName}Request.php",
+            "{$modulePath}/{$workflowName}/{$workflowName}Request.php",
             $moduleName,
             $workflowName
         );
@@ -107,7 +103,7 @@ class WorkflowLayoutGenerator
     ): void {
         $this->copyStub(
             'Policy.stub',
-            "{$modulePath}/Policies/{$workflowName}Policy.php",
+            "{$modulePath}/{$workflowName}/{$workflowName}Policy.php",
             $moduleName,
             $workflowName
         );
@@ -120,7 +116,7 @@ class WorkflowLayoutGenerator
     ): void {
         $this->copyStub(
             'Route.stub',
-            "{$modulePath}/Routes/{$workflowName}.php",
+            "{$modulePath}/{$workflowName}/{$workflowName}Routes.php",
             $moduleName,
             $workflowName
         );
@@ -137,14 +133,14 @@ class WorkflowLayoutGenerator
             'navbar.stub' => 'Components/navbar.blade.php',
             'sidebar.stub' => 'Components/sidebar.blade.php',
             'footer.stub' => 'Components/footer.blade.php',
-            'guest.stub' => 'Components/guest.blade.php',
-            'auth.stub' => 'Components/auth.blade.php',
+            'guest.stub' => 'guest.blade.php',
+            'auth.stub' => 'auth.blade.php',
         ];
 
         foreach ($views as $stub => $view) {
             $this->files->copy(
                 __DIR__ . "/../Stubs/Layout/{$stub}",
-                "{$modulePath}/Views/{$workflowName}/{$view}"
+                "{$modulePath}/{$workflowName}/Views/{$view}"
             );
         }
     }
@@ -162,6 +158,7 @@ class WorkflowLayoutGenerator
         $content = str_replace([
             '{{ ModuleName }}',
             '{{ WorkflowName }}',
+            '{{ WorkflowRoute }}',
             '{{ ControllerNamespace }}',
             '{{ ServiceNamespace }}',
             '{{ RequestNamespace }}',
@@ -169,10 +166,11 @@ class WorkflowLayoutGenerator
         ], [
             $moduleName,
             $workflowName,
-            "App\\MCF\\Modules\\{$moduleName}\\Controllers",
-            "App\\MCF\\Modules\\{$moduleName}\\Services",
-            "App\\MCF\\Modules\\{$moduleName}\\Requests",
-            "App\\MCF\\Modules\\{$moduleName}\\Policies",
+            lcfirst($workflowName),
+            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
+            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
+            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
+            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
         ], $content);
 
         $this->files->put($destination, $content);
@@ -192,7 +190,7 @@ class WorkflowLayoutGenerator
 
         $content = $this->files->get($routesFile);
 
-        $require = "require_once __DIR__.'/Modules/{$moduleName}/Routes/{$workflowName}.php';";
+        $require = "require_once __DIR__.'/Modules/{$moduleName}/{$workflowName}/{$workflowName}Routes.php';";
 
         if (str_contains($content, $require)) {
             return;

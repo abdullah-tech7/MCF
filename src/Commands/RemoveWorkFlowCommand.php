@@ -39,6 +39,14 @@ class RemoveWorkflowCommand extends Command
             );
         }
 
+        $workflowPath = "{$modulePath}/{$workflowName}";
+
+        if (! $this->files->exists($workflowPath)) {
+            throw new RuntimeException(
+                "Workflow [{$workflowName}] does not exist."
+            );
+        }
+
         if (
             ! $this->option('force') &&
             ! $this->confirm(
@@ -50,14 +58,7 @@ class RemoveWorkflowCommand extends Command
             return self::SUCCESS;
         }
 
-        $this->deleteFile("{$modulePath}/Controllers/{$workflowName}Controller.php");
-        $this->deleteFile("{$modulePath}/Services/{$workflowName}Service.php");
-        $this->deleteFile("{$modulePath}/Requests/{$workflowName}Request.php");
-        $this->deleteFile("{$modulePath}/Policies/{$workflowName}Policy.php");
-        $this->deleteFile("{$modulePath}/Routes/{$workflowName}.php");
-
-        $this->deleteDirectory("{$modulePath}/Views/{$workflowName}");
-        $this->deleteDirectory("{$modulePath}/Lang/{$workflowName}");
+        $this->deleteDirectory($workflowPath);
 
         $this->removeRoute($moduleName, $workflowName);
 
@@ -66,13 +67,6 @@ class RemoveWorkflowCommand extends Command
         );
 
         return self::SUCCESS;
-    }
-
-    protected function deleteFile(string $path): void
-    {
-        if ($this->files->exists($path)) {
-            $this->files->delete($path);
-        }
     }
 
     protected function deleteDirectory(string $path): void
@@ -94,7 +88,7 @@ class RemoveWorkflowCommand extends Command
 
         $content = $this->files->get($routesFile);
 
-        $require = "require_once __DIR__.'/Modules/{$moduleName}/Routes/{$workflowName}.php';";
+        $require = "require_once __DIR__.'/Modules/{$moduleName}/{$workflowName}/{$workflowName}Routes.php';";
 
         $content = str_replace(
             [
@@ -106,6 +100,6 @@ class RemoveWorkflowCommand extends Command
             $content
         );
 
-        $this->files->put($routesFile, $content);
+        $this->files->put($routesFile, trim($content) . PHP_EOL);
     }
 }

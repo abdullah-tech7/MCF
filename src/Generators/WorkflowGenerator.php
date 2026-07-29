@@ -58,7 +58,7 @@ class WorkflowGenerator
         string $moduleName,
         string $workflowName
     ): void {
-        $this->copyStub(
+        $this->(
             'Controller.stub',
             "{$modulePath}/{$workflowName}/{$workflowName}Controller.php",
             $moduleName,
@@ -71,7 +71,7 @@ class WorkflowGenerator
         string $moduleName,
         string $workflowName
     ): void {
-        $this->copyStub(
+        $this->(
             'Service.stub',
             "{$modulePath}/{$workflowName}/{$workflowName}Service.php",
             $moduleName,
@@ -84,7 +84,7 @@ class WorkflowGenerator
         string $moduleName,
         string $workflowName
     ): void {
-        $this->copyStub(
+        $this->(
             'Request.stub',
             "{$modulePath}/{$workflowName}/{$workflowName}Request.php",
             $moduleName,
@@ -97,7 +97,7 @@ class WorkflowGenerator
         string $moduleName,
         string $workflowName
     ): void {
-        $this->copyStub(
+        $this->(
             'Policy.stub',
             "{$modulePath}/{$workflowName}/{$workflowName}Policy.php",
             $moduleName,
@@ -110,7 +110,7 @@ class WorkflowGenerator
         string $moduleName,
         string $workflowName
     ): void {
-        $this->copyStub(
+        $this->(
             'Route.stub',
             "{$modulePath}/{$workflowName}/{$workflowName}Routes.php",
             $moduleName,
@@ -128,7 +128,7 @@ class WorkflowGenerator
         );
     }
 
-    protected function copyStub(
+    protected function (
         string $stub,
         string $destination,
         string $moduleName,
@@ -139,21 +139,23 @@ class WorkflowGenerator
             __DIR__ . "/../Stubs/Workflow/{$stub}"
         );
 
-        $content = str_replace([
-            '{{ ModuleName }}',
-            '{{ WorkflowName }}',
-            '{{ ControllerNamespace }}',
-            '{{ ServiceNamespace }}',
-            '{{ RequestNamespace }}',
-            '{{ PolicyNamespace }}',
-        ], [
-            $moduleName,
-            $workflowName,
-            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
-            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
-            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
-            "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
-        ], $content);
+$content = str_replace([
+    '{{ ModuleName }}',
+    '{{ WorkflowName }}',
+    '{{ WorkflowRoute }}',
+    '{{ ControllerNamespace }}',
+    '{{ ServiceNamespace }}',
+    '{{ RequestNamespace }}',
+    '{{ PolicyNamespace }}',
+], [
+    $moduleName,
+    $workflowName,
+    lcfirst($workflowName),
+    "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
+    "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
+    "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
+    "App\\MCF\\Modules\\{$moduleName}\\{$workflowName}",
+], $content);
 
         $this->files->put($destination, $content);
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MCF\Generators;
 
+use RuntimeException;
+
 class WorkflowCrudGenerator extends WorkflowGenerator
 {
     public function generate(string $moduleName, string $workflowName): void
@@ -20,7 +22,6 @@ class WorkflowCrudGenerator extends WorkflowGenerator
         $this->generateRoute($modulePath, $moduleName, $workflowName);
         $this->registerRoute($moduleName, $workflowName);
 
-
         $this->generateIndexView($modulePath, $workflowName);
         $this->generateCreateView($modulePath, $workflowName);
         $this->generateEditView($modulePath, $workflowName);
@@ -34,7 +35,7 @@ class WorkflowCrudGenerator extends WorkflowGenerator
     ): void {
         $this->copyStub(
             'ControllerCrud.stub',
-            "{$modulePath}/Controllers/{$workflowName}Controller.php",
+            "{$modulePath}/{$workflowName}/{$workflowName}Controller.php",
             $moduleName,
             $workflowName
         );
@@ -46,7 +47,7 @@ class WorkflowCrudGenerator extends WorkflowGenerator
     ): void {
         $this->files->copy(
             __DIR__ . '/../Stubs/Workflow/create.stub',
-            "{$modulePath}/Views/{$workflowName}/create.blade.php"
+            "{$modulePath}/{$workflowName}/Views/create.blade.php"
         );
     }
 
@@ -56,7 +57,7 @@ class WorkflowCrudGenerator extends WorkflowGenerator
     ): void {
         $this->files->copy(
             __DIR__ . '/../Stubs/Workflow/edit.stub',
-            "{$modulePath}/Views/{$workflowName}/edit.blade.php"
+            "{$modulePath}/{$workflowName}/Views/edit.blade.php"
         );
     }
 
@@ -66,30 +67,30 @@ class WorkflowCrudGenerator extends WorkflowGenerator
     ): void {
         $this->files->copy(
             __DIR__ . '/../Stubs/Workflow/details.stub',
-            "{$modulePath}/Views/{$workflowName}/details.blade.php"
+            "{$modulePath}/{$workflowName}/Views/details.blade.php"
         );
     }
 
     protected function registerRoute(
-    string $moduleName,
-    string $workflowName
-): void {
-    $routesFile = app_path('MCF/mcf_routes.php');
+        string $moduleName,
+        string $workflowName
+    ): void {
+        $routesFile = app_path('MCF/mcf_routes.php');
 
-    if (! $this->files->exists($routesFile)) {
-        throw new RuntimeException('MCF routes file not found.');
+        if (! $this->files->exists($routesFile)) {
+            throw new RuntimeException('MCF routes file not found.');
+        }
+
+        $content = $this->files->get($routesFile);
+
+        $require = "require_once __DIR__.'/Modules/{$moduleName}/{$workflowName}/{$workflowName}Routes.php';";
+
+        if (str_contains($content, $require)) {
+            return;
+        }
+
+        $content .= PHP_EOL . $require . PHP_EOL;
+
+        $this->files->put($routesFile, $content);
     }
-
-    $content = $this->files->get($routesFile);
-
-    $require = "require_once __DIR__.'/Modules/{$moduleName}/Routes/{$workflowName}.php';";
-
-    if (str_contains($content, $require)) {
-        return;
-    }
-
-    $content .= PHP_EOL . $require . PHP_EOL;
-
-    $this->files->put($routesFile, $content);
-}
 }
