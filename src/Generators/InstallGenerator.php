@@ -78,16 +78,14 @@ Artisan::call('mcf:make:workflow:layout', [
         }
     }
 
-    protected function publishRoutes(string $basePath): void
-    {
-        $source = dirname(__DIR__, 2) . '/src/Stubs/Routes/mcf_routes.php';
+protected function publishRoutes(string $basePath): void
+{
+    $source = dirname(__DIR__, 2) . '/src/Stubs/Routes/mcf_routes.php';
 
-        $destination = $basePath . '/app/MCF/mcf_routes.php';
+    $destination = $basePath . '/app/MCF/mcf_routes.php';
 
-        if (! $this->files->exists($destination)) {
-            $this->files->copy($source, $destination);
-        }
-    }
+    $this->files->copy($source, $destination);
+}
 
 protected function updateBootstrapApp(string $basePath): void
 {
