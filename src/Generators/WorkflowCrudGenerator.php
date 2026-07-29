@@ -33,7 +33,7 @@ class WorkflowCrudGenerator extends WorkflowGenerator
         string $moduleName,
         string $workflowName
     ): void {
-        $this->copyStub(
+        $this->generateFromStub(
             'ControllerCrud.stub',
             "{$modulePath}/{$workflowName}/{$workflowName}Controller.php",
             $moduleName,
