@@ -45,6 +45,7 @@ class WorkflowLayoutGenerator
     ): void {
         $directories = [
             $workflowName,
+            "{$workflowName}/Backend",
             "{$workflowName}/Lang",
             "{$workflowName}/Views",
             "{$workflowName}/Views/Components",
@@ -64,7 +65,7 @@ class WorkflowLayoutGenerator
     ): void {
         $this->copyStub(
             'Controller.stub',
-            "{$modulePath}/{$workflowName}/{$workflowName}Controller.php",
+            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Controller.php",
             $moduleName,
             $workflowName
         );
@@ -77,7 +78,7 @@ class WorkflowLayoutGenerator
     ): void {
         $this->copyStub(
             'Service.stub',
-            "{$modulePath}/{$workflowName}/{$workflowName}Service.php",
+            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Service.php",
             $moduleName,
             $workflowName
         );
@@ -90,7 +91,7 @@ class WorkflowLayoutGenerator
     ): void {
         $this->copyStub(
             'Request.stub',
-            "{$modulePath}/{$workflowName}/{$workflowName}Request.php",
+            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Request.php",
             $moduleName,
             $workflowName
         );
@@ -103,7 +104,7 @@ class WorkflowLayoutGenerator
     ): void {
         $this->copyStub(
             'Policy.stub',
-            "{$modulePath}/{$workflowName}/{$workflowName}Policy.php",
+            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Policy.php",
             $moduleName,
             $workflowName
         );
@@ -116,7 +117,7 @@ class WorkflowLayoutGenerator
     ): void {
         $this->copyStub(
             'Route.stub',
-            "{$modulePath}/{$workflowName}/{$workflowName}Routes.php",
+            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Routes.php",
             $moduleName,
             $workflowName
         );

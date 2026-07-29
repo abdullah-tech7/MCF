@@ -42,6 +42,7 @@ class WorkflowGenerator
     {
         $directories = [
             $workflowName,
+            "{$workflowName}/Backend",
             "{$workflowName}/Views",
             "{$workflowName}/Lang",
         ];
@@ -60,7 +61,7 @@ class WorkflowGenerator
     ): void {
         $this->generateFromStub(
             'Controller.stub',
-            "{$modulePath}/{$workflowName}/{$workflowName}Controller.php",
+            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Controller.php",
             $moduleName,
             $workflowName
         );
@@ -73,7 +74,7 @@ class WorkflowGenerator
     ): void {
         $this->generateFromStub(
             'Service.stub',
-            "{$modulePath}/{$workflowName}/{$workflowName}Service.php",
+            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Service.php",
             $moduleName,
             $workflowName
         );
@@ -86,7 +87,7 @@ class WorkflowGenerator
     ): void {
         $this->generateFromStub(
             'Request.stub',
-            "{$modulePath}/{$workflowName}/{$workflowName}Request.php",
+            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Request.php",
             $moduleName,
             $workflowName
         );
@@ -99,7 +100,7 @@ class WorkflowGenerator
     ): void {
         $this->generateFromStub(
             'Policy.stub',
-            "{$modulePath}/{$workflowName}/{$workflowName}Policy.php",
+            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Policy.php",
             $moduleName,
             $workflowName
         );
@@ -112,7 +113,7 @@ class WorkflowGenerator
     ): void {
         $this->generateFromStub(
             'Route.stub',
-            "{$modulePath}/{$workflowName}/{$workflowName}Routes.php",
+            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Routes.php",
             $moduleName,
             $workflowName
         );
