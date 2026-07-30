@@ -153,50 +153,68 @@ class RemoveEndpointCommand extends Command
         );
     }
 
-        protected function removeRoute(): void
-    {
-        $routes = $this->files->get(
-            $this->routesFile
-        );
+protected function removeRoute(): void
+{
+    $routes = $this->files->get(
+        $this->routesFile
+    );
 
-        $pattern =
-            '/\n\s*Route::(?:get|post|put|patch|delete)\s*'
-            . '\(.*?\)\s*'
-            . '->name\(\s*[\'"]'
-            . preg_quote(
-                strtolower($this->moduleName) .
-                '.' .
-                strtolower($this->workflowName) .
-                '.' .
-                $this->endpointName,
-                '/'
-            )
-            . '[\'"]\s*\);/is';
+    $routeName =
+        strtolower($this->moduleName) .
+        '.' .
+        strtolower($this->workflowName) .
+        '.' .
+        $this->endpointName;
 
-        if (! preg_match($pattern, $routes)) {
-            throw new RuntimeException(
-                "Route for endpoint [{$this->endpointName}] was not found."
-            );
-        }
+    $namePosition = strpos(
+        $routes,
+        "->name('{$routeName}')"
+    );
 
-        $routes = preg_replace(
-            $pattern,
-            '',
-            $routes,
-            1
-        );
-
-        $routes = preg_replace(
-            "/\n{3,}/",
-            PHP_EOL . PHP_EOL,
-            $routes
-        );
-
-        $this->files->put(
-            $this->routesFile,
-            $routes
+    if ($namePosition === false) {
+        throw new RuntimeException(
+            "Route for endpoint [{$this->endpointName}] was not found."
         );
     }
+
+    $routeStart = strrpos(
+        substr($routes, 0, $namePosition),
+        'Route::'
+    );
+
+    if ($routeStart === false) {
+        throw new RuntimeException(
+            'Unable to locate route start.'
+        );
+    }
+
+    $routeEnd = strpos(
+        $routes,
+        ';',
+        $namePosition
+    );
+
+    if ($routeEnd === false) {
+        throw new RuntimeException(
+            'Unable to locate route end.'
+        );
+    }
+
+    $routes =
+        substr($routes, 0, $routeStart) .
+        substr($routes, $routeEnd + 1);
+
+    $routes = preg_replace(
+        "/\n{3,}/",
+        PHP_EOL . PHP_EOL,
+        $routes
+    );
+
+    $this->files->put(
+        $this->routesFile,
+        $routes
+    );
+}
 
         protected function removeView(): void
     {
