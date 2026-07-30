@@ -24,6 +24,7 @@ use MCF\Commands\MakeWorkflowLayoutCommand;
 use MCF\Commands\MakeMiddlewareCommand;
 use MCF\Commands\MakeLangCommand;
 use MCF\Commands\RemoveLangCommand;
+use MCF\Commands\CreateEndpointCommand;
 
 class MCFServiceProvider extends ServiceProvider
 {
@@ -88,8 +89,8 @@ class MCFServiceProvider extends ServiceProvider
             MakeRuleCommand::class,
             MakeNotificationCommand::class,
             RemoveLangCommand::class,
-            MakeLangCommand::class
-   
+            MakeLangCommand::class,
+            CreateEndpointCommand::class
         ]);
     }
 }

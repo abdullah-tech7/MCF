@@ -19,7 +19,7 @@ class WorkflowCrudGenerator extends WorkflowGenerator
         $this->generateService($modulePath, $moduleName, $workflowName);
         $this->generateRequest($modulePath, $moduleName, $workflowName);
         $this->generatePolicy($modulePath, $moduleName, $workflowName);
-        $this->generateRoute($modulePath, $moduleName, $workflowName);
+        $this->generateCrudRoute($modulePath, $moduleName, $workflowName);
         $this->registerRoute($moduleName, $workflowName);
 
         $this->generateIndexView($modulePath, $workflowName);
@@ -68,6 +68,19 @@ class WorkflowCrudGenerator extends WorkflowGenerator
         $this->files->copy(
             __DIR__ . '/../Stubs/Workflow/details.stub',
             "{$modulePath}/{$workflowName}/Views/details.blade.php"
+        );
+    }
+
+   protected function generateCrudRoute(
+        string $modulePath,
+        string $moduleName,
+        string $workflowName
+    ): void {
+        $this->generateFromStub(
+            'RouteCrud.stub',
+            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Routes.php",
+            $moduleName,
+            $workflowName
         );
     }
 

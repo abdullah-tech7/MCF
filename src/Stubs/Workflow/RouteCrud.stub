@@ -1,0 +1,29 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use {{ ControllerNamespace }}\{{ WorkflowName }}Controller;
+
+Route::get('/{{ WorkflowRoute }}', [{{ WorkflowName }}Controller::class, 'index'])
+    ->name('{{ ModuleRoute }}.{{ WorkflowRoute }}.index');
+
+Route::get('/{{ WorkflowRoute }}/create', [{{ WorkflowName }}Controller::class, 'create'])
+    ->name('{{ ModuleRoute }}.{{ WorkflowRoute }}.create');
+
+Route::post('/{{ WorkflowRoute }}', [{{ WorkflowName }}Controller::class, 'store'])
+    ->name('{{ ModuleRoute }}.{{ WorkflowRoute }}.store');
+
+Route::get('/{{ WorkflowRoute }}/{id}', [{{ WorkflowName }}Controller::class, 'details'])
+    ->whereNumber('id')
+    ->name('{{ ModuleRoute }}.{{ WorkflowRoute }}.details');
+
+Route::get('/{{ WorkflowRoute }}/{id}/edit', [{{ WorkflowName }}Controller::class, 'edit'])
+    ->whereNumber('id')
+    ->name('{{ ModuleRoute }}.{{ WorkflowRoute }}.edit');
+
+Route::put('/{{ WorkflowRoute }}/{id}', [{{ WorkflowName }}Controller::class, 'update'])
+    ->whereNumber('id')
+    ->name('{{ ModuleRoute }}.{{ WorkflowRoute }}.update');
+
+Route::delete('/{{ WorkflowRoute }}/{id}', [{{ WorkflowName }}Controller::class, 'destroy'])
+    ->whereNumber('id')
+    ->name('{{ ModuleRoute }}.{{ WorkflowRoute }}.destroy');
