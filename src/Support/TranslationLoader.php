@@ -4,13 +4,21 @@ declare(strict_types=1);
 
 namespace MCF\Support;
 
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use RuntimeException;
 
 class TranslationLoader
 {
     /**
+     * Loads all JSON translations from:
+     *
+     * app/MCF/Modules/
+     *   Module/
+     *     Workflow/
+     *       Lang/
+     *         ar.json
+     *         en.json
+     *
+     * Result:
      *
      * [
      *     'ar' => [...],
@@ -25,49 +33,52 @@ class TranslationLoader
 
         $translations = [];
 
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($modulesPath)
-        );
+        foreach (glob($modulesPath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $modulePath) {
 
-        foreach ($iterator as $file) {
-            if (! $file->isFile()) {
-                continue;
-            }
+            foreach (glob($modulePath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $workflowPath) {
 
-            if ($file->getExtension() !== 'json') {
-                continue;
-            }
+                $langPath = $workflowPath . DIRECTORY_SEPARATOR . 'Lang';
 
-            if (! str_contains($file->getPath(), DIRECTORY_SEPARATOR . 'Lang' . DIRECTORY_SEPARATOR)) {
-                continue;
-            }
-
-            $locale = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-
-            $content = file_get_contents($file->getRealPath());
-
-            $data = json_decode($content, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new RuntimeException(
-                    "Invalid JSON: {$file->getRealPath()}"
-                );
-            }
-
-            $translations[$locale] ??= [];
-
-            foreach ($data as $key => $value) {
-
-                if (
-                    isset($translations[$locale][$key]) &&
-                    $translations[$locale][$key] !== $value
-                ) {
-                    throw new RuntimeException(
-                        "Duplicate translation key '{$key}' for locale '{$locale}'."
-                    );
+                if (! is_dir($langPath)) {
+                    continue;
                 }
 
-                $translations[$locale][$key] = $value;
+                foreach (glob($langPath . DIRECTORY_SEPARATOR . '*.json') as $jsonFile) {
+
+                    $locale = pathinfo($jsonFile, PATHINFO_FILENAME);
+
+                    $content = file_get_contents($jsonFile);
+
+                    $data = json_decode($content, true);
+
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        throw new RuntimeException(
+                            "Invalid JSON: {$jsonFile}"
+                        );
+                    }
+
+                    if (! is_array($data)) {
+                        throw new RuntimeException(
+                            "Translation file must contain a JSON object: {$jsonFile}"
+                        );
+                    }
+
+                    $translations[$locale] ??= [];
+
+                    foreach ($data as $key => $value) {
+
+                        if (
+                            isset($translations[$locale][$key]) &&
+                            $translations[$locale][$key] !== $value
+                        ) {
+                            throw new RuntimeException(
+                                "Duplicate translation key '{$key}' for locale '{$locale}'."
+                            );
+                        }
+
+                        $translations[$locale][$key] = $value;
+                    }
+                }
             }
         }
 
