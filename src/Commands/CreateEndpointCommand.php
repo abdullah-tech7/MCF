@@ -584,6 +584,26 @@ protected function addRouteControllerUse(
 }
 
 
+protected function generateView(): void
+{
+    $viewFile =
+        $this->viewsPath .
+        '/' .
+        $this->endpointName .
+        '.blade.php';
+
+    if ($this->files->exists($viewFile)) {
+        throw new RuntimeException(
+            "View [{$this->endpointName}] already exists."
+        );
+    }
+
+    $this->files->put(
+        $viewFile,
+        ''
+    );
+}
+
 
 
 }
