@@ -605,5 +605,39 @@ protected function generateView(): void
 }
 
 
+protected function showSummary(): void
+{
+    $this->newLine();
+
+    $this->info('Endpoint created successfully.');
+
+    $this->newLine();
+
+    $this->line("Module    : {$this->moduleName}");
+    $this->line("Workflow  : {$this->workflowName}");
+    $this->line("Endpoint  : {$this->endpointName}");
+    $this->line("Method    : {$this->httpMethod}");
+    $this->line("Return    : {$this->returnType}");
+    $this->line('View      : ' . ($this->createView ? 'Yes' : 'No'));
+    $this->line('Request   : ' . ($this->injectWorkflowRequest ? 'Yes' : 'No'));
+
+    if ($this->parameters !== '') {
+        $this->line("Parameters: {$this->parameters}");
+    }
+
+$this->newLine();
+
+$this->comment('To remove this endpoint, run:');
+
+$this->line(
+    "php artisan mcf:endpoint:remove " .
+    "{$this->moduleName} " .
+    "{$this->workflowName} " .
+    "{$this->endpointName}"
+);
+
+$this->newLine();
+}
+
 
 }
