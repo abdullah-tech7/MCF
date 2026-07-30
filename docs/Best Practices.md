@@ -1,53 +1,309 @@
+
 # Best Practices
 
----
+This document describes the recommended development practices for building applications with MCF.
 
-# Overview
+These practices are not framework requirements.
 
-This document describes the recommended practices for developing applications with MCF.
-
-These recommendations are not strict rules.
-
-They represent the architectural philosophy of MCF and help applications remain predictable, maintainable, and scalable as they grow.
+However, following them results in applications that are easier to understand, maintain and scale.
 
 ---
 
-# Build Around Workflows
+# Design Around Business Capabilities
 
-MCF is a Workflow-driven framework.
+The most important principle in MCF is:
 
-Every business capability should be implemented as a Workflow.
+> **Build applications around what users do, not around what the database stores.**
 
-Think about what the application does rather than what the database stores.
+A Workflow should represent a business capability.
 
 Good examples:
 
-```text
-Authentication
-User Management
-Checkout
-Inventory
-Reports
-```
+- Authentication
+- User Management
+- Dashboard
+- Product Catalog
+- Checkout
+- Reports
 
 Avoid creating Workflows that simply mirror database tables.
 
 Poor examples:
 
-```text
-User
-Product
-Order
-Role
-```
+- User
+- Product
+- Order
+- Role
+
+Business capabilities remain stable even when the database evolves.
 
 ---
 
-# Group Workflows into Modules
+# Keep Workflows Focused
 
-A Module is an organizational boundary.
+Each Workflow should have one responsibility.
 
-Modules group related Workflows that belong to the same business domain.
+Good:
+
+```text
+Authentication
+├── Login
+├── Logout
+├── Forgot Password
+└── Reset Password
+```
+
+Avoid:
+
+```text
+Authentication
+Users
+Roles
+Settings
+Notifications
+Reports
+Dashboard
+```
+
+inside a single Workflow.
+
+Smaller Workflows are easier to understand and maintain.
+
+---
+
+# Prefer Multiple Small Workflows
+
+It is usually better to have several focused Workflows than one large Workflow.
+
+Good:
+
+```text
+Users
+├── Authentication
+├── Profile
+├── User Management
+└── Settings
+```
+
+Instead of:
+
+```text
+Users
+└── Everything
+```
+
+Smaller Workflows improve readability and reduce maintenance costs.
+
+---
+
+# Keep Related Actions Together
+
+Actions belonging to the same business capability should remain inside one Workflow.
+
+Example:
+
+```text
+User Management
+
+├── List Users
+├── Create User
+├── Edit User
+├── Delete User
+└── Export Users
+```
+
+Creating a separate Workflow for every action introduces unnecessary fragmentation.
+
+---
+
+# Controllers Should Stay Thin
+
+Controllers should coordinate requests.
+
+They should not contain business logic.
+
+Good responsibilities:
+
+- Receive HTTP requests.
+- Call Services.
+- Return responses.
+
+Avoid:
+
+- Complex calculations.
+- Database queries.
+- Authorization logic.
+- Validation rules.
+- Business rules.
+
+---
+
+# Place Business Logic in Services
+
+Business logic belongs inside Workflow Services.
+
+Examples include:
+
+- Price calculations.
+- Order processing.
+- Workflow coordination.
+- Business validation.
+- Domain rules.
+
+Keeping Services focused makes them easier to test and reuse.
+
+---
+
+# Keep Validation in Requests
+
+Validation should always be centralized.
+
+Each Workflow owns one Request.
+
+Avoid validating data directly inside Controllers.
+
+Good:
+
+```text
+ProfileRequest
+```
+
+Avoid:
+
+```php
+$request->validate(...)
+```
+
+inside every Controller method.
+
+---
+
+# Keep Authorization in Policies
+
+Every Workflow owns one Policy.
+
+Authorization should never be mixed with business logic.
+
+Policies should:
+
+- Ask permission questions.
+- Delegate authorization.
+- Return decisions.
+
+Services should never check roles directly.
+
+---
+
+# Never Hard-Code Roles
+
+Avoid writing:
+
+```php
+$user->role == 'admin'
+```
+
+Avoid:
+
+```php
+$user->isAdmin()
+```
+
+Roles belong to the application, not to the framework.
+
+Authorization should always remain dynamic.
+
+---
+
+# Keep Views Inside Their Workflow
+
+Views belong to the feature that owns them.
+
+Good:
+
+```text
+Users
+└── Profile
+    └── Views
+```
+
+Avoid creating one large global Views directory for unrelated features.
+
+Keeping Views together improves discoverability.
+
+---
+
+# Keep Language Files Close to Features
+
+Every Workflow should own its translations.
+
+Example:
+
+```text
+Profile
+└── Lang
+```
+
+Avoid placing feature-specific translations in unrelated locations.
+
+Localized resources should move together with the Workflow.
+
+---
+
+# Prefer Endpoint Generation
+
+Whenever possible, use the Endpoint Generator instead of manually editing Controllers and Routes.
+
+Benefits include:
+
+- Consistent code generation.
+- Predictable structure.
+- Reduced boilerplate.
+- Fewer manual errors.
+
+Generated code remains easier to maintain across large projects.
+
+---
+
+# Use CRUD Workflows Appropriately
+
+CRUD Workflows are intended for resource management.
+
+Good examples:
+
+- Products
+- Categories
+- Customers
+- Employees
+- Roles
+
+Avoid using CRUD generators for business processes such as:
+
+- Checkout
+- Authentication
+- Payment Processing
+
+Business-oriented Workflows usually require custom logic beyond standard CRUD operations.
+
+---
+
+# Reuse Shared Components
+
+Components used by multiple Workflows should live in shared framework directories.
+
+Examples include:
+
+- Middleware
+- Mail
+- Notifications
+- Validation Rules
+
+Avoid duplicating reusable code across multiple Workflows.
+
+---
+
+# Keep Modules Organized
+
+Modules should group related business capabilities.
 
 Example:
 
@@ -55,359 +311,121 @@ Example:
 Users
 ├── Authentication
 ├── Profile
-└── User Management
-
-Shop
-├── Products
-├── Cart
-└── Checkout
+├── User Management
+└── Settings
 ```
 
-Modules organize Workflows.
+Avoid placing unrelated Workflows inside the same Module.
 
-They should not contain business logic themselves.
+Modules should have a clear business purpose.
+
+---
+
+# Follow Consistent Naming
+
+Workflow names should immediately describe their purpose.
+
+Good:
+
+- Authentication
+- Product Catalog
+- User Management
+- Sales Reports
+
+Avoid generic names such as:
+
+- Main
+- Default
+- Test
+- Temp
+- NewWorkflow
+
+Meaningful names improve project readability.
 
 ---
 
 # Keep Workflows Independent
 
-Every Workflow should own its own implementation.
+A Workflow should avoid depending on another Workflow whenever possible.
 
-A Workflow should contain everything required to implement its business capability.
+Business features should communicate through Services or well-defined interfaces rather than tightly coupling implementations.
 
-- Controller
-- Service
-- Request
-- Policy
-- Views
-- Routes
-- Lang
-- README
-
-Avoid unnecessary dependencies between Workflows.
-
-When communication is required, expose clear interfaces rather than accessing another Workflow's internal implementation.
+Independent Workflows are easier to move, reuse and maintain.
 
 ---
 
-# Keep Business Logic Out of Controllers
+# Extend Base Classes
 
-Controllers should coordinate HTTP requests.
+Generated backend classes inherit from MCF base classes.
 
-Every generated Controller should inherit from:
+If multiple Workflows require shared behavior, extend the framework base classes instead of duplicating code across individual Workflows.
 
-```text
-MfcController
-```
-
-Their responsibilities are limited to:
-
-- Receive requests.
-- Validate input.
-- Call the Service.
-- Return responses.
-
-Business rules should always live inside the Workflow's Service.
-
-Controllers should remain small and predictable.
+Centralizing shared behavior simplifies maintenance.
 
 ---
 
-# Keep Services Focused
+# Keep Routes Local
 
-Each Workflow owns one Service.
+Every Workflow owns its own routes.
 
-Every generated Service should inherit from:
+Avoid collecting unrelated routes in one global file.
 
-```text
-MfcService
-```
-
-That Service contains the business logic for the Workflow.
-
-Avoid splitting one Workflow across multiple unrelated Services unless there is a clear architectural reason.
-
-Keeping Workflow logic together improves discoverability.
+Keeping routes close to their feature makes navigation significantly easier.
 
 ---
 
-# Keep Requests Centralized
+# Favor Convention
 
-Each Workflow owns a single Request class.
+MCF follows predictable conventions.
 
-Every generated Request should inherit from:
+Avoid unnecessary customization unless there is a clear benefit.
 
-```text
-MfcRequest
-```
-
-Instead of generating multiple Request classes for every action, centralize Workflow validation in one predictable location.
-
-This makes validation easier to maintain.
+Following conventions helps every developer understand the project quickly.
 
 ---
 
-# Keep Policies Close to the Workflow
+# Design for Scalability
 
-Authorization belongs to the Workflow.
+When creating a new Workflow, ask yourself:
 
-Each Workflow should own its own Policy.
+- Can this feature grow independently?
+- Does it have one responsibility?
+- Can another team maintain it without understanding unrelated features?
 
-Every generated Policy should inherit from:
-
-```text
-MfcPolicy
-```
-
-Keeping authorization together with the business capability makes security rules easier to understand and maintain.
+If the answer is yes, the Workflow is probably designed well.
 
 ---
 
-# Keep Views Inside the Workflow
+# Think About Maintenance
 
-Every Workflow owns its own Views directory.
+Code is usually read more often than it is written.
 
-Avoid creating one large global collection of Blade files.
+Optimize for:
 
-Generated Controllers should return:
+- Readability.
+- Predictability.
+- Simplicity.
+- Consistency.
 
-```php
-return view('Users::Authentication.index');
-```
-
-Shared Layout components should be referenced using:
-
-```blade
-@include('Shared::Layout.Components.head')
-```
-
-Keeping Views inside the Workflow keeps every feature self-contained.
-
----
-
-# Treat Layout as a Workflow
-
-Layout is implemented as a normal Workflow.
-
-The default installation creates:
-
-```text
-Shared
-└── Layout
-```
-
-Developers are free to:
-
-- Rename it.
-- Replace it.
-- Delete it.
-- Recreate it.
-- Create multiple Layout Workflows.
-
-MCF does not reserve Layout as a special framework component.
-
----
-
-# Use Laravel's Native Assets and Storage
-
-MCF does not provide a custom asset management system.
-
-Use Laravel's standard locations.
-
-Public assets:
-
-```text
-public/
-```
-
-Uploaded files:
-
-```text
-storage/
-```
-
-Following Laravel's conventions simplifies deployment and maintenance.
-
----
-
-# Keep Models Focused
-
-Models represent application data.
-
-Avoid placing business processes inside Eloquent Models whenever possible.
-
-Business logic belongs inside Workflow Services.
-
----
-
-# Use Validation Rules
-
-When validation becomes reusable across multiple Workflows, extract it into dedicated Rule classes.
-
-Examples:
-
-```text
-StrongPassword
-
-ValidPhoneNumber
-
-NationalId
-```
-
-Reusable Rules reduce duplication and improve consistency.
-
----
-
-# Use Middleware for Cross-Cutting Concerns
-
-Middleware should handle concerns shared across multiple Workflows.
-
-Examples:
-
-- Authentication
-- Authorization
-- Localization
-- Request Logging
-- Maintenance Mode
-
-Avoid implementing these concerns inside Controllers.
-
----
-
-# Keep Notifications Focused
-
-Notifications should only deliver notifications.
-
-Business decisions should already be completed before a Notification is created.
-
----
-
-# Keep Mail Classes Focused
-
-Mail classes prepare email messages.
-
-They should not contain business rules.
-
-A Mailable should never decide whether an email should be sent.
-
----
-
-# Generate Only What You Need
-
-MCF generators intentionally generate focused components.
-
-Avoid creating components that are never used.
-
-Smaller projects are easier to understand and maintain.
-
----
-
-# Prefer Composition Over Duplication
-
-If functionality is shared across multiple Workflows, extract it into reusable components or shared services.
-
-Avoid copying implementations between Workflows.
-
----
-
-# Use Consistent Naming
-
-Names should describe business intent.
-
-Good examples:
-
-```text
-Authentication
-
-User Management
-
-Product Catalog
-
-Inventory Report
-
-Invoice Notification
-```
-
-Avoid abbreviations and vague names.
-
----
-
-# Follow Laravel Conventions
-
-MCF extends Laravel.
-
-Whenever possible, follow Laravel's conventions for:
-
-- Naming
-- Routing
-- Validation
-- Dependency Injection
-- Service Container
-- Events
-- Queues
-- Blade
-
-This reduces the learning curve for Laravel developers.
-
----
-
-# Keep Generated Structure Intact
-
-Avoid moving generated files into unrelated directories.
-
-Every generated component has a predictable location.
-
-Keeping the generated structure intact improves consistency across the application.
-
----
-
-# Minimize Global State
-
-Avoid static mutable state whenever possible.
-
-Prefer dependency injection.
-
-Explicit dependencies improve testing, maintainability and readability.
-
----
-
-# Write Maintainable Code
-
-Before adding new functionality, ask whether the implementation is:
-
-- Simple
-- Readable
-- Reusable
-- Predictable
-- Testable
-
-Favor clarity over unnecessary abstraction.
-
----
-
-# Design for Growth
-
-Applications evolve over time.
-
-Design Modules and Workflows so they can grow without major restructuring.
-
-A well-designed Workflow today often prevents significant refactoring later.
+Future maintainability is more valuable than short-term convenience.
 
 ---
 
 # Summary
 
-Applications built with MCF should strive to be:
+Successful MCF applications share several characteristics.
 
-- Workflow-Driven
-- Modular
-- Predictable
-- Maintainable
-- Loosely Coupled
-- Highly Cohesive
-- Easy to Navigate
-- Consistent with Laravel
+- Workflows represent business capabilities.
+- Controllers remain thin.
+- Services contain business logic.
+- Requests handle validation.
+- Policies handle authorization.
+- Views and translations stay inside their Workflows.
+- Shared components are reused.
+- Modules remain organized.
+- Naming stays consistent.
+- Features remain independent.
 
-Follow the generated MCF structure, inherit from the provided base classes, and keep each Workflow self-contained.
+Following these practices keeps applications scalable, predictable and easy to maintain as they grow.
+````
 
-Following these practices helps keep applications understandable, scalable, and maintainable throughout their lifecycle.

@@ -1,533 +1,81 @@
-# Architecture
+# MCF Architecture
+
+MCF (Modular Code Framework) is a feature-oriented architecture built on top of Laravel 12.
+
+Instead of organizing an application around framework directories, MCF organizes it around **business capabilities** called **Workflows**.
+
+Each Workflow contains everything required to implement one feature, making applications easier to understand, maintain and scale.
 
 ---
 
-# Overview
+# Architecture Goals
 
-MCF (Modular Code Framework) is a modular architecture built on top of Laravel.
+MCF was designed around several core goals.
 
-It extends Laravel without replacing its core components, allowing developers to organize applications using a feature-oriented architecture while preserving Laravel's conventions and ecosystem.
-
-The framework introduces a dedicated application structure located under:
-
-```text
-app/MCF
-```
-
-This isolates framework components from Laravel's default directories and provides a predictable, scalable project layout.
-
----
-
-# Design Goals
-
-MCF is designed around several core objectives.
-
-- Organize application code by business capabilities.
-- Keep framework code isolated.
-- Encourage Workflow-driven development.
-- Reduce project complexity.
-- Promote clean architecture.
-- Promote single responsibility.
-- Minimize boilerplate.
-- Remain fully compatible with Laravel.
-
----
-
-# Architecture Philosophy
-
-MCF follows several architectural principles.
-
-## Modular Development
-
-Applications are divided into independent Modules.
-
-Each Module groups related business capabilities.
-
-Example:
-
-```text
-Modules
-├── Users
-├── Orders
-├── Products
-├── Reports
-└── Settings
-```
-
-Modules organize Workflows.
-
-Business logic lives inside Workflows rather than inside the Module itself.
-
----
-
-## Workflow-Driven Development
-
-The primary building block of every application is the **Workflow**.
-
-Instead of organizing applications around Models, MCF organizes applications around complete business capabilities.
-
-Example:
-
-```text
-Users
-├── Authentication
-├── Profile
-├── User Management
-└── Roles
-```
-
-Every Workflow owns its own:
-
-- Controller
-- Request
-- Service
-- Policy
-- Views
-- Routes
-- Lang
-- README
-
-This keeps every feature self-contained.
-
----
-
-## Laravel Compatibility
-
-MCF does not replace Laravel.
-
-Laravel remains responsible for:
-
-- Routing
-- Service Container
-- Eloquent ORM
-- Events
-- Queues
-- Validation
-- Middleware Pipeline
-- Artisan
-- Blade
-- Configuration
-- Filesystem
-
-MCF builds on top of Laravel rather than replacing it.
-
----
-
-## Isolated Framework Structure
-
-Framework-specific code is generated inside:
-
-```text
-app/MCF
-```
-
-instead of Laravel's default directories.
-
-Example:
-
-Instead of:
-
-```text
-app/Models
-```
-
-MCF uses:
-
-```text
-app/MCF/Database/Models
-```
-
-This keeps Laravel's default structure clean while keeping all framework-generated code together.
+- Organize applications by business capability.
+- Keep features completely self-contained.
+- Minimize coupling between modules.
+- Encourage clear separation of responsibilities.
+- Reduce boilerplate through generators.
+- Keep full compatibility with Laravel.
+- Support long-term scalability.
 
 ---
 
 # High-Level Architecture
 
-```text
-Laravel Application
-│
-├── Laravel Core
-│
-├── app/
-│   │
-│   └── MCF/
-│       ├── Base
-│       ├── Database
-│       ├── Mail
-│       ├── Middleware
-│       ├── Modules
-│       ├── Notifications
-│       ├── Rules
-│       └── mcf_routes.php
-│
-└── Framework Services
-```
-
----
-
-# Separation of Responsibilities
-
-Every directory inside MCF has a dedicated responsibility.
-
-Examples:
-
-- Models represent database entities.
-- Migrations modify database structure.
-- Factories generate test data.
-- Seeders populate databases.
-- Notifications deliver notifications.
-- Mail contains mailables.
-- Rules contain reusable validation logic.
-- Middleware processes HTTP requests.
-- Modules organize Workflows.
-- Base contains the shared foundation classes used by every generated Workflow.
-
-Responsibilities are intentionally separated to reduce coupling.
-
----
-
-# Single Responsibility Principle
-
-MCF generators follow the Single Responsibility Principle.
-
-Each generator creates only one type of component.
-
-Examples:
-
-## Model Generator
-
-Creates:
-
-- Model
-
-Optionally:
-
-- Migration
-- Factory
-- Seeder
-
-It does not create:
-
-- Controller
-- Request
-- Policy
-- Resource
-
----
-
-## Notification Generator
-
-Creates:
-
-- Notification
-
-It does not create:
-
-- Mail
-- Blade Views
-- Markdown Templates
-
----
-
-## Mail Generator
-
-Creates:
-
-- Mailable
-
-It does not create:
-
-- Blade Views
-- Markdown Templates
-
----
-
-## Rule Generator
-
-Creates:
-
-- Validation Rule
-
-Nothing else.
-
----
-
-# Framework Layers
+An MCF application is organized into four primary layers.
 
 ```text
-Presentation
-
-↓
-
 Application
 
-↓
+│
 
-Modules
+├── Modules
 
-↓
+│      └── Workflows
 
-Workflows
+│              ├── Backend
+│              ├── Views
+│              └── Lang
 
-↓
+│
 
-Database
+├── Database
 
-↓
+│
 
-Infrastructure
+├── Framework Base Classes
+
+│
+
+└── Laravel
 ```
 
-Each layer has a clearly defined responsibility.
+Laravel provides the runtime.
 
-Business logic should remain independent from infrastructure whenever practical.
+MCF provides the application architecture.
+
+---
+
+# Core Concepts
+
+Understanding four concepts is enough to understand the entire framework.
+
+- Module
+- Workflow
+- Backend
+- Base Classes
+
+Everything else builds upon these concepts.
 
 ---
 
 # Modules
 
-Modules are organizational boundaries.
+A Module is the highest organizational unit inside MCF.
 
-Each Module groups related Workflows.
-
-Example:
-
-- Users
-- Inventory
-- Sales
-- Reports
-- Customer Service
-
-Modules themselves should remain lightweight.
-
----
-
-# Workflows
-
-Workflows are the primary business units inside MCF.
-
-Every Workflow belongs to exactly one Module.
-
-A Workflow represents one complete business capability.
-
-Examples:
-
-- Authentication
-- User Management
-- Product Catalog
-- Checkout
-- Reports
-
-MCF applications are designed around Workflows rather than Models.
-
----
-
-# Layout Workflow
-
-MCF does not reserve a special Layout system.
-
-Instead, Layout is implemented as a normal Workflow.
-
-The installer automatically creates:
-
-```text
-Shared
-└── Layout
-```
-
-Internally this is equivalent to:
-
-```bash
-php artisan mcf:make:workflow:layout Shared Layout
-```
-
-The generated Layout Workflow contains the application's default layout and optional Blade components.
-
-Example:
-
-```text
-Shared
-└── Layout
-    ├── LayoutController.php
-    ├── LayoutRequest.php
-    ├── LayoutService.php
-    ├── LayoutPolicy.php
-    ├── LayoutRoutes.php
-    ├── Lang
-    └── Views
-        ├── index.blade.php
-        └── Components
-            ├── head.blade.php
-            ├── header.blade.php
-            ├── navbar.blade.php
-            ├── sidebar.blade.php
-            ├── footer.blade.php
-            ├── guest.blade.php
-            └── auth.blade.php
-```
-
-Layout is not reserved.
-
-Developers may:
-
-- Rename it.
-- Delete it.
-- Recreate it.
-- Create multiple Layout Workflows.
-- Customize it freely.
-
----
-
-# Assets & Storage
-
-MCF does not introduce its own asset management system.
-
-Use Laravel's standard locations:
-
-```text
-public/
-```
-
-for public assets such as:
-
-- CSS
-- JavaScript
-- Images
-- Fonts
-
-Use:
-
-```text
-storage/
-```
-
-for uploaded files and filesystem storage.
-
-This keeps applications fully compatible with Laravel's deployment workflow.
-
----
-
-# Database Layer
-
-Database-related classes are grouped together.
-
-```text
-Database
-├── Models
-├── Migrations
-├── Factories
-└── Seeders
-```
-
-Keeping database components together improves discoverability and maintenance.
-
----
-
-# Routing
-
-Every Workflow owns its own route definition.
-
-MCF automatically registers all generated Workflow routes through:
-
-```text
-app/MCF/mcf_routes.php
-```
-
-Each Workflow is responsible only for its own routes, keeping routing modular and maintainable.
-
----
-
-# Extensibility
-
-MCF is designed for future expansion.
-
-New generators, Modules, and Workflows can be introduced without changing the overall project structure.
-
-Because every feature follows the same architecture, extending the framework remains predictable.
-
----
-
-# Predictable Structure
-
-Every generated component has a predefined destination.
-
-```text
-Model
-→ app/MCF/Database/Models
-
-Migration
-→ app/MCF/Database/Migrations
-
-Factory
-→ app/MCF/Database/Factories
-
-Seeder
-→ app/MCF/Database/Seeders
-
-Notification
-→ app/MCF/Notifications
-
-Mail
-→ app/MCF/Mail
-
-Rule
-→ app/MCF/Rules
-
-Middleware
-→ app/MCF/Middleware
-
-Workflow
-→ app/MCF/Modules/{Module}/{Workflow}
-```
-
-Developers always know where generated code will be located.
-
----
-
-# Design Principles
-
-MCF follows these architectural principles.
-
-- Workflow-Driven
-- Modular
-- Predictable
-- Maintainable
-- Extensible
-- Laravel Compatible
-- Low Coupling
-- High Cohesion
-- Single Responsibility
-- Separation of Concerns
-
-These principles guide both the framework itself and applications built with MCF.
-
----
-
-# Workflow Design
-
----
-
-# Introduction
-
-MCF is a **Workflow-Driven Framework**.
-
-Unlike traditional Laravel applications that are commonly organized around database models, MCF organizes applications around **business capabilities**.
-
-Instead of starting with Models and building Controllers around them, MCF starts with a **Workflow** that represents a complete business capability.
-
-The goal is simple:
-
-> **Build your application around what the application does, not around what the database stores.**
-
-A Workflow is the primary building block of every MCF application.
-
----
-
-# Modules
-
-Every Workflow belongs to exactly one **Module**.
-
-A Module groups related Workflows into a single business domain.
+Modules group related business capabilities together.
 
 Example:
 
@@ -536,18 +84,23 @@ Modules
 ├── Users
 ├── Shop
 ├── Reports
+├── Shared
 └── System
 ```
 
-A Module does not contain business logic.
+Modules do not contain business logic directly.
 
-Its responsibility is to organize Workflows.
+Their purpose is organization.
 
 ---
 
 # Workflows
 
 A Workflow represents one complete business capability.
+
+Unlike traditional Laravel applications, MCF does not organize applications around Models.
+
+Instead, every feature begins with a Workflow.
 
 Example:
 
@@ -556,487 +109,517 @@ Users
 ├── Authentication
 ├── Profile
 ├── User Management
-└── Roles
+└── Settings
 ```
 
-Here:
+Each Workflow represents something the user wants to accomplish.
 
-- **Users** is the Module.
-- **Authentication**, **Profile**, **User Management**, and **Roles** are Workflows.
+Examples include:
 
-Every Workflow owns everything required to implement that capability.
+- Authentication
+- Checkout
+- Dashboard
+- Product Catalog
+- Reports
+- User Management
+
+A Workflow should never represent a database table.
 
 ---
 
-# Layout Workflow
+# Workflow Structure
 
-Layout is implemented as a normal Workflow.
-
-The installer automatically creates:
-
-```text
-Shared
-└── Layout
-```
-
-using:
-
-```bash
-php artisan mcf:make:workflow:layout Shared Layout
-```
-
-The generated structure looks like:
-
-```text
-Shared
-└── Layout
-    ├── LayoutController.php
-    ├── LayoutRequest.php
-    ├── LayoutService.php
-    ├── LayoutPolicy.php
-    ├── LayoutRoutes.php
-    ├── Lang
-    └── Views
-        ├── index.blade.php
-        └── Components
-            ├── head.blade.php
-            ├── header.blade.php
-            ├── navbar.blade.php
-            ├── sidebar.blade.php
-            ├── footer.blade.php
-            ├── guest.blade.php
-            └── auth.blade.php
-```
-
-Layout is not reserved by the framework.
-
-Developers are free to:
-
-- Rename it.
-- Delete it.
-- Recreate it.
-- Create additional Layout Workflows.
-- Customize it freely.
-
-Generated Workflow controllers return:
-
-```php
-return view('Users::Authentication.index');
-```
-
-Layout components are referenced using:
-
-```blade
-@include('Shared::Layout.Components.head')
-```
-
----
-
-# Creating Your First Workflow
-
-A Workflow cannot exist without a Module.
-
-First create a Module.
-
-```bash
-php artisan mcf:make:module Users
-```
-
-Then create a Workflow.
-
-```bash
-php artisan mcf:make:workflow Users Authentication
-```
-
-MCF generates:
-
-```text
-Users
-└── Authentication
-    ├── AuthenticationController.php
-    ├── AuthenticationRequest.php
-    ├── AuthenticationService.php
-    ├── AuthenticationPolicy.php
-    ├── AuthenticationRoutes.php
-    ├── Views
-    ├── Lang
-    └── README.md
-```
-
-Every generated component uses the Workflow name.
-
-This predictable convention makes every Workflow immediately recognizable.
-
----
-
-# Generated Components
-
-MCF generates a complete feature structure rather than only a Controller.
-
-Every generated file has one responsibility.
-
----
-
-## Controller
-
-The Controller is the HTTP entry point.
-
-Responsibilities:
-
-- Receive requests.
-- Coordinate the Workflow.
-- Call the Service.
-- Return responses.
-
-Business logic should never be written inside Controllers.
-
----
-
-## Request
-
-Each Workflow owns one Request class.
-
-Validation for the Workflow is centralized inside this class.
-
-Instead of generating many Request classes, MCF keeps validation predictable and easy to locate.
-
----
-
-## Service
-
-Each Workflow owns one Service.
-
-The Service contains the business logic.
+Each Workflow is completely self-contained.
 
 Example:
 
-**AuthenticationService**
-
-- login()
-- logout()
-- forgotPassword()
-- resetPassword()
-
-All Workflow logic remains inside one Service.
-
----
-
-## Policy
-
-Each Workflow owns its own Policy.
-
-Authorization rules remain together with the Workflow instead of being scattered across the application.
-
----
-
-## Views
-
-Each Workflow owns its own Views directory.
-
-Generated Workflow controllers return:
-
-```php
-return view('Users::Authentication.index');
+```text
+Users
+└── Profile
+    ├── Backend
+    ├── Lang
+    └── Views
 ```
 
-Layout components are referenced using:
+Every resource required by the feature remains inside this directory.
 
-```blade
-@include('Shared::Layout.Components.head')
-```
-
-All Blade files remain together with the Workflow.
+This eliminates the need to search across multiple Laravel folders.
 
 ---
 
-## Routes
+# Backend Layer
 
-Each Workflow owns its own route definition.
+The Backend directory contains all server-side logic for a Workflow.
 
 ```text
-AuthenticationRoutes.php
+Backend
+├── ProfileController.php
+├── ProfilePolicy.php
+├── ProfileRequest.php
+├── ProfileRoutes.php
+└── ProfileService.php
 ```
 
-MCF automatically registers all Workflow routes through:
-
-```text
-app/MCF/mcf_routes.php
-```
+Each class has one clearly defined responsibility.
 
 ---
 
-## Lang
+# Controller
 
-Each Workflow owns its own language directory.
+Controllers receive HTTP requests.
+
+Responsibilities include:
+
+- Receive requests.
+- Delegate business logic.
+- Return responses.
+
+Controllers should remain small.
+
+Business logic belongs elsewhere.
+
+---
+
+# Service
+
+Services contain business logic.
+
+Typical responsibilities include:
+
+- Business rules
+- Data manipulation
+- Workflow coordination
+- Domain operations
+
+Services should never become Controllers.
+
+Controllers should never become Services.
+
+Each class has a single responsibility.
+
+---
+
+# Request
+
+Requests centralize validation.
+
+Every validation rule belonging to a Workflow should remain inside its Request class.
+
+Validation should never be duplicated across Controllers.
+
+---
+
+# Policy
+
+Policies handle authorization.
+
+Each Workflow owns exactly one Policy.
+
+Policies delegate authorization to the application's authorization layer.
+
+Policies should never know:
+
+- Role names
+- Permission identifiers
+- Database schema
+
+Authorization remains completely independent from business logic.
+
+---
+
+# Routes
+
+Every Workflow owns its own route file.
+
+```text
+ProfileRoutes.php
+```
+
+Routes remain close to the feature they belong to.
+
+MCF automatically discovers and registers Workflow routes during application startup.
+
+---
+
+# Views
+
+Every Workflow owns its own Blade templates.
+
+```text
+Views
+├── index.blade.php
+├── create.blade.php
+├── edit.blade.php
+└── components
+```
+
+This keeps presentation logic together with the feature that owns it.
+
+---
+
+# Language Resources
+
+Every Workflow owns its own language directory.
 
 ```text
 Lang
 ```
 
-Translation files are optional.
+Unlike traditional Laravel applications, translations are distributed across Workflows.
 
-MCF recursively discovers translation files inside every Workflow's `Lang` directory.
+During application startup, MCF discovers every Workflow language directory and registers the available translation resources automatically.
 
-Keeping translations beside the Workflow improves discoverability.
+Developers do not manually register Workflow language files.
 
----
-
-# Why This Architecture?
-
-As applications grow, code becomes scattered across multiple directories.
-
-Finding the Controller, Request, Service, Policy, Routes, translations, and documentation for one feature becomes increasingly difficult.
-
-MCF solves this by keeping every business capability completely self-contained.
-
-Every Workflow contains:
-
-- Controller
-- Request
-- Service
-- Policy
-- Views
-- Routes
-- Lang
-- README
-
-Developers always know where everything belongs.
-
-There is no guessing.
-
-There is no searching.
-
-Every Workflow follows exactly the same architecture.
+This allows every Workflow to remain completely self-contained.
 
 ---
 
-# Workflow Rules
+# Base Classes
 
-## Rule 1 — A Workflow Represents a Goal
+MCF provides common framework base classes.
 
-A Workflow represents something the user wants to accomplish.
+```text
+app/MCF/Base
+├── MfcController
+├── MfcPolicy
+├── MfcRequest
+└── MfcService
+```
 
-### ✔ Good
+Every generated Workflow inherits from these classes.
 
-- Authentication
-- User Management
-- Profile
-- Dashboard
-- Settings
-
-### ✘ Avoid
-
-- User
-- Product
-- Order
-- Role
-
-Think about business capabilities, not database tables.
+This provides a consistent foundation while allowing projects to extend shared framework behavior from a single location.
 
 ---
 
-## Rule 2 — One Workflow, One Responsibility
+# Separation of Responsibilities
 
-Each Workflow should own one business responsibility.
+MCF encourages one responsibility per class.
 
-Example:
+| Component | Responsibility |
+|-----------|----------------|
+| Controller | HTTP communication |
+| Service | Business logic |
+| Request | Validation |
+| Policy | Authorization |
+| Routes | Endpoint definitions |
+| Views | Presentation |
+| Lang | Localization |
 
-**Authentication**
-
-- Login
-- Logout
-- Forgot Password
-- Reset Password
-
-These all belong to Authentication.
-
----
-
-## Rule 3 — Actions Are Not Workflows
-
-Avoid creating Workflows such as:
-
-- Export
-- Delete
-- Upload
-- Import
-- Print
-
-These are actions.
-
-Actions belong inside another Workflow.
+This separation improves readability, maintainability and testability.
 
 ---
 
-## Rule 4 — Follow the User Journey
+# Feature Isolation
 
-Ask yourself:
+One of MCF's primary goals is feature isolation.
 
-> Where does the user naturally begin this task?
+A Workflow contains everything related to one business capability.
+
+Moving or deleting a Workflow should have minimal impact on unrelated features.
+
+This organization allows applications to scale without scattering code across multiple directories.
+
+# Application Startup
+
+When an MCF application starts, the framework initializes every registered Workflow automatically.
+
+The startup process includes:
+
+1. Loading framework configuration.
+2. Discovering Modules.
+3. Discovering Workflows.
+4. Registering Workflow routes.
+5. Registering Workflow views.
+6. Registering Workflow language resources.
+7. Bootstrapping the application.
+
+Developers are not required to manually register Workflows.
+
+---
+
+# Workflow Discovery
+
+MCF automatically discovers every Workflow inside the Modules directory.
+
+```text
+app/MCF/Modules
+```
 
 Example:
 
 ```text
-User Management
-└── Users List
-    └── Export
+Modules
+├── Users
+│   ├── Authentication
+│   └── Profile
+│
+├── Shop
+│   ├── Product Catalog
+│   └── Checkout
+│
+└── Reports
+    └── Sales Reports
 ```
 
-Export belongs to User Management.
+Every discovered Workflow becomes part of the application automatically.
+
+Adding a new Workflow requires no additional registration.
 
 ---
 
-## Rule 5 — Keep Related Actions Together
+# Route Registration
 
-If actions share:
+Every Workflow owns its own route definition.
 
-- Business context
-- Permissions
-- Views
-- Data
+Example:
 
-they belong inside the same Workflow.
+```text
+Profile
+└── Backend
+    └── ProfileRoutes.php
+```
 
----
+During startup MCF discovers every Workflow route file and registers it with Laravel.
 
-## Rule 6 — A Workflow Must Be Independent
+Developers never maintain one large global route file.
 
-Ask:
-
-> Can this Workflow logically exist on its own?
-
-If not, it probably belongs inside another Workflow.
+Each feature remains responsible for its own endpoints.
 
 ---
 
-## Rule 7 — Every Workflow Belongs to a Module
+# View Registration
 
-Every Workflow belongs to exactly one Module.
+Every Workflow owns its own Views directory.
 
 Example:
 
 ```text
 Users
-└── Authentication
+└── Profile
+    └── Views
 ```
 
-This relationship is mandatory.
+MCF automatically registers Workflow views using a namespace derived from the Module and Workflow.
+
+Example:
+
+```php
+return view('Users::Profile.index');
+```
+
+This keeps Blade templates isolated while remaining easy to reference throughout the application.
 
 ---
 
-## Rule 8 — Layout Is Just Another Workflow
+# Language Registration
 
-Layout follows the same architecture as every other Workflow.
-
-It may be:
-
-- Renamed
-- Deleted
-- Recreated
-- Replaced
-- Duplicated
-
-The default `Shared/Layout` exists only because the installer creates it.
-
----
-
-## Rule 9 — Never Name a Workflow After a Model
-
-Models describe data.
-
-Workflows describe business capabilities.
-
-### ✘ Avoid
-
-- User
-- Product
-- Role
-
-### ✔ Prefer
-
-- User Management
-- Product Catalog
-- Role Management
-
----
-
-## Rule 10 — The Name Should Explain Itself
-
-A Workflow name should immediately describe its responsibility.
-
----
-
-## Rule 11 — Every Workflow Uses the Same Foundation
-
-Every generated Workflow inherits from the MCF base classes.
+Each Workflow contains its own language resources.
 
 ```text
-app/MCF/Base
-
-├── MfcController.php
-├── MfcRequest.php
-├── MfcService.php
-└── MfcPolicy.php
+Users
+└── Profile
+    └── Lang
 ```
 
-Every generated Workflow uses these base classes to provide a consistent architecture across the framework.
+During application startup, MCF recursively discovers every Workflow Lang directory.
+
+All discovered translation resources are then registered automatically.
+
+This provides several advantages.
+
+- Workflows remain self-contained.
+- Translations stay close to the feature they describe.
+- No manual registration is required.
+- Moving a Workflow automatically moves its translations.
+- Removing a Workflow automatically removes its translations.
+
+Localization scales naturally as applications grow.
 
 ---
 
-# The Golden Rule
+# Database Layer
 
-Before creating a Workflow ask yourself:
+MCF keeps database-related classes together inside the framework.
 
-> **If I delete this Workflow, what business capability disappears?**
+```text
+app/MCF/Database
+├── Models
+├── Migrations
+├── Factories
+└── Seeders
+```
 
-✔ Authentication disappears.
+This organization keeps application code inside the MCF architecture while remaining fully compatible with Laravel's migration and Eloquent systems.
 
-✔ User Management disappears.
+---
 
-✘ Export disappears.
+# Shared Components
 
-✘ Delete disappears.
+Not every resource belongs to a single Workflow.
 
-Export and Delete are actions.
+MCF provides shared framework directories for reusable components.
 
-Authentication and User Management are business capabilities.
+```text
+app/MCF
+├── Mail
+├── Middleware
+├── Notifications
+└── Rules
+```
+
+These directories contain components that may be used by multiple Workflows.
+
+Keeping them outside individual Workflows avoids unnecessary duplication.
+
+---
+
+# Layout Workflow
+
+The installer creates a default Layout Workflow.
+
+```text
+Shared
+└── Layout
+```
+
+Unlike many frameworks, the Layout is **not** a special framework component.
+
+It is simply another Workflow.
+
+Developers may:
+
+- Rename it.
+- Delete it.
+- Recreate it.
+- Duplicate it.
+- Customize it.
+
+MCF treats Layout exactly like every other Workflow.
+
+---
+
+# Request Lifecycle
+
+A typical request travels through the following pipeline.
+
+```text
+HTTP Request
+
+↓
+
+Route
+
+↓
+
+Workflow Controller
+
+↓
+
+Workflow Request
+
+↓
+
+Workflow Policy
+
+↓
+
+Workflow Service
+
+↓
+
+Response
+```
+
+Each component performs one responsibility before passing control to the next.
+
+This predictable execution flow makes applications easier to understand and debug.
+
+---
+
+# Extensibility
+
+MCF was designed to be extended rather than modified.
+
+Projects may:
+
+- Extend base classes.
+- Replace framework services.
+- Add custom generators.
+- Create reusable Workflow templates.
+- Integrate external packages.
+- Customize application structure where appropriate.
+
+Because responsibilities remain well separated, extending the framework rarely requires changing existing code.
+
+---
+
+# Laravel Compatibility
+
+MCF extends Laravel instead of replacing it.
+
+Developers continue using familiar Laravel features such as:
+
+- Eloquent
+- Blade
+- Queues
+- Events
+- Middleware
+- Validation
+- Policies
+- Notifications
+- Mail
+- Caching
+- Storage
+- Broadcasting
+- Scheduling
+
+Existing Laravel packages continue to work normally inside MCF applications.
+
+---
+
+# Scalability
+
+As applications grow, new features are added by creating additional Workflows.
+
+Because every Workflow remains isolated:
+
+- Features are easier to locate.
+- Teams can work independently.
+- Merge conflicts are reduced.
+- Refactoring becomes simpler.
+- Testing becomes more focused.
+
+The architecture remains consistent regardless of project size.
+
+---
+
+# Design Principles
+
+MCF architecture is built around the following principles.
+
+- Business capability first.
+- Feature isolation.
+- One responsibility per class.
+- Self-contained Workflows.
+- Automatic discovery.
+- Convention over configuration.
+- Laravel compatibility.
+- Extensibility.
+- Predictable structure.
+- Long-term maintainability.
+
+Every architectural decision within MCF follows these principles.
 
 ---
 
 # Summary
 
-Every MCF application follows the same structure.
+MCF organizes applications around Workflows rather than framework directories or database models.
 
-```text
-Module
-└── Workflow
-    ├── WorkflowController.php
-    ├── WorkflowRequest.php
-    ├── WorkflowService.php
-    ├── WorkflowPolicy.php
-    ├── WorkflowRoutes.php
-    ├── Views
-    ├── Lang
-    └── README.md
-```
+Each Workflow contains everything required to implement a single business capability, including its backend classes, views and language resources.
 
-Every generated Workflow inherits from:
+The framework automatically discovers and registers Workflows, routes, views and translations, allowing developers to focus on building features instead of maintaining framework configuration.
 
-```text
-MfcController
-MfcRequest
-MfcService
-MfcPolicy
-```
-
-Keep Workflows focused.
-
-Keep business logic inside Services.
-
-Keep validation inside Requests.
-
-Keep authorization inside Policies.
-
-Keep related functionality together.
-
-Build applications around business capabilities—not database tables.
+By combining feature isolation, automatic discovery and Laravel compatibility, MCF provides a scalable architecture that remains easy to understand from small projects to large enterprise applications.

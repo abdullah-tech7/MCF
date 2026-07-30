@@ -1,56 +1,144 @@
 # MCF Permissions
 
-## Overview
+Authorization in MCF is designed around one principle:
 
-MCF provides a fully dynamic authorization architecture.
+> **The framework defines the authorization architecture. The application defines the authorization data.**
 
-Permissions, Roles, and Access Rules are application data.
+MCF provides a workflow-oriented authorization pipeline without making assumptions about roles, permissions, storage, or identity providers.
 
-They are never defined by the framework.
-
-Authorization decisions are driven entirely by the application's permission provider.
+This allows the same Workflow to be reused across different projects without modifying its authorization logic.
 
 ---
 
-# Core Philosophy
+# Authorization Philosophy
 
-Permissions are data.
+MCF treats authorization as an application concern rather than a framework concern.
 
-Roles are data.
+The framework provides:
 
-Access rules are data.
+- Authorization architecture
+- Authorization flow
+- Workflow Policies
+- Base Policy classes
 
-MCF provides the authorization architecture.
+Applications provide:
 
-Applications provide the authorization data.
+- Roles
+- Permissions
+- Authorization rules
+- Storage implementation
+- Identity model
+
+This separation keeps business features independent from authorization implementation.
 
 ---
 
-# Dynamic Authorization
+# Core Principles
 
-MCF does not recognize predefined roles.
+MCF authorization follows five fundamental principles.
 
-Examples of forbidden assumptions:
+## Dynamic
+
+Authorization decisions are evaluated at runtime.
+
+Nothing is hard-coded into the framework.
+
+---
+
+## Centralized
+
+Every authorization request passes through a single authorization service.
+
+Authorization logic is never duplicated across Workflows.
+
+---
+
+## Storage Independent
+
+Permissions may come from any storage mechanism.
+
+Changing the storage backend must never require modifying Workflows or Policies.
+
+---
+
+## Workflow-Oriented
+
+Authorization belongs to Workflows rather than Models.
+
+Each Workflow owns its own Policy.
+
+---
+
+## Extensible
+
+Applications are free to implement any authorization model without changing the framework architecture.
+
+---
+
+# Permissions Are Data
+
+Permissions belong to the application.
+
+They are not part of MCF.
+
+Example:
 
 ```text
-Admin
-
-User
-
-Manager
-
-Employee
-
-SuperAdmin
+Create Users
+Edit Users
+Delete Users
+Export Reports
+Approve Orders
+Manage Inventory
 ```
 
-These are application-specific data created by developers.
+Applications define permission identifiers.
 
-MCF has no knowledge of them.
+MCF never reserves any permission names.
 
 ---
 
-# No Hard-Coded Roles
+# Roles Are Data
+
+Roles are also application data.
+
+Examples:
+
+```text
+Administrator
+Manager
+Employee
+Customer
+Accountant
+```
+
+These names exist only inside the application.
+
+MCF never creates or reserves roles.
+
+---
+
+# Framework Guarantees
+
+MCF intentionally avoids making assumptions about authorization.
+
+The framework never assumes:
+
+- Role names
+- Role IDs
+- Permission names
+- Permission IDs
+- Database tables
+- Database schemas
+- Identity providers
+
+Every authorization decision is delegated to the application's authorization layer.
+
+---
+
+# Never Hard-Code Authorization
+
+Avoid coupling business logic to authorization data.
 
 Never write:
 
@@ -76,103 +164,90 @@ Never write:
 enum Role
 ```
 
-Never assume any role exists.
-
----
-
-# No Hard-Coded Permissions
-
 Never write:
 
 ```php
 $user->can('manage_users')
 ```
 
-unless the permission identifier is resolved dynamically by the application's authorization system.
+inside framework components unless permission identifiers are resolved dynamically by the application's authorization service.
 
-Permission identifiers should never become part of the framework's business logic.
+Business features should never depend on application-specific role names.
 
 ---
 
-# Roles
+# Workflow Authorization
 
-Roles exist only within the application's authorization data.
+Authorization in MCF begins with the Workflow.
+
+Every generated Workflow owns one Policy.
 
 Example:
 
 ```text
-Roles
-
---------------
-Administrator
-Manager
-Accountant
-Customer
+Authentication
+    └── AuthenticationPolicy
 ```
 
-MCF never creates or reserves any role.
+```text
+Profile
+    └── ProfilePolicy
+```
 
-Applications define them.
+```text
+User Management
+    └── UserManagementPolicy
+```
+
+```text
+Product Catalog
+    └── ProductCatalogPolicy
+```
+
+Authorization belongs to the business capability implemented by the Workflow.
+
+It does not belong to database Models.
 
 ---
 
-# Permissions
+# Endpoint Authorization
 
-Permissions also exist only within the application's authorization data.
+A Workflow may expose many endpoints.
 
 Example:
 
 ```text
-Permissions
+User Management
 
---------------
-Create Users
-Edit Users
-Delete Users
-View Reports
-Manage Inventory
+├── index
+├── create
+├── store
+├── edit
+├── update
+├── delete
+└── export
 ```
 
-MCF never defines permissions.
+Every endpoint delegates authorization to the same Workflow Policy.
 
-Applications own them completely.
+This keeps authorization centralized while allowing each action to define its own authorization requirements.
 
 ---
 
-# Role Assignment
+# Authorization Lifecycle
 
-Users receive Roles through application-defined relationships.
-
-Example:
+Every authorization request follows the same pipeline.
 
 ```text
-User
+HTTP Request
 
 ↓
 
-Role
+Workflow Endpoint
 
 ↓
 
-Permissions
-```
-
-MCF does not require a specific database schema or authorization model.
-
-Projects are free to implement their own design.
-
----
-
-# Authorization Flow
-
-Authorization follows this sequence:
-
-```text
-Request
-
-↓
-
-Policy
+Workflow Policy
 
 ↓
 
@@ -188,32 +263,38 @@ Permission Source
 
 ↓
 
-Decision
+Authorization Decision
+
+↓
+
+Workflow Service
 ```
 
-Policies never perform authorization directly.
+Every layer has a single responsibility.
 
-They delegate authorization to the Permission Service.
+No layer should bypass another.
 
 ---
 
-# Policies
+# Workflow Policies
 
-Every generated Workflow owns its own Policy.
-
-Generated Policies inherit from:
+Every generated Workflow inherits from:
 
 ```text
 MfcPolicy
 ```
 
-Policies answer one question only:
+The Policy acts as the authorization entry point for the Workflow.
 
-```text
-Is this action allowed?
-```
+Its responsibility is simple:
 
-Good:
+> Decide whether a Workflow action may continue.
+
+Policies should never implement authorization storage.
+
+Instead they delegate authorization.
+
+Good example:
 
 ```php
 return $permissionService->allows(...);
@@ -225,7 +306,9 @@ Avoid:
 return $user->role == 'admin';
 ```
 
-Policies must remain independent from authorization storage.
+Policies answer authorization questions.
+
+They do not resolve authorization themselves.
 
 ---
 
@@ -233,22 +316,25 @@ Policies must remain independent from authorization storage.
 
 The Permission Service is the central authorization engine.
 
-Responsibilities include:
-
-- Resolve permissions.
-- Evaluate authorization rules.
-- Apply business authorization policies.
-- Return authorization results.
-
 Every authorization request passes through this service.
 
-Business Workflows should never duplicate authorization logic.
+Responsibilities include:
+
+- Resolve permission requests.
+- Apply authorization rules.
+- Coordinate permission providers.
+- Return authorization decisions.
+- Centralize business authorization logic.
+
+Workflows should never duplicate authorization logic outside this service.
 
 ---
 
 # Permission Provider
 
-The Permission Provider retrieves authorization information.
+The Permission Provider retrieves authorization data.
+
+The provider hides how authorization information is stored.
 
 Possible providers include:
 
@@ -257,66 +343,96 @@ Possible providers include:
 - REST API
 - LDAP
 - Identity Provider
+- External Authorization Service
 
-Providers are interchangeable.
-
-The Permission Service depends on the provider abstraction rather than a storage implementation.
+Because Policies depend only on the provider abstraction, storage implementations may change without affecting business code.
 
 ---
 
 # Permission Source
 
-Authorization data may originate from any source.
+Authorization information may originate from any source.
 
-Examples:
+Examples include:
 
 - MySQL
 - PostgreSQL
 - SQLite
+- SQL Server
 - Redis
-- REST API
-- Identity Server
+- REST APIs
+- External Identity Providers
+- Cloud Authorization Services
 
 MCF imposes no storage requirements.
+
+Applications remain free to choose the implementation that best fits their needs.
 
 ---
 
 # Permission Resolution
 
-Permission checks should always be resolved dynamically.
+Permission checks should always be evaluated dynamically.
 
-The Permission Service may retrieve authorization information from:
+The Permission Service may obtain authorization information from:
 
 - Database
 - Cache
-- Remote services
-- External identity providers
+- Remote APIs
+- Identity servers
+- Multiple providers simultaneously
 
-Policies should never care where authorization data is stored.
-
----
-
-# Configuration
-
-Authorization behavior should be configurable.
-
-Permission storage must remain decoupled from business logic.
-
-Changing the authorization backend should not require modifying Policies or Workflows.
-
----
+Policies should never know where authorization information comes from.
 
 # Module Independence
 
-Modules must never assume:
+Modules must remain independent from authorization implementation.
+
+A Module must never assume:
 
 - Role names
-- Role IDs
+- Role identifiers
 - Permission names
-- Permission IDs
+- Permission identifiers
 - Database schema
+- Authorization tables
+- Storage implementation
 
-Modules simply request an authorization decision.
+Instead, Modules simply request an authorization decision from the Permission Service.
+
+This guarantees that the same Module can be reused across multiple applications without modification.
+
+---
+
+# Workflow Independence
+
+One of the primary goals of MCF is Workflow portability.
+
+A Workflow should be reusable in another project without changing its authorization logic.
+
+Example:
+
+Project A
+
+```text
+Administrator
+Manager
+Employee
+```
+
+Project B
+
+```text
+Owner
+Supervisor
+Operator
+```
+
+Although role names differ completely, the Workflow remains unchanged.
+
+Only the application's authorization data changes.
+
+This separation allows Workflows to remain portable and framework-independent.
 
 ---
 
@@ -327,142 +443,188 @@ Authorization should be manageable without modifying application source code.
 Typical administrative operations include:
 
 - Creating Roles
-- Removing Roles
 - Renaming Roles
+- Removing Roles
 - Creating Permissions
+- Updating Permissions
 - Assigning Permissions
 - Revoking Permissions
+- Creating Permission Groups
 
-These operations should require only changes to the authorization data.
+All of these operations should affect only authorization data.
+
+Business Workflows should not require modification.
 
 ---
 
-# Extensibility
+# Configuration
 
-MCF places no restrictions on authorization models.
+Authorization behavior should remain configurable.
+
+Applications may choose how authorization is implemented.
+
+Examples include:
+
+- Database authorization
+- Cached authorization
+- Remote authorization
+- Hybrid authorization
+
+Changing the authorization backend should never require modifying Workflow Policies.
+
+---
+
+# Supported Authorization Models
+
+MCF does not enforce a specific authorization strategy.
 
 Applications may implement:
 
 - Role-Based Access Control (RBAC)
 - Permission-Based Authorization
 - Attribute-Based Access Control (ABAC)
+- Claims-Based Authorization
 - External Identity Providers
 - Hybrid authorization models
 
-As long as authorization remains dynamic and centralized.
-
----
-
-# Permission Architecture
-
-MCF separates authorization into four independent layers.
-
-```text
-Policy
-    │
-    ▼
-Permission Service
-    │
-    ▼
-Permission Provider
-    │
-    ▼
-Permission Source
-```
-
-Each layer has one clear responsibility.
+As long as authorization remains centralized and dynamic, the implementation is compatible with MCF.
 
 ---
 
 # Separation of Responsibilities
 
-## Policy
+MCF divides authorization into four independent layers.
 
-Responsibilities:
+```text
+Workflow Policy
+        │
+        ▼
+Permission Service
+        │
+        ▼
+Permission Provider
+        │
+        ▼
+Permission Source
+```
 
-- Request authorization.
-- Return authorization results.
+Each layer has one responsibility.
 
-Policies must never:
-
-- Query the database.
-- Read cache.
-- Read configuration.
-- Know table names.
-- Know role names.
-- Know permission identifiers.
+This separation keeps authorization predictable, testable and easy to extend.
 
 ---
 
-## Permission Service
+# Workflow Policy
+
+Responsibilities:
+
+- Receive authorization requests.
+- Delegate authorization.
+- Return authorization results.
+
+Workflow Policies must never:
+
+- Query databases.
+- Read cache.
+- Read configuration files.
+- Know table names.
+- Know role names.
+- Know permission identifiers.
+- Know storage implementation.
+
+Policies should remain thin and predictable.
+
+---
+
+# Permission Service
 
 Responsibilities:
 
 - Resolve authorization requests.
-- Apply authorization logic.
-- Coordinate authorization providers.
+- Evaluate authorization rules.
+- Coordinate providers.
 - Return authorization decisions.
 
-This is the single entry point for authorization.
+The Permission Service is the single entry point for authorization inside the application.
+
+Business authorization logic belongs here.
 
 ---
 
-## Permission Provider
+# Permission Provider
 
 Responsibilities:
 
 - Retrieve authorization data.
-- Abstract the underlying storage mechanism.
+- Hide storage implementation.
+- Provide a consistent interface to the Permission Service.
 
-Providers may use any supported backend without affecting Policies or Modules.
+Providers may read authorization information from any supported backend.
+
+Replacing one provider with another must not affect Workflow Policies.
 
 ---
 
-## Permission Source
+# Permission Source
 
 Responsibilities:
 
-- Store authorization data.
+- Persist authorization data.
 
-Examples include:
+Possible implementations include:
 
 - SQL databases
 - Cache systems
-- Remote APIs
 - Identity providers
+- Remote authorization services
+- Enterprise IAM systems
 
-The storage implementation remains completely replaceable.
+Permission Sources are completely replaceable.
 
 ---
 
 # Forbidden Dependencies
 
-Policies must never depend directly on:
+Workflow Policies must never depend directly on:
 
 - Database tables
-- Eloquent Models
+- Eloquent models
 - Cache drivers
 - Configuration values
 - Role names
 - Permission names
-- Permission IDs
-- Storage implementations
+- Permission identifiers
+- Storage implementation
 
-Authorization must always flow through the Permission Service.
+All authorization must flow through the Permission Service.
+
+This keeps business features independent from infrastructure.
+
+---
+
+# Laravel Integration
+
+MCF builds on Laravel's authorization system.
+
+It does not replace Laravel Policies or Gates.
+
+Instead, MCF organizes authorization around Workflows while keeping Laravel's authorization facilities available.
+
+Applications may continue using Laravel's authorization features wherever appropriate.
 
 ---
 
 # Design Principles
 
-MCF authorization follows these principles:
+Authorization in MCF follows these principles.
 
 - Dynamic
-- Database-driven
-- Provider-based
-- Storage-independent
 - Centralized
+- Workflow-Oriented
+- Storage Independent
+- Provider Based
 - Extensible
-- Decoupled from business logic
+- Decoupled from Business Logic
 
 Authorization data belongs to the application.
 
@@ -472,7 +634,9 @@ Authorization resolution belongs to the Permission Service.
 
 Authorization retrieval belongs to the Permission Provider.
 
-No authorization information should ever be hard-coded into an MCF application.
+Authorization storage belongs to the Permission Source.
+
+Each responsibility exists in exactly one layer.
 
 ---
 
@@ -480,11 +644,36 @@ No authorization information should ever be hard-coded into an MCF application.
 
 This architecture provides:
 
+- Workflow portability.
 - Storage independence.
 - Dynamic authorization.
 - Centralized permission resolution.
 - Decoupled business logic.
 - Replaceable authorization providers.
 - Database independence.
-- Improved testability.
-- Future compatibility with external identity systems.
+- Improved maintainability.
+- Easier testing.
+- Compatibility with enterprise identity systems.
+- Future-proof authorization architecture.
+
+---
+
+# Summary
+
+MCF treats authorization as a Workflow concern rather than a database concern.
+
+Every Workflow owns its own Policy.
+
+Every Policy delegates authorization to the Permission Service.
+
+The Permission Service coordinates one or more Permission Providers.
+
+Providers retrieve authorization data from any Permission Source chosen by the application.
+
+This layered architecture keeps Workflows independent from roles, permissions, storage technologies and infrastructure, allowing the same business feature to be reused across different projects with minimal or no changes.
+
+The framework defines the authorization architecture.
+
+The application defines the authorization data.
+
+Together, they provide a flexible, centralized and extensible authorization system that scales with applications of any size.

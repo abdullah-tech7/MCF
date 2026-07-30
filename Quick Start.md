@@ -1,147 +1,273 @@
 # Quick Start
 
-## Installation
+This guide walks you through creating your first MCF application from scratch.
 
-Install MCF into a fresh Laravel project:
+By the end of this guide, you will know how to:
+
+- Install MCF
+- Create Modules
+- Create Workflows
+- Generate CRUD Workflows
+- Add Endpoints
+- Generate Language Files
+- Create Models
+- Understand the generated project structure
+
+Estimated time: **10–15 minutes**
+
+---
+
+# Before You Begin
+
+Make sure your environment meets the following requirements.
+
+- PHP 8.4+
+- Laravel 12
+- Composer
+
+---
+
+# Step 1 — Install MCF
+
+Inside your Laravel project, run:
 
 ```bash
 php artisan mcf:install
 ```
 
-During installation, MCF automatically creates the default application structure, including:
+The installer prepares the MCF framework directory and creates the default project structure.
+
+After installation your application contains:
+
+```text
+app/MCF
+├── Base
+├── Database
+├── Mail
+├── Middleware
+├── Modules
+├── Notifications
+├── Rules
+└── mcf_routes.php
+```
+
+The installer also creates the default Layout Workflow.
 
 ```text
 Shared
 └── Layout
 ```
 
-The generated **Layout** is a normal Workflow created using:
-
-```bash
-php artisan mcf:make:workflow:layout Shared Layout
-```
-
-It is not reserved by the framework. You may modify it, rename it, delete it, recreate it, or create additional Layout Workflows whenever needed.
+The Layout Workflow is completely editable and behaves like every other Workflow.
 
 ---
 
-## Modules
+# Step 2 — Create Your First Module
 
-Create a new module:
+Modules organize related business features.
+
+Create one using:
 
 ```bash
 php artisan mcf:make:module Users
 ```
 
+Result:
+
+```text
+Modules
+└── Users
+```
+
+A Module is simply a container.
+
+Business logic belongs inside Workflows.
+
 ---
 
-## Workflows
+# Step 3 — Create Your First Workflow
 
-Create a Workflow inside a Module:
+Create a Workflow inside the Users module.
 
 ```bash
 php artisan mcf:make:workflow Users Profile
 ```
 
-Create a CRUD Workflow:
+MCF generates:
 
-```bash
-php artisan mcf:make:workflow:crud Users UserManagement
+```text
+Users
+└── Profile
+    ├── Backend
+    ├── Lang
+    └── Views
 ```
 
-Create a Layout Workflow:
+The Backend directory contains:
 
-```bash
-php artisan mcf:make:workflow:layout Shared Layout
+```text
+Backend
+├── ProfileController.php
+├── ProfilePolicy.php
+├── ProfileRequest.php
+├── ProfileRoutes.php
+└── ProfileService.php
 ```
 
-Remove a Workflow:
-
-```bash
-php artisan mcf:remove:workflow Users Profile
-```
-
-> **Before creating your first Workflow, read the Workflow Rules at the bottom of this page.**
+Every generated class inherits from the MCF base classes.
 
 ---
 
-# Database
+# Step 4 — Create a CRUD Workflow
 
-## Models
+Many applications require Create, Read, Update and Delete operations.
 
-Create a model:
+Instead of generating everything manually, use:
+
+```bash
+php artisan mcf:make:workflow:crud Users Products
+```
+
+MCF prepares a workflow designed for resource management.
+
+This is recommended for administrative sections such as:
+
+- Products
+- Categories
+- Customers
+- Orders
+- Employees
+
+---
+
+# Step 5 — Add Endpoints
+
+A Workflow usually contains multiple actions.
+
+Instead of editing routes and controllers manually, launch the Endpoint Generator.
+
+```bash
+php artisan mcf:endpoint:create
+```
+
+The generator will guide you through the required options.
+
+Depending on your selections, it can generate:
+
+- Controller methods
+- Routes
+- Views
+- Additional workflow components
+
+This is the recommended way to expand existing Workflows.
+
+---
+
+# Step 6 — Create Language Files
+
+Generate Arabic translations for a Workflow.
+
+```bash
+php artisan mcf:lang:make ar Users Profile
+```
+
+Generate language files for an entire Module.
+
+```bash
+php artisan mcf:lang:make ar Users
+```
+
+Generate application-wide language files.
+
+```bash
+php artisan mcf:lang:make ar
+```
+
+MCF keeps translations close to the feature they belong to whenever possible.
+
+---
+
+# Step 7 — Create a Model
+
+Generate a model.
 
 ```bash
 php artisan mcf:make:model User
 ```
 
-Create a model with a migration:
+Generate a model with migration.
 
 ```bash
-php artisan mcf:make:model User -m
+php artisan mcf:make:model User --migration
 ```
 
-Create a model with a factory:
+Generate everything.
 
 ```bash
-php artisan mcf:make:model User -f
+php artisan mcf:make:model User --all
 ```
 
-Create a model with a seeder:
-
-```bash
-php artisan mcf:make:model User -s
-```
-
-Create a model with migration, factory, and seeder:
-
-```bash
-php artisan mcf:make:model User -mfs
-```
+Models are stored inside the MCF database directory.
 
 ---
 
-## Migrations
+# Step 8 — Create a Migration
 
-Create a migration:
+Generate a migration.
 
 ```bash
 php artisan mcf:make:migration create_users_table
 ```
 
-Create a migration for a new table:
+Create a table.
 
 ```bash
 php artisan mcf:make:migration create_users_table --create=users
 ```
 
-Create a migration for an existing table:
+Modify an existing table.
 
 ```bash
-php artisan mcf:make:migration add_email_to_users_table --table=users
+php artisan mcf:make:migration add_status_to_users_table --table=users
 ```
 
 ---
 
-## Factories
+# Step 9 — Other Generators
 
-Create a factory:
+MCF also provides generators for common Laravel components.
+
+Middleware
+
+```bash
+php artisan mcf:make:middleware AdminMiddleware
+```
+
+Mail
+
+```bash
+php artisan mcf:make:mail WelcomeMail
+```
+
+Notification
+
+```bash
+php artisan mcf:make:notification OrderCreated
+```
+
+Validation Rule
+
+```bash
+php artisan mcf:make:rule StrongPassword
+```
+
+Factory
 
 ```bash
 php artisan mcf:make:factory UserFactory
 ```
 
-Create a factory for a specific model:
-
-```bash
-php artisan mcf:make:factory UserFactory --model=User
-```
-
----
-
-## Seeders
-
-Create a seeder:
+Seeder
 
 ```bash
 php artisan mcf:make:seeder UserSeeder
@@ -149,449 +275,159 @@ php artisan mcf:make:seeder UserSeeder
 
 ---
 
-# HTTP
+# Generated Workflow
 
-## Middleware
-
-Create a middleware:
-
-```bash
-php artisan mcf:make:middleware Auth
-```
-
----
-
-## Validation Rules
-
-Create a validation rule:
-
-```bash
-php artisan mcf:make:rule StrongPassword
-```
-
----
-
-## Notifications
-
-Create a notification:
-
-```bash
-php artisan mcf:make:notification OrderCreated
-```
-
----
-
-## Mail
-
-Create a mailable:
-
-```bash
-php artisan mcf:make:mail WelcomeMail
-```
-
----
-
-# Routes
-
-Register all application routes inside:
-
-```text
-app/MCF/mcf_routes.php
-```
-
----
-
-# Assets & Storage
-
-MCF does not provide its own asset or storage system.
-
-Use Laravel's native locations:
-
-- `public/` for CSS, JavaScript, images, fonts, and other public assets.
-- `storage/` for uploaded files and filesystem storage.
-
-This keeps MCF fully compatible with Laravel's native filesystem and deployment workflow.
-
----
-
-# Available Commands
-
-| Command | Description |
-|----------|-------------|
-| `mcf:make:module` | Create a new module |
-| `mcf:make:workflow` | Create a workflow |
-| `mcf:make:workflow:crud` | Create a CRUD workflow |
-| `mcf:make:workflow:layout` | Create a Layout workflow |
-| `mcf:remove:workflow` | Remove a workflow |
-| `mcf:make:model` | Create a model |
-| `mcf:make:migration` | Create a migration |
-| `mcf:make:factory` | Create a factory |
-| `mcf:make:seeder` | Create a seeder |
-| `mcf:make:middleware` | Create a middleware |
-| `mcf:make:rule` | Create a validation rule |
-| `mcf:make:notification` | Create a notification |
-| `mcf:make:mail` | Create a mailable |
-
----
-
-# Workflow Design
-
-## Introduction
-
-MCF is a **Workflow-Driven Framework**.
-
-Unlike traditional Laravel applications that are commonly organized around database models, MCF organizes applications around **business capabilities**.
-
-Instead of starting with Models and building Controllers around them, MCF starts with a **Workflow** that represents a complete feature of your application.
-
-The goal is simple:
-
-> **Build your application around what the application does, not around what the database stores.**
-
-A Workflow is the primary building block of every MCF application.
-
----
-
-# Modules
-
-Every Workflow belongs to a **Module**.
-
-A Module is simply a container that groups related business capabilities.
-
-Example:
-
-```text
-Modules
-├── System
-├── Users
-├── Shop
-└── Reports
-```
-
-A Module does not contain business logic.
-
-Its purpose is to organize related Workflows.
-
----
-
-# Workflows
-
-A Workflow represents one complete business responsibility inside a Module.
-
-Example:
+A typical Workflow looks like this.
 
 ```text
 Users
-├── Authentication
-├── Profile
-├── User Management
-└── Roles
+└── Profile
+    ├── Backend
+    │   ├── ProfileController.php
+    │   ├── ProfilePolicy.php
+    │   ├── ProfileRequest.php
+    │   ├── ProfileRoutes.php
+    │   └── ProfileService.php
+    ├── Lang
+    └── Views
+```
+
+Everything required for one feature lives in one place.
+
+---
+
+# Development Flow
+
+Most applications follow this workflow.
+
+```text
+Install MCF
+        │
+        ▼
+Create Module
+        │
+        ▼
+Create Workflow
+        │
+        ▼
+Generate CRUD (optional)
+        │
+        ▼
+Create Endpoints
+        │
+        ▼
+Generate Language Files
+        │
+        ▼
+Create Models & Migrations
+        │
+        ▼
+Build Your Feature
+```
+
+---
+
+# Next Steps
+
+After completing this guide, continue with the documentation:
+
+- Architecture
+- Workflow Design
+- Endpoint Generator
+- CLI Reference
+- Language Generator
+- Best Practices
+
+You are now ready to start building applications with MCF.
+
+
+# Workflow Design Essentials
+
+MCF is built around **business capabilities**, not database tables.
+
+Before creating a new Workflow, ask yourself:
+
+> **What does the user want to accomplish?**
+
+If the answer describes a business capability, it is probably a Workflow.
+
+---
+
+## Good Workflow Names
+
+✔ Authentication
+
+✔ User Management
+
+✔ Profile
+
+✔ Dashboard
+
+✔ Settings
+
+✔ Reports
+
+✔ Product Catalog
+
+---
+
+## Avoid These Names
+
+✘ User
+
+✘ Product
+
+✘ Order
+
+✘ Role
+
+These represent data models rather than business features.
+
+---
+
+## One Workflow, One Responsibility
+
+Each Workflow should focus on one responsibility.
+
+Example:
+
+```text
+Authentication
+├── Login
+├── Logout
+├── Forgot Password
+└── Reset Password
+```
+
+All of these belong to the same Workflow because they serve the same business capability.
+
+Avoid splitting related functionality into multiple Workflows unnecessarily.
+
+---
+
+## Actions Are Not Workflows
+
+Actions belong inside Workflows.
+
+For example:
+
+```text
+User Management
+├── List Users
+├── Create User
+├── Edit User
+├── Delete User
+└── Export Users
 ```
 
 Here:
 
-- **Users** is the Module.
-- **Authentication**, **Profile**, **User Management**, and **Roles** are Workflows.
-
-Each Workflow is responsible for one business capability.
-
----
-
-# Layout Workflow
-
-Layout is implemented as a normal Workflow.
-
-The installer creates the following by default:
-
-```text
-Shared
-└── Layout
-```
-
-Internally this is equivalent to:
-
-```bash
-php artisan mcf:make:workflow:layout Shared Layout
-```
-
-The generated Layout Workflow contains the standard application layout and optional Blade components.
-
-Example:
-
-```text
-Shared
-└── Layout
-    ├── LayoutController.php
-    ├── LayoutRequest.php
-    ├── LayoutService.php
-    ├── LayoutPolicy.php
-    ├── LayoutRoutes.php
-    ├── Lang
-    └── Views
-        ├── index.blade.php
-        └── Components
-            ├── head.blade.php
-            ├── header.blade.php
-            ├── navbar.blade.php
-            ├── sidebar.blade.php
-            ├── footer.blade.php
-            ├── guest.blade.php
-            └── auth.blade.php
-```
-
-The Layout Workflow is **not reserved** by MCF.
-
-You are free to:
-
-- Rename it.
-- Delete it.
-- Recreate it.
-- Create multiple Layout Workflows.
-- Customize the generated Blade files.
-
-MCF treats Layout exactly like any other Workflow.
-
----
-
-# Creating Your First Workflow
-
-A Workflow cannot exist without a Module.
-
-First create the Module.
-
-```bash
-php artisan mcf:make:module Users
-```
-
-Then create a Workflow inside that Module.
-
-```bash
-php artisan mcf:make:workflow Users Authentication
-```
-
-MCF generates the following structure.
-
-```text
-Users
-└── Authentication
-    ├── AuthenticationController.php
-    ├── AuthenticationRequest.php
-    ├── AuthenticationService.php
-    ├── AuthenticationPolicy.php
-    ├── AuthenticationRoutes.php
-    ├── Views
-    ├── Lang
-    └── README.md
-```
-
-Every generated component uses the same name as the Workflow.
-
-This naming convention is intentional.
-
-Once you know one Workflow, you immediately know every Workflow in the application.
-
----
-
-# Generated Components
-
-MCF generates much more than a Controller.
-
-It generates a complete feature structure where every file has a single responsibility.
-
----
-
-## AuthenticationController
-
-The Controller is the entry point of the Workflow.
-
-Its responsibilities are to:
-
-- Receive HTTP requests.
-- Coordinate the Workflow.
-- Delegate business logic to the Service.
-- Return the response.
-
-Controllers should remain small.
-
-Business logic should never be written inside Controllers.
-
----
-
-## AuthenticationRequest
-
-Each Workflow owns one Request class.
-
-All validation related to the Workflow is centralized inside the Workflow Request.
-
-```text
-AuthenticationRequest.php
-```
-
-Whether the Workflow contains Login, Logout, Reset Password, or any other operation, all validation belongs to the same Request class.
-
-This keeps validation easy to locate and avoids unnecessary file fragmentation.
-
----
-
-## AuthenticationService
-
-Each Workflow owns one Service class.
-
-The Service contains all business logic for the Workflow.
-
-For example, the Authentication Service may contain methods such as:
-
-- login()
-- logout()
-- forgotPassword()
-- resetPassword()
-
-Instead of creating multiple Service classes for one feature, all business logic remains inside a single Service dedicated to that Workflow.
-
----
-
-## AuthenticationPolicy
-
-Each Workflow owns one Policy class.
-
-The Policy centralizes authorization logic for the Workflow.
-
-Authorization remains predictable and easy to locate.
-
----
-
-## Views
-
-Every Workflow owns its own Views directory.
-
-All Blade files related to that Workflow remain together.
-
-Generated Workflows return:
-
-```php
-return view('Users::Authentication.index');
-```
-
-Layout components are referenced using:
-
-```blade
-@include('Shared::Layout.Components.head')
-```
-
-Instead of searching through one large global Views directory, everything related to Authentication stays inside the Authentication Workflow.
-
----
-
-## Routes
-
-Each Workflow owns its own route definition.
-
-```text
-AuthenticationRoutes.php
-```
-
-MCF automatically registers every generated Workflow route from:
-
-```text
-app/MCF/mcf_routes.php
-```
-
-The developer only manages routes that belong to the current Workflow.
-
----
-
-## Lang
-
-Each Workflow owns its own language directory.
-
-```text
-Lang
-```
-
-MCF recursively discovers translation files inside Workflow Lang directories.
-
-Keeping translations inside the Workflow allows every feature to remain completely self-contained.
-
----
-
-# Why This Architecture?
-
-As applications grow, code often becomes scattered across many unrelated directories.
-
-Finding the Controller, Request, Service, Policy, Routes, Views, translations, and documentation for a single feature may require searching the entire project.
-
-MCF eliminates this problem.
-
-Every Workflow is completely self-contained.
-
-Everything related to one business capability lives inside one directory.
-
-Developers always know where to find:
-
-- Controller
-- Request
-- Service
-- Policy
-- Views
-- Routes
-- Language files
-- Documentation
-
-There is no guessing.
-
-There is no searching.
-
-Every Workflow follows exactly the same architecture.
-
----
-
-# Workflow Rules
-
-## Rule 1 — A Workflow Represents a Goal
-
-A Workflow should represent something the user wants to accomplish.
-
-### ✔ Good
-
-- Authentication
-- User Management
-- Profile
-- Settings
-- Dashboard
-
-### ✘ Avoid
-
-- User
-- Product
-- Order
-- Role
-
-Always think about what the user wants to achieve, not what tables exist in the database.
-
----
-
-## Rule 2 — One Workflow, One Responsibility
-
-Each Workflow should have one business responsibility.
-
-Example:
-
-**Authentication**
-
-- Login
-- Logout
-- Forgot Password
-- Reset Password
-
-All of these belong to the Authentication Workflow because they describe the same business capability.
-
----
-
-## Rule 3 — Actions Are Not Workflows
-
-An action is not a Workflow.
-
-Avoid creating Workflows such as:
+- **User Management** is the Workflow.
+- **Export** is an action.
+- **Delete** is an action.
+- **Create** is an action.
+
+Do not create separate Workflows named:
 
 - Export
 - Delete
@@ -599,207 +435,158 @@ Avoid creating Workflows such as:
 - Print
 - Import
 
-These are actions that belong inside another Workflow.
-
 ---
 
-## Rule 4 — Follow the User Journey
+## Every Workflow Belongs to a Module
 
-Ask yourself:
+A Workflow cannot exist on its own.
 
-> Where does the user naturally begin this action?
-
-Example:
-
-```text
-User Management
-    └── Users List
-            └── Export
-```
-
-Since the user starts from **User Management**, Export belongs to that Workflow.
-
----
-
-## Rule 5 — Keep Related Actions Together
-
-If multiple actions share the same business context, permissions, pages, or data, they belong to the same Workflow.
-
-Example:
-
-**User Management**
-
-- List Users
-- Create User
-- Edit User
-- Delete User
-- Export Users
-
-These all describe one business capability.
-
----
-
-## Rule 6 — A Workflow Must Be Independent
-
-Ask yourself:
-
-> Can this Workflow logically exist on its own?
-
-If the answer is **No**, it probably belongs inside another Workflow.
-
----
-
-## Rule 7 — Every Workflow Belongs to a Module
-
-A Workflow cannot exist by itself.
-
-It always belongs to exactly one Module.
-
-Example:
+Correct:
 
 ```text
 Users
 └── Authentication
 ```
 
-Here:
+```text
+Shop
+└── Product Catalog
+```
 
-- **Users** is the Module.
-- **Authentication** is the Workflow.
+```text
+Reports
+└── Sales Reports
+```
 
-This relationship is mandatory throughout MCF.
+Incorrect:
 
----
+```text
+Authentication
+```
 
-## Rule 8 — Layout Is Just Another Workflow
-
-The Layout Workflow follows exactly the same architecture as every other Workflow.
-
-It can be:
-
-- Renamed.
-- Deleted.
-- Recreated.
-- Replaced.
-- Duplicated.
-
-MCF does not reserve any special location for layouts.
-
-The default `Shared/Layout` Workflow exists only because the installer creates it for convenience.
+without a Module.
 
 ---
 
-## Rule 9 — Never Name a Workflow After a Model
+## Keep Features Together
 
-Models represent data.
+If multiple pages use the same business rules, permissions and data, they usually belong to one Workflow.
 
-Workflows represent business capabilities.
+For example:
 
-### ✘ Avoid
+```text
+Product Catalog
+├── List Products
+├── Create Product
+├── Edit Product
+├── Delete Product
+├── Product Details
+└── Export Products
+```
 
-- User
-- Product
-- Role
-
-### ✔ Prefer
-
-- User Management
-- Product Catalog
-- Role Management
+Keeping related functionality together makes the application easier to understand and maintain.
 
 ---
 
-## Rule 10 — The Name Should Explain Itself
+# Base Classes
 
-A Workflow name should immediately describe its purpose.
+All generated backend classes inherit from the MCF base classes.
+
+```text
+Controller → MfcController
+Request    → MfcRequest
+Service    → MfcService
+Policy     → MfcPolicy
+```
+
+These classes provide a common foundation across every Workflow while allowing projects to extend shared behavior from a single location.
+
+---
+
+# Routes
+
+Each Workflow owns its own route file.
 
 Example:
 
-**Authentication**
+```text
+Backend
+└── ProfileRoutes.php
+```
 
-A developer immediately understands what business capability this Workflow implements.
+MCF automatically loads Workflow routes through:
+
+```text
+app/MCF/mcf_routes.php
+```
+
+This keeps route definitions close to the feature they belong to.
 
 ---
 
-## Rule 11 — Every Workflow Uses the Same Foundation
+# Views
 
-Every generated Workflow inherits from the MCF base classes.
+Each Workflow stores its Blade templates inside its own Views directory.
 
 ```text
-app/MCF/Base
-
-├── MfcController.php
-├── MfcRequest.php
-├── MfcService.php
-└── MfcPolicy.php
+Profile
+└── Views
+    ├── index.blade.php
+    ├── create.blade.php
+    └── edit.blade.php
 ```
 
-Every generated Workflow uses these base classes to provide a consistent architecture across the framework.
+Instead of sharing one large global views directory, every feature keeps its templates together.
 
 ---
 
-# The Golden Rule
+# Language Files
 
-Before creating a new Workflow, ask yourself:
+Workflow-specific translations live inside the Workflow.
 
-> **If I delete this Workflow, what business capability disappears?**
+```text
+Profile
+└── Lang
+```
 
-### ✔ Correct
-
-> User Management disappears.
-
-### ✔ Correct
-
-> Authentication disappears.
-
-### ✘ Incorrect
-
-> Export disappears.
-
-### ✘ Incorrect
-
-> Delete disappears.
-
-Export and Delete are actions.
-
-Authentication and User Management are business capabilities.
+This keeps translations synchronized with the feature they describe and simplifies moving or removing Workflows.
 
 ---
 
-# Summary
+# Tips
 
-Every MCF application follows the same architecture:
+When starting a new feature:
 
-```text
-Module
-└── Workflow
-    ├── WorkflowController.php
-    ├── WorkflowRequest.php
-    ├── WorkflowService.php
-    ├── WorkflowPolicy.php
-    ├── WorkflowRoutes.php
-    ├── Views
-    ├── Lang
-    └── README.md
-```
+1. Create a Module if one does not already exist.
+2. Create a Workflow.
+3. Generate endpoints as needed.
+4. Keep business logic inside the Service.
+5. Keep validation inside the Request.
+6. Keep authorization inside the Policy.
+7. Keep views inside the Workflow.
+8. Keep translations inside the Workflow.
 
-Every generated Workflow inherits from:
+Following this structure ensures every feature remains isolated, predictable and easy to maintain.
 
-```text
-MfcController
-MfcRequest
-MfcService
-MfcPolicy
-```
+---
 
-Keep Workflows focused.
+# Where to Go Next
 
-Keep business logic inside Services.
+You have now created your first MCF project and understand the basic development workflow.
 
-Keep validation inside Requests.
+For more detailed information, continue with:
 
-Keep authorization inside Policies.
+- **README.md** — Framework overview and command reference.
+- **Architecture.md** — Internal framework architecture.
+- **CLI.md** — Complete Artisan command reference.
+- **Workflow Rules.md** — Workflow design principles.
+- **Endpoint Generator.md** — Endpoint generation guide.
+- **Language Generator.md** — Translation generation guide.
+- **Database.md** — Models, migrations, factories and seeders.
+- **Best Practices.md** — Recommended project organization and development patterns.
 
-Keep related functionality together.
+The Quick Start guide intentionally focuses on getting you productive quickly. The remaining documentation explores each topic in greater depth.
 
-Design your application around business capabilities—not database tables.
+---
+
+**End of Quick Start**

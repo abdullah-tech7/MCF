@@ -1,551 +1,433 @@
-# MCF Coding Standards
+# Coding Standards
+
+This document defines the recommended coding standards for applications built with MCF.
+
+These guidelines help maintain consistency across projects, improve readability and simplify long-term maintenance.
+
+While individual projects may introduce additional conventions, following these standards is strongly recommended.
 
 ---
 
-# Overview
+# General Principles
 
-This document defines the official coding standards for MCF (Modular Code Framework).
+Every piece of code should be:
 
-These standards ensure every MCF application follows the same architectural principles, naming conventions, and development practices.
+- Simple
+- Readable
+- Predictable
+- Consistent
+- Maintainable
 
-They apply to every Module, Workflow, and shared framework component.
+Code is written once but read many times.
 
----
-
-# Core Principles
-
-MCF is built around five principles.
-
-- Consistency
-- Simplicity
-- Predictability
-- Separation of Concerns
-- Workflow-Driven Architecture
-
-Every class should have one clear responsibility.
+Always optimize for readability.
 
 ---
 
-# Naming Conventions
+# Follow the Framework Structure
 
-## Modules
+Always place files in their intended location.
 
-Module names must:
-
-- Use PascalCase.
-- Represent a business domain.
-- Be concise and descriptive.
-
-Examples:
+Good:
 
 ```text
-Users
-Shop
-Inventory
-Reports
-Accounting
-```
-
-Avoid:
-
-```text
-UsersModule
-MyUsers
-ModuleUsers
-```
-
----
-
-## Workflows
-
-Workflow names describe business capabilities.
-
-Examples:
-
-```text
-Authentication
-UserManagement
 Profile
-Checkout
-PasswordReset
+├── Backend
+├── Views
+└── Lang
+```
+
+Avoid moving Workflow files into unrelated directories.
+
+Following the standard structure makes every MCF project immediately familiar.
+
+---
+
+# Respect Class Responsibilities
+
+Each backend class has exactly one responsibility.
+
+| Class | Responsibility |
+|--------|----------------|
+| Controller | HTTP communication |
+| Service | Business logic |
+| Request | Validation |
+| Policy | Authorization |
+| Routes | Route definitions |
+
+Avoid mixing responsibilities between classes.
+
+---
+
+# Keep Controllers Thin
+
+Controllers should contain as little code as possible.
+
+Good:
+
+```php
+public function update(ProfileRequest $request)
+{
+    return $this->service->update($request->validated());
+}
+```
+
+Avoid:
+
+- Business rules
+- Database queries
+- Complex calculations
+- Permission checks
+- Validation logic
+
+Controllers should coordinate, not implement business logic.
+
+---
+
+# Keep Services Focused
+
+Services should contain business logic only.
+
+Typical responsibilities include:
+
+- Business rules
+- Workflow coordination
+- Domain operations
+- Data processing
+
+Avoid placing HTTP or presentation logic inside Services.
+
+---
+
+# Centralize Validation
+
+Validation belongs inside Request classes.
+
+Good:
+
+```text
+ProfileRequest
+```
+
+Avoid repeating validation rules across multiple Controller methods.
+
+Every validation rule should exist in one place.
+
+---
+
+# Centralize Authorization
+
+Authorization belongs inside Workflow Policies.
+
+Avoid writing:
+
+```php
+if ($user->role == 'admin')
+```
+
+inside Controllers or Services.
+
+Policies should delegate authorization through the application's authorization layer.
+
+---
+
+# Prefer Dependency Injection
+
+Always depend on abstractions through dependency injection whenever possible.
+
+Good:
+
+```php
+public function __construct(ProfileService $service)
+{
+    $this->service = $service;
+}
+```
+
+Avoid creating dependencies manually inside methods.
+
+Dependency injection improves testability and flexibility.
+
+---
+
+# Keep Methods Small
+
+Methods should perform one task.
+
+Good:
+
+```php
+updateProfile()
+```
+
+Avoid methods that:
+
+- Validate data
+- Process business logic
+- Send emails
+- Generate reports
+- Return responses
+
+all at once.
+
+Small methods are easier to understand and test.
+
+---
+
+# Use Meaningful Names
+
+Names should clearly describe intent.
+
+Good:
+
+```text
+UserManagementService
+```
+
+```text
+ProductCatalogController
+```
+
+```text
+SalesReportRequest
 ```
 
 Avoid:
 
 ```text
-CRUD
-Controller1
-Main
-Test
+Helper
 ```
-
-Workflow names should describe what the application does, not what the database stores.
-
----
-
-# Controllers
-
-Each Workflow owns one Controller.
-
-Every generated Controller extends:
 
 ```text
-MfcController
+Manager
 ```
-
-Controllers coordinate HTTP requests.
-
-Allowed responsibilities:
-
-- Receive requests.
-- Call the Request.
-- Call the Service.
-- Return responses.
-- Return Views.
-
-Controllers should never contain:
-
-- Business logic.
-- Database queries.
-- Complex calculations.
-- Authorization rules.
-- Long conditional logic.
-
-Generated Controllers should return Workflow Views using the MCF namespace:
-
-```php
-return view('Users::Authentication.index');
-```
-
-Controllers should remain small.
-
----
-
-# Services
-
-Every Workflow owns one Service.
-
-Every generated Service extends:
 
 ```text
-MfcService
+Data
 ```
-
-The Service contains all business logic for that Workflow.
-
-Responsibilities include:
-
-- Business rules.
-- Application behavior.
-- Database coordination.
-- Transactions.
-- Event dispatching.
-
-Services should never:
-
-- Return Blade Views.
-- Perform request validation.
-- Handle presentation concerns.
-
----
-
-# Requests
-
-Every Workflow owns one Request.
-
-Every generated Request extends:
 
 ```text
-MfcRequest
+TestClass
 ```
 
-Responsibilities:
-
-- Validation.
-- Basic request authorization.
-
-Validation should remain inside the Request whenever possible.
-
-Reusable validation belongs in:
-
-```text
-app/MCF/Rules
-```
+Descriptive names reduce the need for comments.
 
 ---
 
-# Policies
+# Keep Workflows Self-Contained
 
-Every Workflow owns one Policy.
-
-Every generated Policy extends:
-
-```text
-MfcPolicy
-```
-
-Policies determine whether an action is permitted.
-
-Responsibilities:
-
-- Authorization.
-- Permission checks.
-- Role checks.
-- Access rules.
-
-Policies should never contain business logic.
-
----
-
-# Models
-
-Models represent application entities.
-
-Models belong to:
-
-```text
-app/MCF/Database/Models
-```
-
-Models are shared across the application.
-
-They never belong to a specific Module or Workflow.
-
-Avoid placing business processes inside Models.
-
----
-
-# Views
-
-Views are responsible only for presentation.
-
-Views may contain:
-
-- Blade directives.
-- Components.
-- Loops.
-- Simple rendering conditions.
-
-Views must never contain:
-
-- Business logic.
-- Database queries.
-- Authorization logic.
-- Service calls.
-
-Workflow Views are returned using:
-
-```php
-return view('Users::Authentication.index');
-```
-
-Shared Layout components should be referenced using:
-
-```blade
-@include('Shared::Layout.Components.head')
-```
-
----
-
-# Layout Workflow
-
-Layouts are implemented as a normal Workflow.
+Everything related to a feature should remain inside its Workflow whenever practical.
 
 Example:
 
 ```text
-Shared
-└── Layout
+Profile
+├── Backend
+├── Views
+└── Lang
 ```
 
-Responsibilities include:
-
-- Header.
-- Footer.
-- Navigation.
-- Sidebar.
-- Shared layouts.
-- Common Blade components.
-
-Layouts must never contain business logic.
-
-Developers may replace or customize the Layout Workflow as needed.
+Avoid scattering feature files across unrelated directories.
 
 ---
 
-# Assets
+# Avoid Duplicate Code
 
-MCF does not provide a custom asset system.
+If code is reused by multiple Workflows, move it into a shared component.
 
-Use Laravel's standard locations.
+Possible shared locations include:
 
-Shared assets:
-
-```text
-public/
-```
-
-Uploaded files:
-
-```text
-storage/
-```
-
-Avoid placing assets inside Workflows unless there is a specific architectural reason.
-
----
-
-# Language Files
-
-Each Workflow owns its own language directory.
-
-Example:
-
-```text
-Lang
-```
-
-MCF automatically discovers translation files recursively from every Workflow's `Lang` directory.
-
-Language keys should be descriptive.
-
-Good examples:
-
-```text
-login
-logout
-save
-delete
-password_invalid
-```
-
-Avoid unnecessary nesting.
-
----
-
-# Routes
-
-Each Workflow owns one Route definition.
-
-Route files should contain only route definitions.
-
-Business logic must never appear inside Routes.
-
-Workflow Routes are automatically registered through:
-
-```text
-app/MCF/mcf_routes.php
-```
-
-Route names should follow the MCF naming convention.
-
-Example:
-
-```text
-shared.userManagement.index
-```
-
----
-
-# Middleware
-
-Middleware is infrastructure.
-
-Use Middleware for:
-
-- Authentication.
-- Guest access.
-- Localization.
-- Logging.
-- Rate limiting.
-- Request filtering.
-
-Authorization belongs inside Policies.
-
-Business logic belongs inside Services.
-
----
-
-# Notifications
-
-Notifications should only describe how notifications are delivered.
-
-Notifications should never determine:
-
-- Whether a notification should be sent.
-- Who receives notifications.
-- Business decisions.
-
-Those responsibilities belong to Workflow Services.
-
----
-
-# Mail
-
-Mail classes prepare email messages.
-
-They should never contain business decisions.
-
-Workflow Services decide when Mail should be created or sent.
-
----
-
-# Jobs
-
-Jobs execute background work.
-
-Jobs should receive complete data from the Service.
-
-Jobs should avoid making business decisions.
-
----
-
-# Events
-
-Events describe something that already happened.
-
-Examples:
-
-```text
-UserRegistered
-OrderCompleted
-PasswordChanged
-```
-
-Event names should use the past tense.
-
----
-
-# Class Size
-
-Keep classes focused.
-
-If a class grows excessively, consider splitting the business capability into multiple Workflows instead of creating large classes.
-
----
-
-# File Organization
-
-One class per file.
-
-One responsibility per class.
-
-Avoid utility classes that collect unrelated functionality.
-
----
-
-# Dependency Injection
-
-Prefer constructor injection.
-
-Example:
-
-```php
-public function __construct(
-    AuthenticationService $service
-) {}
-```
-
-Avoid manually resolving dependencies.
-
-```php
-app(AuthenticationService::class);
-```
-
-Use manual resolution only when truly necessary.
-
----
-
-# Static Methods
-
-Avoid unnecessary static methods.
-
-Prefer dependency injection and object instances.
-
-Static methods should be limited to utility scenarios where state is unnecessary.
-
----
-
-# Business Logic
-
-Business logic belongs only inside Workflow Services.
-
-Never place business logic inside:
-
-- Controllers
-- Requests
-- Policies
-- Views
-- Layouts
+- Base classes
 - Middleware
+- Rules
 - Notifications
 - Mail
-- Models
-- Routes
+
+Avoid copying the same implementation between Workflows.
 
 ---
 
-# Shared Components
+# Keep Routes Close to Features
 
-Reusable functionality should be extracted into shared framework components.
+Routes should remain inside their owning Workflow.
 
-Use the shared MCF foundation located in:
+Good:
 
 ```text
-app/MCF/Base
+ProfileRoutes.php
 ```
 
-Avoid duplicating business logic across multiple Workflows.
-
-Prefer reuse over duplication.
+Avoid maintaining one large application route file containing unrelated features.
 
 ---
 
-# Comments
+# Keep Views Organized
 
-Prefer self-explanatory code.
+Blade templates should remain inside the Workflow that owns them.
 
-Use meaningful names instead of excessive comments.
+Example:
 
-Comments should explain **why**, not **what**.
+```text
+Views
+├── index.blade.php
+├── create.blade.php
+└── edit.blade.php
+```
 
----
-
-# Formatting
-
-Follow Laravel's official coding style.
-
-MCF follows:
-
-- PSR-12
-- Laravel Coding Style
-
-MCF extends Laravel conventions rather than replacing them.
+Avoid mixing templates from unrelated features.
 
 ---
 
-# Golden Rules
+# Keep Translations Local
 
-1. One Module groups related Workflows.
-2. One Workflow represents one business capability.
-3. One Workflow owns one Controller.
-4. One Workflow owns one Service.
-5. One Workflow owns one Request.
-6. One Workflow owns one Policy.
-7. Generated Controllers inherit from `MfcController`.
-8. Generated Requests inherit from `MfcRequest`.
-9. Generated Services inherit from `MfcService`.
-10. Generated Policies inherit from `MfcPolicy`.
-11. Controllers remain thin.
-12. Services contain business logic.
-13. Requests contain validation.
-14. Policies contain authorization.
-15. Models represent entities.
-16. Views handle presentation only.
-17. Layout is implemented as a Workflow.
-18. Use `Shared::Layout.Components.*` for shared Blade components.
-19. Workflow routes are registered through `app/MCF/mcf_routes.php`.
-20. Assets use Laravel's standard `public/` directory.
-21. Uploaded files use Laravel's `storage/` directory.
-22. Shared functionality should never be duplicated.
-23. Every class should have one clear responsibility.
+Translations belong to the Workflow they describe.
+
+Good:
+
+```text
+Profile
+└── Lang
+```
+
+MCF automatically discovers Workflow language resources during application startup.
+
+No manual registration is required.
+
+---
+
+# Avoid Hard-Coded Values
+
+Avoid embedding application-specific values directly in code.
+
+Examples include:
+
+- Role names
+- Permission names
+- Database identifiers
+- Business constants
+
+Prefer configuration, services or centralized definitions where appropriate.
+
+---
+
+# Follow Naming Conventions
+
+Use clear and consistent naming throughout the project.
+
+Examples:
+
+Controllers:
+
+```text
+ProfileController
+```
+
+Services:
+
+```text
+ProfileService
+```
+
+Requests:
+
+```text
+ProfileRequest
+```
+
+Policies:
+
+```text
+ProfilePolicy
+```
+
+Routes:
+
+```text
+ProfileRoutes
+```
+
+Consistency improves discoverability.
+
+---
+
+# Keep Business Logic Independent
+
+Business logic should not depend on:
+
+- HTTP requests
+- Blade templates
+- Database schema
+- Route definitions
+
+Business logic should remain reusable across different interfaces.
+
+---
+
+# Write Predictable Code
+
+Developers should be able to predict where functionality exists.
+
+Questions such as:
+
+- Where is validation?
+- Where is authorization?
+- Where is business logic?
+- Where are translations?
+
+should always have the same answer.
+
+Predictability reduces onboarding time and maintenance costs.
+
+---
+
+# Prefer Framework Generators
+
+Use MCF generators whenever possible.
+
+Generated classes already follow the framework architecture and naming conventions.
+
+Manual file creation should be the exception rather than the rule.
+
+---
+
+# Keep Shared Logic in Base Classes
+
+When multiple Workflows require identical behavior, extend the MCF base classes instead of duplicating implementations.
+
+This keeps shared functionality centralized and easier to maintain.
+
+---
+
+# Document Complex Logic
+
+Most code should be self-explanatory.
+
+However, when business rules are complex or non-obvious, add concise comments explaining *why* the code exists rather than *what* it does.
+
+Avoid excessive or redundant comments.
+
+---
+
+# Maintain Consistency
+
+Consistency is more important than personal preference.
+
+Follow the same:
+
+- Naming
+- File organization
+- Architecture
+- Coding style
+- Workflow structure
+
+throughout the entire project.
+
+A consistent codebase is easier for every developer to understand.
+
+---
+
+# Summary
+
+MCF coding standards emphasize clarity, consistency and separation of responsibilities.
+
+By keeping Controllers thin, Services focused, Requests responsible for validation, Policies responsible for authorization and Workflows self-contained, applications remain predictable, maintainable and scalable throughout their lifecycle.
