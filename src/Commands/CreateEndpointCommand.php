@@ -113,20 +113,20 @@ class CreateEndpointCommand extends Command
         }
     }
 
-    protected function preparePaths(): void
-    {
-        $this->backendPath =
-            "{$this->workflowPath}/Backend";
+protected function preparePaths(): void
+{
+    $this->backendPath =
+        "{$this->workflowPath}/Backend";
 
-        $this->viewsPath =
-            "{$this->workflowPath}/Views";
+    $this->viewsPath =
+        "{$this->workflowPath}/Views";
 
-        $this->controllerFile =
-            "{$this->backendPath}/Controller.php";
+    $this->controllerFile =
+        "{$this->backendPath}/{$this->workflowName}Controller.php";
 
-        $this->routesFile =
-            "{$this->backendPath}/routes.php";
-    }
+    $this->routesFile =
+        "{$this->backendPath}/{$this->workflowName}Routes.php";
+}
 
     protected function askEndpointName(): void
     {
