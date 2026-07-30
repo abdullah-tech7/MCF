@@ -2,7 +2,7 @@
 
 namespace App\MCF\Base;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 abstract class MfcController extends Controller
 {
