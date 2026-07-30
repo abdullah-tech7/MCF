@@ -37,24 +37,6 @@ class MCFServiceProvider extends ServiceProvider
         );
 
 
-$this->app->singleton('view.finder', function ($app) {
-    return new MCFViewFinder(
-        $app['files'],
-        $app['config']['view.paths']
-    );
-});
-
-$this->app->resolving('view', function ($factory, $app) {
-
-    $reflection = new \ReflectionObject($factory);
-
-    if ($reflection->hasProperty('finder')) {
-        $property = $reflection->getProperty('finder');
-        $property->setAccessible(true);
-        $property->setValue($factory, $app['view.finder']);
-    }
-
-});
 
 
         $this->app->extend('translation.loader', function ($loader, $app) {
