@@ -86,7 +86,7 @@ class CreateEndpointCommand extends Command
 
     protected function askModule(): void
     {
-        $this->moduleName = $this->input('Module');
+        $this->moduleName = $this->readInput('Module');
 
         $this->modulePath = app_path(
             "MCF/Modules/{$this->moduleName}"
@@ -101,7 +101,7 @@ class CreateEndpointCommand extends Command
 
     protected function askWorkflow(): void
     {
-        $this->workflowName = $this->input('Workflow');
+        $this->workflowName = $this->readInput('Workflow');
 
         $this->workflowPath =
             "{$this->modulePath}/{$this->workflowName}";
@@ -130,7 +130,7 @@ protected function preparePaths(): void
 
     protected function askEndpointName(): void
     {
-        $this->endpointName = $this->input(
+        $this->endpointName = $this->readInput(
             'Endpoint Name'
         );
     }
@@ -211,12 +211,12 @@ protected function preparePaths(): void
             return;
         }
 
-        $this->parameters = $this->input(
+        $this->parameters = $this->readInput(
             "Enter Parameters\nExample: int \$id, string \$name"
         );
     }
 
-    protected function input(string $title): string
+    protected function readInput(string $title): string
     {
         while (true) {
             $this->newLine();
