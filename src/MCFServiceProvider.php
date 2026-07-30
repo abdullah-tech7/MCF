@@ -57,21 +57,30 @@ class MCFServiceProvider extends ServiceProvider
 
    public function boot(): void
 {
-    $filesystem = new Filesystem();
+       
+$filesystem = new Filesystem();
 
-    $modulesPath = app_path('MCF/Modules');
+$modulesPath = app_path('MCF/Modules');
 
-    if ($filesystem->exists($modulesPath)) {
-        foreach ($filesystem->directories($modulesPath) as $modulePath) {
-            $module = basename($modulePath);
+if ($filesystem->exists($modulesPath)) {
+    foreach ($filesystem->directories($modulesPath) as $modulePath) {
+        $module = basename($modulePath);
 
-            $viewsPath = $modulePath . DIRECTORY_SEPARATOR . 'Views';
+        $viewPaths = [];
+
+        foreach ($filesystem->directories($modulePath) as $workflowPath) {
+            $viewsPath = $workflowPath . DIRECTORY_SEPARATOR . 'Views';
 
             if ($filesystem->isDirectory($viewsPath)) {
-                $this->loadViewsFrom($viewsPath, $module);
+                $viewPaths[] = $viewsPath;
             }
         }
+
+        if ($viewPaths !== []) {
+            $this->loadViewsFrom($viewPaths, $module);
+        }
     }
+}
 
     if ($this->app->runningInConsole()) {
         $this->commands([
