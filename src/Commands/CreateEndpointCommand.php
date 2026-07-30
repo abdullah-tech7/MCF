@@ -364,17 +364,13 @@ protected function buildControllerParameters(): string
 
 protected function buildControllerBody(): string
 {
+
+if ($this->createView) {
+    return
+        "return view('{$this->moduleName}::{$this->workflowName}.{$this->endpointName}');";
+}
+
     return match ($this->returnType) {
-
-        'View' =>
-            "        return view('" .
-            $this->moduleName .
-            '::' .
-            $this->workflowName .
-            '.' .
-            $this->endpointName .
-            "');",
-
         'RedirectResponse' =>
             "        return redirect()->back();",
 
