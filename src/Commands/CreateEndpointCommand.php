@@ -276,275 +276,314 @@ protected function preparePaths(): void
         }
     }
 
-    protected function generateControllerMethod(): void
-    {
-        $controller = $this->files->get(
-            $this->controllerFile
+  
+protected function generateControllerMethod(): void
+{
+    if (! $this->files->exists($this->controllerFile)) {
+        throw new RuntimeException(
+            "Controller file [{$this->controllerFile}] does not exist."
         );
+    }
 
-        if (
-            preg_match(
-                '/function\s+' .
-                preg_quote(
-                    $this->endpointName,
-                    '/'
-                ) .
-                '\s*\(/',
-                $controller
-            )
-        ) {
-            throw new RuntimeException(
-                "Endpoint [{$this->endpointName}] already exists."
-            );
+    $controller = $this->files->get(
+        $this->controllerFile
+    );
+
+    if (
+        preg_match(
+            '/public\s+function\s+' .
+            preg_quote($this->endpointName, '/') .
+            '\s*\(/',
+            $controller
+        )
+    ) {
+        throw new RuntimeException(
+            "Endpoint [{$this->endpointName}] already exists."
+        );
+    }
+
+    $controller = $this->addControllerUses(
+        $controller
+    );
+
+    $method = $this->buildControllerMethod();
+
+    $controller = preg_replace(
+        '/}\s*$/',
+        PHP_EOL .
+        $method .
+        PHP_EOL .
+        '}',
+        $controller,
+        1
+    );
+
+    $this->files->put(
+        $this->controllerFile,
+        $controller
+    );
+}
+
+
+protected function buildControllerMethod(): string
+{
+    return
+        '    public function ' .
+        $this->endpointName .
+        '(' .
+        $this->buildControllerParameters() .
+        '): ' .
+        $this->returnType .
+        PHP_EOL .
+        '    {' .
+        PHP_EOL .
+        $this->buildControllerBody() .
+        PHP_EOL .
+        '    }';
+}
+
+protected function buildControllerParameters(): string
+{
+    $parameters = [];
+
+    if ($this->injectWorkflowRequest) {
+        $parameters[] =
+            $this->workflowName .
+            'Request $request';
+    }
+
+    if ($this->parameters !== '') {
+        $parameters[] = $this->parameters;
+    }
+
+    return implode(
+        ', ',
+        $parameters
+    );
+}
+
+protected function buildControllerBody(): string
+{
+    return match ($this->returnType) {
+
+        'View' =>
+            "        return view('" .
+            $this->moduleName .
+            '::' .
+            $this->workflowName .
+            '.' .
+            $this->endpointName .
+            "');",
+
+        'RedirectResponse' =>
+            "        return redirect()->back();",
+
+        'JsonResponse' =>
+            "        return response()->json([]);",
+
+        'BinaryFileResponse' =>
+            "        abort(501);",
+
+        'StreamedResponse' =>
+            "        abort(501);",
+
+        'Response' =>
+            "        return response('');",
+
+        default => throw new RuntimeException(
+            'Unsupported return type.'
+        ),
+    };
+}
+
+protected function addControllerUses(
+    string $controller
+): string
+{
+    $uses = [];
+
+    if ($this->injectWorkflowRequest) {
+        $uses[] =
+            'use App\\MCF\\Modules\\' .
+            $this->moduleName .
+            '\\' .
+            $this->workflowName .
+            '\\Backend\\' .
+            $this->workflowName .
+            'Request;';
+    }
+
+    $uses[] = match ($this->returnType) {
+
+        'View' =>
+            'use Illuminate\Contracts\View\View;',
+
+        'RedirectResponse' =>
+            'use Illuminate\Http\RedirectResponse;',
+
+        'JsonResponse' =>
+            'use Illuminate\Http\JsonResponse;',
+
+        'BinaryFileResponse' =>
+            'use Symfony\Component\HttpFoundation\BinaryFileResponse;',
+
+        'StreamedResponse' =>
+            'use Symfony\Component\HttpFoundation\StreamedResponse;',
+
+        'Response' =>
+            'use Illuminate\Http\Response;',
+    };
+
+    foreach ($uses as $use) {
+
+        if (str_contains($controller, $use)) {
+            continue;
         }
 
-        $method = $this->buildMethod();
-
         $controller = preg_replace(
-            '/}\s*$/',
-            $method . PHP_EOL . '}',
+            '/^(namespace\s+.*?;\R)/m',
+            "$1\n{$use}\n",
             $controller,
             1
         );
+    }
 
-        $this->files->put(
-            $this->controllerFile,
-            $controller
+    return $controller;
+}
+
+protected function generateRoute(): void
+{
+    if (! $this->files->exists($this->routesFile)) {
+        throw new RuntimeException(
+            "Routes file [{$this->routesFile}] does not exist."
         );
     }
 
-    protected function buildMethod(): string
-    {
-        $parameters = $this->buildParameters();
+    $routes = $this->files->get(
+        $this->routesFile
+    );
 
-        return PHP_EOL .
-            '    public function ' .
-            $this->endpointName .
-            '(' .
-            $parameters .
-            '): ' .
-            $this->returnType .
-            PHP_EOL .
-            '    {' .
-            PHP_EOL .
-            $this->buildMethodBody() .
-            PHP_EOL .
-            '    }' .
-            PHP_EOL;
-    }
-
-    protected function buildParameters(): string
-    {
-        $parameters = [];
-
-        if ($this->injectWorkflowRequest) {
-            $parameters[] =
-                'Request $request';
-        }
-
-        if ($this->parameters !== '') {
-            $parameters[] =
-                $this->parameters;
-        }
-
-        return implode(
-            ', ',
-            $parameters
+    if (
+        str_contains(
+            $routes,
+            "'" . $this->endpointName . "'"
+        )
+    ) {
+        throw new RuntimeException(
+            "Endpoint [{$this->endpointName}] already exists in routes."
         );
     }
 
-    protected function buildMethodBody(): string
-    {
-        switch ($this->returnType) {
+    $routes = $this->addRouteControllerUse(
+        $routes
+    );
 
-            case 'View':
-                return $this->buildViewBody();
+    $routes .= PHP_EOL .
+        PHP_EOL .
+        $this->buildRoute();
 
-            case 'RedirectResponse':
-                return $this->buildRedirectBody();
+    $this->files->put(
+        $this->routesFile,
+        $routes
+    );
+}
 
-            case 'JsonResponse':
-                return $this->buildJsonBody();
+protected function buildRoute(): string
+{
+    return
+        'Route::' .
+        strtolower($this->httpMethod) .
+        '(' .
+        "'" .
+        $this->buildRouteUri() .
+        "', " .
+        '[' .
+        $this->workflowName .
+        "Controller::class, '" .
+        $this->endpointName .
+        "'])" .
+        PHP_EOL .
+        '    ->name(' .
+        "'" .
+        strtolower($this->moduleName) .
+        '.' .
+        strtolower($this->workflowName) .
+        '.' .
+        $this->endpointName .
+        "'" .
+        ');';
+}
 
-            case 'BinaryFileResponse':
-                return $this->buildBinaryFileBody();
+protected function buildRouteUri(): string
+{
+    $uri = '/' . strtolower(
+        $this->endpointName
+    );
 
-            case 'StreamedResponse':
-                return $this->buildStreamedResponseBody();
-
-            case 'Response':
-                return $this->buildResponseBody();
-
-            default:
-                throw new RuntimeException(
-                    'Unsupported return type.'
-                );
-        }
+    if ($this->parameters === '') {
+        return $uri;
     }
 
-        protected function buildViewBody(): string
-    {
-        return
-            '        return view(' .
-            "'" .
-            strtolower($this->endpointName) .
-            "'" .
-            ');';
+    preg_match_all(
+        '/\$([A-Za-z_][A-Za-z0-9_]*)/',
+        $this->parameters,
+        $matches
+    );
+
+    foreach ($matches[1] as $parameter) {
+        $uri .= '/{' . $parameter . '}';
     }
 
-    protected function buildRedirectBody(): string
-    {
-        return
-            "        return redirect()->back();";
+    return $uri;
+}
+
+protected function addRouteControllerUse(
+    string $routes
+): string
+{
+    $use =
+        'use App\\MCF\\Modules\\' .
+        $this->moduleName .
+        '\\' .
+        $this->workflowName .
+        '\\Backend\\' .
+        $this->workflowName .
+        'Controller;';
+
+    if (str_contains($routes, $use)) {
+        return $routes;
     }
 
-    protected function buildJsonBody(): string
-    {
-        return
-            "        return response()->json([]);";
-    }
+    if (
+        preg_match_all(
+            '/^use\s+.*?;$/m',
+            $routes,
+            $matches,
+            PREG_OFFSET_CAPTURE
+        )
+    ) {
+        $last = end($matches[0]);
 
-    protected function buildBinaryFileBody(): string
-    {
-        return
-            "        abort(501);";
-    }
+        $position =
+            $last[1] + strlen($last[0]);
 
-    protected function buildStreamedResponseBody(): string
-    {
-        return
-            "        abort(501);";
-    }
-
-    protected function buildResponseBody(): string
-    {
-        return
-            "        return response('');";
-    }
-
-    protected function generateRoute(): void
-    {
-        $routes = $this->files->get(
-            $this->routesFile
-        );
-
-        if (
-            preg_match(
-                '/::' .
-                preg_quote(
-                    strtolower($this->httpMethod),
-                    '/'
-                ) .
-                '\(\s*[\'"]\/' .
-                preg_quote(
-                    strtolower($this->endpointName),
-                    '/'
-                ) .
-                '[\'"]/',
-                $routes
-            )
-        ) {
-            throw new RuntimeException(
-                "Route already exists."
-            );
-        }
-
-        $route = $this->buildRoute();
-
-        $routes .= PHP_EOL . $route;
-
-        $this->files->put(
-            $this->routesFile,
-            $routes
+        return substr_replace(
+            $routes,
+            PHP_EOL . $use,
+            $position,
+            0
         );
     }
 
-    protected function buildRoute(): string
-    {
-        return
-            'Route::' .
-            strtolower($this->httpMethod) .
-            '(' .
-            "'/" .
-            strtolower($this->endpointName) .
-            "', " .
-            '[Controller::class, ' .
-            "'" .
-            $this->endpointName .
-            "'" .
-            ']);';
-    }
+    return preg_replace(
+        '/^<\?php\s*/',
+        "<?php\n\n{$use}\n\n",
+        $routes,
+        1
+    );
+}
 
 
 
-    protected function generateView(): void
-    {
-        $viewFile =
-            $this->viewsPath .
-            '/' .
-            strtolower($this->endpointName) .
-            '.blade.php';
 
-        if ($this->files->exists($viewFile)) {
-            throw new RuntimeException(
-                "View [{$this->endpointName}] already exists."
-            );
-        }
-
-        $this->files->put(
-            $viewFile,
-            ''
-        );
-    }
-
-    protected function showSummary(): void
-    {
-        $this->newLine();
-
-        $this->info(
-            'Endpoint created successfully.'
-        );
-
-        $this->line(
-            'Module   : ' .
-            $this->moduleName
-        );
-
-        $this->line(
-            'Workflow : ' .
-            $this->workflowName
-        );
-
-        $this->line(
-            'Endpoint : ' .
-            $this->endpointName
-        );
-
-        $this->line(
-            'Method   : ' .
-            $this->httpMethod
-        );
-
-        $this->line(
-            'Return   : ' .
-            $this->returnType
-        );
-
-        $this->line(
-            'View     : ' .
-            ($this->createView ? 'Yes' : 'No')
-        );
-
-        $this->line(
-            'Request  : ' .
-            ($this->injectWorkflowRequest ? 'Yes' : 'No')
-        );
-
-        if ($this->parameters !== '') {
-            $this->line(
-                'Parameters : ' .
-                $this->parameters
-            );
-        }
-    }
 }
