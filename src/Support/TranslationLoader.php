@@ -29,11 +29,10 @@ class TranslationLoader
             new RecursiveDirectoryIterator($modulesPath)
         );
 
-     foreach ($iterator as $file) {
-
-    if ($file->isFile()) {
-        throw new \RuntimeException($file->getRealPath());
-    }
+        foreach ($iterator as $file) {
+            if (! $file->isFile()) {
+                continue;
+            }
 
             if ($file->getExtension() !== 'json') {
                 continue;
