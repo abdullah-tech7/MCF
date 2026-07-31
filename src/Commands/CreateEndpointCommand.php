@@ -582,11 +582,10 @@ protected function addRouteControllerUse(
 
 protected function generateView(): void
 {
-    $viewFile =
-        $this->viewsPath .
-        '/' .
-        $this->endpointName .
-        '.blade.php';
+    $viewFile = $this->viewsPath
+        . '/'
+        . $this->endpointName
+        . '.blade.php';
 
     if ($this->files->exists($viewFile)) {
         throw new RuntimeException(
@@ -594,10 +593,11 @@ protected function generateView(): void
         );
     }
 
-    $this->files->put(
-        $viewFile,
-        ''
+    $stub = $this->files->get(
+        __DIR__ . '/../Stubs/Endpoint/view.stub'
     );
+
+    $this->files->put($viewFile, $stub);
 }
 
 
