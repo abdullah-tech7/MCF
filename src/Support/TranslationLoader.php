@@ -27,28 +27,15 @@ class TranslationLoader
         }
 
         $translations = [];
-
-        /*
-        |--------------------------------------------------------------------------
-        | Registry
-        |--------------------------------------------------------------------------
-        |
-        | [
-        |   'ar' => [
-        |       'Save' => [
-        |           ['file'=>..., 'value'=>...],
-        |           ['file'=>..., 'value'=>...],
-        |       ]
-        |   ]
-        | ]
-        |
-        */
-
         $registry = [];
 
         foreach (glob($modulesPath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $modulePath) {
 
+            $module = basename($modulePath);
+
             foreach (glob($modulePath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $workflowPath) {
+
+                $workflow = basename($workflowPath);
 
                 $langPath = $workflowPath . DIRECTORY_SEPARATOR . 'Lang';
 
@@ -79,7 +66,8 @@ class TranslationLoader
                     foreach ($data as $key => $value) {
 
                         $registry[$locale][$key][] = [
-                            'file'  => $jsonFile,
+                            'module' => $module,
+                            'workflow' => $workflow,
                             'value' => $value,
                         ];
                     }
@@ -87,68 +75,49 @@ class TranslationLoader
             }
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Build translations + Detect duplicates
-        |--------------------------------------------------------------------------
-        */
-
-        $errors = [];
+        $duplicates = [];
 
         foreach ($registry as $locale => $keys) {
 
             foreach ($keys as $key => $occurrences) {
 
-                /*
-                |--------------------------------------------------------------------------
-                | First value becomes the active translation.
-                |--------------------------------------------------------------------------
-                */
-
+                // أول تعريف هو الذي يستخدم فعلياً
                 $translations[$locale][$key] = $occurrences[0]['value'];
 
-                if (count($occurrences) <= 1) {
-                    continue;
-                }
+                if (count($occurrences) > 1) {
 
-                $errors[] = [
-                    'locale' => $locale,
-                    'key' => $key,
-                    'occurrences' => $occurrences,
-                ];
+                    $duplicates[] = [
+                        'locale' => $locale,
+                        'key' => $key,
+                        'occurrences' => $occurrences,
+                    ];
+                }
             }
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Throw one exception containing every duplicate.
-        |--------------------------------------------------------------------------
-        */
+        if (! empty($duplicates)) {
 
-        if (! empty($errors)) {
+            $lines = [];
+            $lines[] = 'Duplicate translation keys detected.';
+            $lines[] = '';
 
-            $message = [];
-            $message[] = 'Duplicate translation keys detected.';
-            $message[] = '';
+            foreach ($duplicates as $duplicate) {
 
-            foreach ($errors as $error) {
+                $lines[] = str_repeat('═', 72);
+                $lines[] = "Locale : {$duplicate['locale']}";
+                $lines[] = "Key    : {$duplicate['key']}";
+                $lines[] = '';
 
-                $message[] = str_repeat('=', 80);
-                $message[] = "Locale : {$error['locale']}";
-                $message[] = "Key    : {$error['key']}";
-                $message[] = 'Occurrences: '.count($error['occurrences']);
-                $message[] = '';
+                foreach ($duplicate['occurrences'] as $index => $item) {
 
-                foreach ($error['occurrences'] as $index => $entry) {
-
-                    $message[] = ($index + 1).') '.$entry['file'];
-                    $message[] = '   Value : '.var_export($entry['value'], true);
-                    $message[] = '';
+                    $lines[] = ($index + 1).". {$item['module']}::{$item['workflow']}";
+                    $lines[] = "   Value : {$item['value']}";
+                    $lines[] = '';
                 }
             }
 
             throw new RuntimeException(
-                implode(PHP_EOL, $message)
+                implode(PHP_EOL, $lines)
             );
         }
 
