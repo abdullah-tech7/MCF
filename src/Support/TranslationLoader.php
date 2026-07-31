@@ -25,63 +25,90 @@ class TranslationLoader
      *     'en' => [...],
      * ]
      */
-    public function load(string $modulesPath): array
-    {
-        if (! is_dir($modulesPath)) {
-            return [];
-        }
+public function load(string $modulesPath): array
+{
+    if (! is_dir($modulesPath)) {
+        return [];
+    }
 
-        $translations = [];
+    $translations = [];
 
-        foreach (glob($modulesPath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $modulePath) {
+    $duplicates = [];
 
-            foreach (glob($modulePath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $workflowPath) {
+    foreach (glob($modulesPath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $modulePath) {
 
-                $langPath = $workflowPath . DIRECTORY_SEPARATOR . 'Lang';
+        foreach (glob($modulePath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $workflowPath) {
 
-                if (! is_dir($langPath)) {
-                    continue;
+            $langPath = $workflowPath . DIRECTORY_SEPARATOR . 'Lang';
+
+            if (! is_dir($langPath)) {
+                continue;
+            }
+
+            foreach (glob($langPath . DIRECTORY_SEPARATOR . '*.json') as $jsonFile) {
+
+                $locale = pathinfo($jsonFile, PATHINFO_FILENAME);
+
+                $content = file_get_contents($jsonFile);
+
+                $data = json_decode($content, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    throw new RuntimeException(
+                        "Invalid JSON: {$jsonFile}"
+                    );
                 }
 
-                foreach (glob($langPath . DIRECTORY_SEPARATOR . '*.json') as $jsonFile) {
+                if (! is_array($data)) {
+                    throw new RuntimeException(
+                        "Translation file must contain a JSON object: {$jsonFile}"
+                    );
+                }
 
-                    $locale = pathinfo($jsonFile, PATHINFO_FILENAME);
+                $translations[$locale] ??= [];
 
-                    $content = file_get_contents($jsonFile);
+                foreach ($data as $key => $value) {
 
-                    $data = json_decode($content, true);
+                    if (isset($translations[$locale][$key])) {
 
-                    if (json_last_error() !== JSON_ERROR_NONE) {
-                        throw new RuntimeException(
-                            "Invalid JSON: {$jsonFile}"
-                        );
-                    }
+                        if ($translations[$locale][$key] !== $value) {
 
-                    if (! is_array($data)) {
-                        throw new RuntimeException(
-                            "Translation file must contain a JSON object: {$jsonFile}"
-                        );
-                    }
-
-                    $translations[$locale] ??= [];
-
-                    foreach ($data as $key => $value) {
-
-                        if (
-                            isset($translations[$locale][$key]) &&
-                            $translations[$locale][$key] !== $value
-                        ) {
-                            throw new RuntimeException(
-                                "Duplicate translation key '{$key}' for locale '{$locale}'."
-                            );
+                            $duplicates[$locale][] = [
+                                'key'  => $key,
+                                'file' => $jsonFile,
+                            ];
                         }
 
-                        $translations[$locale][$key] = $value;
+                        continue;
                     }
+
+                    $translations[$locale][$key] = $value;
                 }
             }
         }
-
-        return $translations;
     }
+
+    if (! empty($duplicates)) {
+
+        $message = "Duplicate translation keys were found.\n\n";
+
+        foreach ($duplicates as $locale => $items) {
+
+            $message .= "Locale: {$locale}\n";
+            $message .= str_repeat('-', 60)."\n";
+
+            foreach ($items as $duplicate) {
+
+                $message .= "• {$duplicate['key']}\n";
+                $message .= "  File: {$duplicate['file']}\n";
+            }
+
+            $message .= "\n";
+        }
+
+        throw new RuntimeException(trim($message));
+    }
+
+    return $translations;
+}
 }
