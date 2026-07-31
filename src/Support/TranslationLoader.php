@@ -9,106 +9,149 @@ use RuntimeException;
 class TranslationLoader
 {
     /**
-     * Loads all JSON translations from:
+     * Load all module translations.
      *
-     * app/MCF/Modules/
+     * Structure:
+     *
+     * Modules/
      *   Module/
      *     Workflow/
      *       Lang/
      *         ar.json
      *         en.json
-     *
-     * Result:
-     *
-     * [
-     *     'ar' => [...],
-     *     'en' => [...],
-     * ]
      */
-public function load(string $modulesPath): array
-{
-    if (! is_dir($modulesPath)) {
-        return [];
-    }
+    public function load(string $modulesPath): array
+    {
+        if (! is_dir($modulesPath)) {
+            return [];
+        }
 
-    $translations = [];
+        $translations = [];
 
-    $duplicates = [];
+        /*
+        |--------------------------------------------------------------------------
+        | Registry
+        |--------------------------------------------------------------------------
+        |
+        | [
+        |   'ar' => [
+        |       'Save' => [
+        |           ['file'=>..., 'value'=>...],
+        |           ['file'=>..., 'value'=>...],
+        |       ]
+        |   ]
+        | ]
+        |
+        */
 
-    foreach (glob($modulesPath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $modulePath) {
+        $registry = [];
 
-        foreach (glob($modulePath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $workflowPath) {
+        foreach (glob($modulesPath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $modulePath) {
 
-            $langPath = $workflowPath . DIRECTORY_SEPARATOR . 'Lang';
+            foreach (glob($modulePath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $workflowPath) {
 
-            if (! is_dir($langPath)) {
-                continue;
-            }
+                $langPath = $workflowPath . DIRECTORY_SEPARATOR . 'Lang';
 
-            foreach (glob($langPath . DIRECTORY_SEPARATOR . '*.json') as $jsonFile) {
-
-                $locale = pathinfo($jsonFile, PATHINFO_FILENAME);
-
-                $content = file_get_contents($jsonFile);
-
-                $data = json_decode($content, true);
-
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    throw new RuntimeException(
-                        "Invalid JSON: {$jsonFile}"
-                    );
+                if (! is_dir($langPath)) {
+                    continue;
                 }
 
-                if (! is_array($data)) {
-                    throw new RuntimeException(
-                        "Translation file must contain a JSON object: {$jsonFile}"
-                    );
-                }
+                foreach (glob($langPath . DIRECTORY_SEPARATOR . '*.json') as $jsonFile) {
 
-                $translations[$locale] ??= [];
+                    $locale = pathinfo($jsonFile, PATHINFO_FILENAME);
 
-                foreach ($data as $key => $value) {
+                    $content = file_get_contents($jsonFile);
 
-                    if (isset($translations[$locale][$key])) {
+                    $data = json_decode($content, true);
 
-                        if ($translations[$locale][$key] !== $value) {
-
-                            $duplicates[$locale][] = [
-                                'key'  => $key,
-                                'file' => $jsonFile,
-                            ];
-                        }
-
-                        continue;
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        throw new RuntimeException(
+                            "Invalid JSON:\n{$jsonFile}"
+                        );
                     }
 
-                    $translations[$locale][$key] = $value;
+                    if (! is_array($data)) {
+                        throw new RuntimeException(
+                            "Translation file must contain a JSON object:\n{$jsonFile}"
+                        );
+                    }
+
+                    foreach ($data as $key => $value) {
+
+                        $registry[$locale][$key][] = [
+                            'file'  => $jsonFile,
+                            'value' => $value,
+                        ];
+                    }
                 }
             }
         }
-    }
 
-    if (! empty($duplicates)) {
+        /*
+        |--------------------------------------------------------------------------
+        | Build translations + Detect duplicates
+        |--------------------------------------------------------------------------
+        */
 
-        $message = "Duplicate translation keys were found.\n\n";
+        $errors = [];
 
-        foreach ($duplicates as $locale => $items) {
+        foreach ($registry as $locale => $keys) {
 
-            $message .= "Locale: {$locale}\n";
-            $message .= str_repeat('-', 60)."\n";
+            foreach ($keys as $key => $occurrences) {
 
-            foreach ($items as $duplicate) {
+                /*
+                |--------------------------------------------------------------------------
+                | First value becomes the active translation.
+                |--------------------------------------------------------------------------
+                */
 
-                $message .= "• {$duplicate['key']}\n";
-                $message .= "  File: {$duplicate['file']}\n";
+                $translations[$locale][$key] = $occurrences[0]['value'];
+
+                if (count($occurrences) <= 1) {
+                    continue;
+                }
+
+                $errors[] = [
+                    'locale' => $locale,
+                    'key' => $key,
+                    'occurrences' => $occurrences,
+                ];
             }
-
-            $message .= "\n";
         }
 
-        throw new RuntimeException(trim($message));
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | Throw one exception containing every duplicate.
+        |--------------------------------------------------------------------------
+        */
 
-    return $translations;
-}
+        if (! empty($errors)) {
+
+            $message = [];
+            $message[] = 'Duplicate translation keys detected.';
+            $message[] = '';
+
+            foreach ($errors as $error) {
+
+                $message[] = str_repeat('=', 80);
+                $message[] = "Locale : {$error['locale']}";
+                $message[] = "Key    : {$error['key']}";
+                $message[] = 'Occurrences: '.count($error['occurrences']);
+                $message[] = '';
+
+                foreach ($error['occurrences'] as $index => $entry) {
+
+                    $message[] = ($index + 1).') '.$entry['file'];
+                    $message[] = '   Value : '.var_export($entry['value'], true);
+                    $message[] = '';
+                }
+            }
+
+            throw new RuntimeException(
+                implode(PHP_EOL, $message)
+            );
+        }
+
+        return $translations;
+    }
 }
