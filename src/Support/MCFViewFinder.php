@@ -1,377 +1,117 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MCF\Support;
-use Illuminate\View\ViewFinderInterface;
-use Illuminate\Filesystem\Filesystem;
-use InvalidArgumentException;
 
-class MCFViewFinder implements ViewFinderInterface
+use Illuminate\View\FileViewFinder;
+
+class MCFViewFinder extends FileViewFinder
 {
     /**
-     * The filesystem instance.
+     * Supports:
      *
-     * @var \Illuminate\Filesystem\Filesystem
-     */
-    protected $files;
-
-    /**
-     * The array of active view paths.
+     * view('Shared::Layout.app');
+     * view('Shared::Website.index');
      *
-     * @var string[]
-     */
-    protected $paths;
-
-    /**
-     * The array of views that have been located.
+     * Maps to:
      *
-     * @var array<string, string>
+     * Modules/
+     * └── Shared/
+     *     └── Layout/
+     *         └── Views/
+     *             └── app.blade.php
      */
-    protected $views = [];
-
-    /**
-     * The namespace to file path hints.
-     *
-     * @var array<string, array>
-     */
-    protected $hints = [];
-
-    /**
-     * Register a view extension with the finder.
-     *
-     * @var string[]
-     */
-    protected $extensions = ['blade.php', 'php', 'css', 'html'];
-
-    /**
-     * Create a new file view loader instance.
-     *
-     * @param  \Illuminate\Filesystem\Filesystem  $files
-     * @param  string[]  $paths
-     * @param  string[]|null  $extensions
-     */
-    public function __construct(Filesystem $files, array $paths, ?array $extensions = null)
+    protected function findNamespacedView($name)
     {
-        $this->files = $files;
-        $this->paths = array_map($this->resolvePath(...), $paths);
+        [$namespace, $view] = $this->parseNamespaceSegments($name);
 
-        if (isset($extensions)) {
-            $this->extensions = $extensions;
-        }
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | Default Laravel behaviour
+        |--------------------------------------------------------------------------
+        |
+        | Packages such as:
+        |
+        | mail::
+        | pagination::
+        | errors::
+        | laravel-exceptions-renderer::
+        |
+        | must continue to work exactly as Laravel designed.
+        |
+        */
 
-    /**
-     * Get the fully-qualified location of the view.
-     *
-     * @param  string  $view
-     * @return string
-     */
-    public function find($view)
-    {
-        if (isset($this->views[$view])) {
-            return $this->views[$view];
-        }
-
-        if ($this->hasHintInformation($view = trim($view))) {
-            return $this->views[$view] = $this->findNamespacedView($view);
+        if (! isset($this->hints[$namespace])) {
+            return parent::findNamespacedView($name);
         }
 
-        return $this->views[$view] = $this->findInPaths($view, $this->paths);
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | Detect MCF Module
+        |--------------------------------------------------------------------------
+        */
 
-    /**
-     * Get the path to a template with a named path.
-     *
-     * @param  string  $name
-     * @return string
-     */
-/**
- * Get the path to a template with a named path.
- *
- * Supports the MCF workflow structure:
- *
- * Modules/
- * └── Shared/
- *     └── Test/
- *         └── Views/
- *             └── index.blade.php
- *
- * Usage:
- *
- * view('Shared::Test.index');
- */
-protected function findNamespacedView($name)
-{
-    [$namespace, $view] = $this->parseNamespaceSegments($name);
+        $isMcfModule = true;
 
-    $segments = explode('.', $view);
+        foreach ($this->hints[$namespace] as $path) {
 
-    // MCF Workflow format:
-    // Shared::Test.index
-    if (count($segments) >= 2) {
-
-        $workflow = array_shift($segments);
-        $view = implode('.', $segments);
-
-        $paths = [];
-
-        foreach ($this->hints[$namespace] as $modulePath) {
-
-            $workflowViewsPath =
-                rtrim($modulePath, DIRECTORY_SEPARATOR)
-                . DIRECTORY_SEPARATOR
-                . $workflow
-                . DIRECTORY_SEPARATOR
-                . 'Views';
-
-            if ($this->files->isDirectory($workflowViewsPath)) {
-                $paths[] = $workflowViewsPath;
+            if (
+                ! str_contains(
+                    str_replace('\\', '/', $path),
+                    '/app/MCF/Modules/'
+                )
+            ) {
+                $isMcfModule = false;
+                break;
             }
         }
 
-        if (! empty($paths)) {
-            return $this->findInPaths($view, $paths);
-        }
-    }
-
-    // Laravel default behaviour
-    return $this->findInPaths($view, $this->hints[$namespace]);
-}
-
-    /**
-     * Get the segments of a template with a named path.
-     *
-     * @param  string  $name
-     * @return string[]
-     *
-     * @throws \InvalidArgumentException
-     */
-    protected function parseNamespaceSegments($name)
-    {
-        $segments = explode(static::HINT_PATH_DELIMITER, $name);
-
-        if (count($segments) !== 2) {
-            throw new InvalidArgumentException("View [{$name}] has an invalid name.");
+        if (! $isMcfModule) {
+            return parent::findNamespacedView($name);
         }
 
-        if (! isset($this->hints[$segments[0]])) {
-            throw new InvalidArgumentException("No hint path defined for [{$segments[0]}].");
-        }
+        /*
+        |--------------------------------------------------------------------------
+        | MCF Workflow support
+        |--------------------------------------------------------------------------
+        */
 
-        return $segments;
-    }
+        $segments = explode('.', $view);
 
-    /**
-     * Find the given view in the list of paths.
-     *
-     * @param  string  $name
-     * @param  string|string[]  $paths
-     * @return string
-     *
-     * @throws \InvalidArgumentException
-     */
-    protected function findInPaths($name, $paths)
-    {
-        foreach ((array) $paths as $path) {
-            foreach ($this->getPossibleViewFiles($name) as $file) {
-                $viewPath = $path.'/'.$file;
+        if (count($segments) >= 2) {
 
-                if (strlen($viewPath) < (PHP_MAXPATHLEN - 1) && $this->files->exists($viewPath)) {
-                    return $viewPath;
+            $workflow = array_shift($segments);
+
+            $view = implode('.', $segments);
+
+            $paths = [];
+
+            foreach ($this->hints[$namespace] as $modulePath) {
+
+                $workflowViewsPath =
+                    rtrim($modulePath, DIRECTORY_SEPARATOR)
+                    . DIRECTORY_SEPARATOR
+                    . $workflow
+                    . DIRECTORY_SEPARATOR
+                    . 'Views';
+
+                if ($this->files->isDirectory($workflowViewsPath)) {
+                    $paths[] = $workflowViewsPath;
                 }
             }
+
+            if (! empty($paths)) {
+                return $this->findInPaths($view, $paths);
+            }
         }
 
-        throw new InvalidArgumentException("View [{$name}] not found.");
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | Fallback
+        |--------------------------------------------------------------------------
+        */
 
-    /**
-     * Get an array of possible view files.
-     *
-     * @param  string  $name
-     * @return string[]
-     */
-    protected function getPossibleViewFiles($name)
-    {
-        return array_map(fn ($extension) => str_replace('.', '/', $name).'.'.$extension, $this->extensions);
-    }
-
-    /**
-     * Add a location to the finder.
-     *
-     * @param  string  $location
-     * @return void
-     */
-    public function addLocation($location)
-    {
-        $this->paths[] = $this->resolvePath($location);
-    }
-
-    /**
-     * Prepend a location to the finder.
-     *
-     * @param  string  $location
-     * @return void
-     */
-    public function prependLocation($location)
-    {
-        array_unshift($this->paths, $this->resolvePath($location));
-    }
-
-    /**
-     * Resolve the path.
-     *
-     * @param  string  $path
-     * @return string
-     */
-    protected function resolvePath($path)
-    {
-        return realpath($path) ?: $path;
-    }
-
-    /**
-     * Add a namespace hint to the finder.
-     *
-     * @param  string  $namespace
-     * @param  string|string[]  $hints
-     * @return void
-     */
-    public function addNamespace($namespace, $hints)
-    {
-        $hints = (array) $hints;
-
-        if (isset($this->hints[$namespace])) {
-            $hints = array_merge($this->hints[$namespace], $hints);
-        }
-
-        $this->hints[$namespace] = $hints;
-    }
-
-    /**
-     * Prepend a namespace hint to the finder.
-     *
-     * @param  string  $namespace
-     * @param  string|string[]  $hints
-     * @return void
-     */
-    public function prependNamespace($namespace, $hints)
-    {
-        $hints = (array) $hints;
-
-        if (isset($this->hints[$namespace])) {
-            $hints = array_merge($hints, $this->hints[$namespace]);
-        }
-
-        $this->hints[$namespace] = $hints;
-    }
-
-    /**
-     * Replace the namespace hints for the given namespace.
-     *
-     * @param  string  $namespace
-     * @param  string|string[]  $hints
-     * @return void
-     */
-    public function replaceNamespace($namespace, $hints)
-    {
-        $this->hints[$namespace] = (array) $hints;
-    }
-
-    /**
-     * Register an extension with the view finder.
-     *
-     * @param  string  $extension
-     * @return void
-     */
-    public function addExtension($extension)
-    {
-        if (($index = array_search($extension, $this->extensions)) !== false) {
-            unset($this->extensions[$index]);
-        }
-
-        array_unshift($this->extensions, $extension);
-    }
-
-    /**
-     * Returns whether or not the view name has any hint information.
-     *
-     * @param  string  $name
-     * @return bool
-     */
-    public function hasHintInformation($name)
-    {
-        return strpos($name, static::HINT_PATH_DELIMITER) > 0;
-    }
-
-    /**
-     * Flush the cache of located views.
-     *
-     * @return void
-     */
-    public function flush()
-    {
-        $this->views = [];
-    }
-
-    /**
-     * Get the filesystem instance.
-     *
-     * @return \Illuminate\Filesystem\Filesystem
-     */
-    public function getFilesystem()
-    {
-        return $this->files;
-    }
-
-    /**
-     * Set the active view paths.
-     *
-     * @param  string[]  $paths
-     * @return $this
-     */
-    public function setPaths($paths)
-    {
-        $this->paths = $paths;
-
-        return $this;
-    }
-
-    /**
-     * Get the active view paths.
-     *
-     * @return string[]
-     */
-    public function getPaths()
-    {
-        return $this->paths;
-    }
-
-    /**
-     * Get the views that have been located.
-     *
-     * @return array<string, string>
-     */
-    public function getViews()
-    {
-        return $this->views;
-    }
-
-    /**
-     * Get the namespace to file path hints.
-     *
-     * @return array<string, array>
-     */
-    public function getHints()
-    {
-        return $this->hints;
-    }
-
-    /**
-     * Get registered extensions.
-     *
-     * @return string[]
-     */
-    public function getExtensions()
-    {
-        return $this->extensions;
+        return parent::findNamespacedView($name);
     }
 }

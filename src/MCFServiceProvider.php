@@ -43,24 +43,20 @@ $this->app->singleton(MakeMigrationCommand::class, function ($app) {
                 $app['composer'],
             );
         });
+        
+$this->app->extend('view.finder', function ($finder, $app) {
 
-$this->app->singleton('view.finder', function ($app) {
-    return new MCFViewFinder(
+    $mcfFinder = new MCFViewFinder(
         $app['files'],
-        $app['config']['view.paths']
+        $finder->getPaths(),
+        $finder->getExtensions()
     );
-});
 
-$this->app->resolving('view', function ($factory, $app) {
-
-    $reflection = new \ReflectionObject($factory);
-
-    if ($reflection->hasProperty('finder')) {
-        $property = $reflection->getProperty('finder');
-        $property->setAccessible(true);
-        $property->setValue($factory, $app['view.finder']);
+    foreach ($finder->getHints() as $namespace => $paths) {
+        $mcfFinder->replaceNamespace($namespace, $paths);
     }
 
+    return $mcfFinder;
 });
 
 
