@@ -26,7 +26,6 @@ use MCF\Commands\MakeLangCommand;
 use MCF\Commands\RemoveLangCommand;
 use MCF\Commands\CreateEndpointCommand;
 use MCF\Commands\RemoveEndpointCommand;
-use Illuminate\Support\Facades\View;
 
 class MCFServiceProvider extends ServiceProvider
 {
@@ -84,10 +83,6 @@ if ($filesystem->exists($modulesPath)) {
 
         $this->loadViewsFrom($modulePath, $module);
     }
-}
-$errorsPath = app_path('MCF/errors');
-if ($filesystem->isDirectory($errorsPath)) {
-    View::replaceNamespace('errors', $errorsPath);
 }
 
     if ($this->app->runningInConsole()) {

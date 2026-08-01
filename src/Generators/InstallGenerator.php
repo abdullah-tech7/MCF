@@ -177,7 +177,7 @@ protected function publishErrors(string $basePath): void
 {
     $source = dirname(__DIR__, 2) . '/src/errors';
 
-    $destination = $basePath . '/app/MCF/errors';
+    $destination = $basePath . '/resources/views/errors';
 
     if (! $this->files->isDirectory($source)) {
         return;
