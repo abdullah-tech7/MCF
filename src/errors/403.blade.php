@@ -1,8 +1,5 @@
-@extends('Shared::Layout.app')
+@extends('errors::minimal')
 
 @section('title', __('Forbidden'))
 @section('code', '403')
-@section('message', __('Forbidden'))
-
-@section('content')
-@endsection
+@section('message', __($exception->getMessage() ?: 'Forbidden'))
