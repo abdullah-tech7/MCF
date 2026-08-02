@@ -26,15 +26,7 @@ class InstallGenerator
 
         $directories = [
             'app/MCF',
-
             'app/MCF/Modules',
-
-            'app/MCF/Database',
-            'app/MCF/Database/Models',
-            'app/MCF/Database/Migrations',
-            'app/MCF/Database/Seeders',
-            'app/MCF/Database/Factories',
-
             'app/MCF/Middleware',
             'app/MCF/Notifications',
             'app/MCF/Rules',
@@ -145,7 +137,6 @@ protected function createQuickStart(string $basePath): void
         $directories = [
             'app/Http/Controllers',
             'app/Http/Requests',
-            'app/Models',
             'routes',
         ];
 

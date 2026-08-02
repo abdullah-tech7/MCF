@@ -16,7 +16,7 @@ class InstallCommand extends Command
       public function handle(InstallGenerator $installer): int    
       {
         $cleanupLaravel = $this->confirm(
-            'Do you want to remove Laravel default directories (Controllers, Requests, Models)?',
+            'Do you want to remove Laravel default directories (Controllers, Requests)?',
             false
         );
 

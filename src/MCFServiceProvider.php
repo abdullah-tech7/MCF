@@ -6,10 +6,6 @@ namespace MCF;
 use MCF\Support\MCFViewFinder;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
-use MCF\Commands\MakeMigrationCommand;
-use MCF\Commands\MakeModelCommand;
-use MCF\Commands\MakeFactoryCommand;
-use MCF\Commands\MakeSeederCommand;
 use MCF\Commands\MakeMailCommand;
 use MCF\Commands\MakeNotificationCommand;
 use MCF\Commands\MakeRuleCommand;
@@ -94,10 +90,6 @@ if ($filesystem->exists($modulesPath)) {
             MakeWorkflowLayoutCommand::class,
             RemoveWorkFlowCommand::class,
             MakeMiddlewareCommand::class,
-            MakeMigrationCommand::class,
-            MakeModelCommand::class,
-            MakeFactoryCommand::class,
-            MakeSeederCommand::class,
             MakeMailCommand::class,
             MakeRuleCommand::class,
             MakeNotificationCommand::class,
