@@ -38,24 +38,25 @@ class MakeMigrationCommand extends MigrateMakeCommand
     /**
      * Execute the console command.
      */
-    public function handle(): int
-    {
-        if ($this->migrationExists()) {
-            $this->components->error(
-                "Migration [{$this->getMigrationName()}] already exists."
-            );
+/**
+ * Execute the console command.
+ */
+public function handle(): int
+{
+    if ($this->migrationExists()) {
+        $this->components->error(
+            "Migration [{$this->getMigrationName()}] already exists."
+        );
 
-            return self::FAILURE;
-        }
-
-        $result = parent::handle();
-
-        if ($result === self::SUCCESS) {
-            $this->organizeMigrations();
-        }
-
-        return $result;
+        return self::FAILURE;
     }
+
+    parent::handle();
+
+    $this->organizeMigrations();
+
+    return self::SUCCESS;
+}
 
     /**
      * Get the migration path.
