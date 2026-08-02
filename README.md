@@ -79,11 +79,6 @@ app/MCF
 │   ├── MfcPolicy.php
 │   ├── MfcRequest.php
 │   └── MfcService.php
-├── Database/
-│   ├── Factories/
-│   ├── Migrations/
-│   ├── Models/
-│   └── Seeders/
 ├── Mail/
 ├── Middleware/
 ├── Modules/
@@ -395,98 +390,6 @@ This skips confirmation prompts.
 
 ---
 
-# Database
-
-MCF keeps database-related classes inside the framework directory while remaining fully compatible with Laravel's migration system.
-
-```text
-app/MCF/Database
-├── Factories
-├── Migrations
-├── Models
-└── Seeders
-```
-
----
-
-## Models
-
-Create a model.
-
-```bash
-php artisan mcf:make:model User
-```
-
-Generate a model with migration.
-
-```bash
-php artisan mcf:make:model User --migration
-```
-
-Generate everything.
-
-```bash
-php artisan mcf:make:model User --all
-```
-
-Laravel model options such as controllers, factories, policies, requests, seeders and tests are fully supported.
-
----
-
-## Migrations
-
-Create a migration.
-
-```bash
-php artisan mcf:make:migration create_users_table
-```
-
-Create a table.
-
-```bash
-php artisan mcf:make:migration create_users_table --create=users
-```
-
-Modify an existing table.
-
-```bash
-php artisan mcf:make:migration add_status_to_users_table --table=users
-```
-
----
-
-## Factories
-
-Create a factory.
-
-```bash
-php artisan mcf:make:factory UserFactory
-```
-
-Associate it with a model.
-
-```bash
-php artisan mcf:make:factory UserFactory --model=User
-```
-
----
-
-## Seeders
-
-Create a seeder.
-
-```bash
-php artisan mcf:make:seeder UserSeeder
-```
-
----
-
-# Framework Components
-
-MCF also provides generators for common Laravel components while keeping them inside the MCF framework structure.
-
----
-
 ## Middleware
 
 ```bash
@@ -589,6 +492,29 @@ php artisan mcf:make:workflow:layout Shared Layout
 
 It is not a special framework component and may be modified, renamed, deleted, or recreated like any other workflow.
 
+---
+
+# Database
+
+MCF uses Laravel's native database structure without modification.
+
+```text
+database/
+app/Models/
+```
+
+This includes:
+
+- Migrations
+- Seeders
+- Factories
+- Eloquent Models
+
+MCF remains fully compatible with Laravel's database ecosystem, allowing the use of Laravel packages, database tools, model generators, and third-party integrations without requiring any customization.
+
+---
+
+
 # Assets & Storage
 
 MCF does not replace Laravel's asset or filesystem implementation.
@@ -676,23 +602,9 @@ The interactive wizard generates the required controller methods, routes and opt
 php artisan mcf:lang:make ar Users Profile
 ```
 
----
+------
 
-## 5. Create models and migrations
-
-```bash
-php artisan mcf:make:model Product --all
-```
-
-or
-
-```bash
-php artisan mcf:make:migration create_products_table
-```
-
----
-
-## 6. Continue development
+## 5. Continue development
 
 Because every workflow is isolated, all future development happens inside the workflow itself without affecting unrelated features.
 
@@ -735,8 +647,8 @@ The complete documentation is available inside the **docs** directory.
 - Layout Workflows
 - Endpoints
 - Language Files
-- Database
 - Routing
+- Database
 - Framework Components
 - CLI Reference
 - Coding Standards

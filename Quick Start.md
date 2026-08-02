@@ -10,7 +10,6 @@ By the end of this guide, you will know how to:
 - Generate CRUD Workflows
 - Add Endpoints
 - Generate Language Files
-- Create Models
 - Understand the generated project structure
 
 Estimated time: **10–15 minutes**
@@ -42,7 +41,6 @@ After installation your application contains:
 ```text
 app/MCF
 ├── Base
-├── Database
 ├── Mail
 ├── Middleware
 ├── Modules
@@ -185,55 +183,10 @@ php artisan mcf:lang:make ar
 
 MCF keeps translations close to the feature they belong to whenever possible.
 
----
-
-# Step 7 — Create a Model
-
-Generate a model.
-
-```bash
-php artisan mcf:make:model User
-```
-
-Generate a model with migration.
-
-```bash
-php artisan mcf:make:model User --migration
-```
-
-Generate everything.
-
-```bash
-php artisan mcf:make:model User --all
-```
-
-Models are stored inside the MCF database directory.
 
 ---
 
-# Step 8 — Create a Migration
-
-Generate a migration.
-
-```bash
-php artisan mcf:make:migration create_users_table
-```
-
-Create a table.
-
-```bash
-php artisan mcf:make:migration create_users_table --create=users
-```
-
-Modify an existing table.
-
-```bash
-php artisan mcf:make:migration add_status_to_users_table --table=users
-```
-
----
-
-# Step 9 — Other Generators
+# Step 7 — Other Generators
 
 MCF also provides generators for common Laravel components.
 
@@ -318,8 +271,6 @@ Create Endpoints
         ▼
 Generate Language Files
         │
-        ▼
-Create Models & Migrations
         │
         ▼
 Build Your Feature
@@ -582,7 +533,6 @@ For more detailed information, continue with:
 - **Workflow Rules.md** — Workflow design principles.
 - **Endpoint Generator.md** — Endpoint generation guide.
 - **Language Generator.md** — Translation generation guide.
-- **Database.md** — Models, migrations, factories and seeders.
 - **Best Practices.md** — Recommended project organization and development patterns.
 
 The Quick Start guide intentionally focuses on getting you productive quickly. The remaining documentation explores each topic in greater depth.

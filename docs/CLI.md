@@ -17,7 +17,6 @@ MCF commands are organized into several categories.
 - Workflows
 - Endpoints
 - Languages
-- Database
 - Shared Components
 
 Each category targets a specific part of the framework.
@@ -247,38 +246,6 @@ Only the selected localization resources are removed.
 
 ---
 
-# Database Commands
-
-MCF provides generators for common database components.
-
-Create a Model.
-
-```bash
-php artisan mcf:make:model
-```
-
-Create a Migration.
-
-```bash
-php artisan mcf:make:migration
-```
-
-Create a Factory.
-
-```bash
-php artisan mcf:make:factory
-```
-
-Create a Seeder.
-
-```bash
-php artisan mcf:make:seeder
-```
-
-These commands follow the MCF project organization while remaining fully compatible with Laravel's database system.
-
----
-
 # Shared Components
 
 MCF also generates reusable application components.
@@ -362,4 +329,4 @@ When working with the CLI:
 
 MCF's Artisan commands automate the repetitive tasks involved in building modular applications.
 
-By generating Modules, Workflows, Endpoints, Language resources, Database components and shared classes, the CLI ensures that every feature follows the same architecture and conventions, reducing boilerplate while improving consistency across the entire project.
+By generating Modules, Workflows, Endpoints, Language resources,and shared classes, the CLI ensures that every feature follows the same architecture and conventions, reducing boilerplate while improving consistency across the entire project.

@@ -1,10 +1,24 @@
 # Database
 
-MCF provides generators for Laravel database components while keeping the framework's modular architecture intact.
+MCF uses Laravel's native database architecture without modification.
 
-The framework does not replace Laravel's database system.
+Database components remain in their default Laravel locations.
 
-Instead, it organizes database-related resources in a predictable location and automates their creation through Artisan commands.
+```text
+database/
+app/Models/
+```
+
+This includes:
+
+- Models
+- Migrations
+- Factories
+- Seeders
+
+MCF does not replace Laravel's database layer.
+
+Instead, it builds business features on top of Laravel while remaining fully compatible with its database ecosystem.
 
 ---
 
@@ -12,42 +26,45 @@ Instead, it organizes database-related resources in a predictable location and a
 
 MCF follows one simple principle:
 
-> **Business features live inside Workflows. Database components remain centralized.**
+> **Laravel manages persistence. MCF manages business workflows.**
 
-Database resources are shared across the application and are not owned by individual Workflows.
+Database resources belong to the application, not to individual Workflows.
 
-This keeps the domain model independent while allowing multiple Workflows to use the same database entities.
+This allows multiple Workflows to reuse the same Models without duplication.
 
 ---
 
 # Supported Components
 
-MCF supports generating the following Laravel database components:
+MCF works directly with Laravel's native database components:
 
-- Models
+- Eloquent Models
 - Migrations
 - Factories
 - Seeders
 
-All generated files remain fully compatible with Laravel.
+No custom database structure is required.
+
+Developers continue using Laravel's standard conventions.
 
 ---
 
 # Database Structure
 
-Database-related files are organized under the MCF database directory.
+MCF uses Laravel's default structure.
 
 ```text
 app
-└── MCF
-    └── Database
-        ├── Models
-        ├── Migrations
-        ├── Factories
-        └── Seeders
+├── Models
+└── ...
+
+database
+├── factories
+├── migrations
+└── seeders
 ```
 
-Each directory has a dedicated responsibility.
+This keeps the project fully compatible with Laravel tools and packages.
 
 ---
 
@@ -55,21 +72,21 @@ Each directory has a dedicated responsibility.
 
 Models represent application data.
 
-Generate a Model:
+Generate a Model using Laravel's standard command.
 
 ```bash
-php artisan mcf:make:model
+php artisan make:model
 ```
 
 Generated location:
 
 ```text
-app/MCF/Database/Models
+app/Models
 ```
 
-Models may be shared across multiple Modules and Workflows.
+Models are shared across the entire application.
 
-A Model should represent data.
+A Model represents data.
 
 It should not represent business workflows.
 
@@ -79,19 +96,19 @@ It should not represent business workflows.
 
 Migrations define the database schema.
 
-Generate a Migration:
+Generate a Migration using Laravel.
 
 ```bash
-php artisan mcf:make:migration
+php artisan make:migration
 ```
 
 Generated location:
 
 ```text
-app/MCF/Database/Migrations
+database/migrations
 ```
 
-Migrations allow database schemas to evolve through version-controlled changes.
+MCF does not change Laravel's migration system.
 
 ---
 
@@ -99,19 +116,19 @@ Migrations allow database schemas to evolve through version-controlled changes.
 
 Factories generate model instances for testing and seeding.
 
-Generate a Factory:
+Generate a Factory using Laravel.
 
 ```bash
-php artisan mcf:make:factory
+php artisan make:factory
 ```
 
 Generated location:
 
 ```text
-app/MCF/Database/Factories
+database/factories
 ```
 
-Factories help create consistent test data while reducing repetitive setup code.
+Factories remain fully compatible with Laravel testing tools.
 
 ---
 
@@ -119,32 +136,30 @@ Factories help create consistent test data while reducing repetitive setup code.
 
 Seeders populate the database with initial or sample data.
 
-Generate a Seeder:
+Generate a Seeder using Laravel.
 
 ```bash
-php artisan mcf:make:seeder
+php artisan make:seeder
 ```
 
 Generated location:
 
 ```text
-app/MCF/Database/Seeders
+database/seeders
 ```
 
-Seeders are useful for:
+Seeders are commonly used for:
 
-- Initial application setup.
-- Development environments.
-- Automated testing.
-- Demo data.
+- Initial application setup
+- Development environments
+- Automated testing
+- Reference data
 
 ---
 
 # Relationship Between Workflows and Models
 
-A common misconception is that one Workflow should own one Model.
-
-MCF intentionally avoids this relationship.
+Workflows do not own Models.
 
 Example:
 
@@ -165,195 +180,59 @@ User Model
 
 Likewise, one Workflow may coordinate multiple Models.
 
-Business capabilities and database entities should remain independent concepts.
-
----
-
-# Shared Models
-
-Models are application-wide resources.
-
-Examples:
-
-```text
-User
-Product
-Category
-Order
-Role
-Permission
-Invoice
-```
-
-These Models may be used by many different Workflows.
-
-Keeping Models centralized avoids duplication and encourages reuse.
+Business capabilities and database entities are independent concepts.
 
 ---
 
 # Business Logic
 
-Business logic should never be placed inside Migrations or Factories.
+Business logic should not be placed inside Models, Migrations, Factories or Seeders.
 
 Business logic belongs inside Workflow Services.
 
-Database components should focus on persistence and data representation.
-
-This separation improves maintainability and keeps responsibilities clear.
-
----
-
-# Migration Workflow
-
-A typical database change follows this process.
-
-```text
-Generate Migration
-
-↓
-
-Modify Schema
-
-↓
-
-Run Migration
-
-↓
-
-Update Model
-
-↓
-
-Use Model Inside Workflows
-```
-
-Each step has a clear responsibility.
+Database components should focus only on persistence and data representation.
 
 ---
 
 # Database Independence
 
-Workflows should not depend on a particular database engine.
+Workflow Services should not depend on a specific database implementation.
 
-MCF remains compatible with Laravel's supported database drivers, including:
+They communicate with Models and repositories while Laravel handles persistence.
 
-- MySQL
-- PostgreSQL
-- SQLite
-- SQL Server
-
-Changing the database engine should not require changes to Workflow architecture.
-
----
-
-# Model Reuse
-
-Avoid creating duplicate Models for similar concepts.
-
-Good:
-
-```text
-User
-```
-
-Used by:
-
-- Authentication
-- Profile
-- User Management
-- Notifications
-
-Avoid:
-
-```text
-AuthenticationUser
-ProfileUser
-ManagementUser
-```
-
-A single Model should represent a single data entity.
-
----
-
-# Keep Models Focused
-
-Models should describe application data.
-
-Avoid placing Workflow-specific business processes inside Models.
-
-Workflow coordination belongs to Services.
-
-Models should remain reusable across different business capabilities.
-
----
-
-# Factories and Testing
-
-Factories should generate realistic data that reflects application requirements.
-
-Using Factories consistently improves:
-
-- Automated testing.
-- Database seeding.
-- Development efficiency.
-
-Factories should remain independent of business workflows.
-
----
-
-# Seeding Strategy
-
-Use Seeders for predictable application data.
-
-Examples include:
-
-- Default roles.
-- Default permissions.
-- Initial configuration.
-- Reference data.
-- Sample records.
-
-Avoid embedding large amounts of setup logic directly inside application code.
-
----
-
-# Best Practices
-
-When working with database components:
-
-- Keep Models reusable.
-- Keep Migrations focused on schema changes.
-- Use Factories for generating test data.
-- Use Seeders for initial and development data.
-- Place business logic inside Workflow Services.
-- Avoid coupling Models to specific Workflows.
-- Reuse existing Models whenever possible.
+This allows applications to evolve without affecting Workflow architecture.
 
 ---
 
 # Laravel Compatibility
 
-MCF database components are fully compatible with Laravel.
+Because MCF uses Laravel's native database structure, developers can use the complete Laravel ecosystem without additional configuration.
 
-Developers can continue using familiar Laravel features, including:
+Examples include:
 
 - Eloquent ORM
 - Relationships
 - Query Builder
 - Model Scopes
+- Observers
 - Factories
 - Seeders
 - Migrations
 - Database Transactions
-
-MCF extends the project organization without changing Laravel's database capabilities.
+- Third-party database packages
+- Model generators
+- Database utilities
 
 ---
 
 # Summary
 
-MCF centralizes database resources while organizing business features into independent Workflows.
+MCF does not introduce a custom database architecture.
 
-Models, Migrations, Factories and Seeders remain shared application resources, allowing multiple Workflows to reuse the same data model without duplication.
+Instead, it adopts Laravel's native database structure and conventions while focusing on business architecture.
 
-This separation between business capabilities and database entities results in a cleaner, more maintainable architecture that scales naturally as applications grow.
+Laravel is responsible for persistence.
+
+MCF is responsible for organizing business workflows.
+
+This separation keeps applications familiar to Laravel developers while allowing MCF to remain lightweight, extensible and fully compatible with the Laravel ecosystem.

@@ -16,7 +16,6 @@ A typical MCF application contains the following structure.
 app
 └── MCF
     ├── Base
-    ├── Database
     ├── Mail
     ├── Middleware
     ├── Modules
@@ -43,24 +42,6 @@ The Base directory contains the framework's shared base classes.
 Every generated backend class inherits from one of these classes.
 
 This provides a consistent foundation for all Workflows.
-
----
-
-# Database
-
-```text
-Database
-├── Models
-├── Migrations
-├── Factories
-└── Seeders
-```
-
-Database resources remain centralized.
-
-Unlike Workflows, database components are shared across the application.
-
-Multiple Workflows may use the same Models.
 
 ---
 
@@ -312,11 +293,6 @@ app
     │   ├── MfcRequest.php
     │   └── MfcService.php
     │
-    ├── Database
-    │   ├── Models
-    │   ├── Migrations
-    │   ├── Factories
-    │   └── Seeders
     │
     ├── Mail
     ├── Middleware
@@ -349,7 +325,6 @@ Controllers
 Requests
 Policies
 Views
-Models
 ```
 
 Finding everything related to one feature often requires navigating multiple directories.
@@ -381,6 +356,6 @@ Each feature becomes easier to understand because all related resources live tog
 
 The MCF folder structure organizes applications around Modules and Workflows rather than framework directories.
 
-Each Workflow contains its backend classes, views and language resources, while shared infrastructure such as database components, middleware and notifications remains centralized.
+Each Workflow contains its backend classes, views and language resources, while shared infrastructure such as middleware and notifications remains centralized.
 
 This architecture keeps features self-contained, promotes consistency and allows applications to scale without sacrificing maintainability.

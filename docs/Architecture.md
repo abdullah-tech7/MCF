@@ -41,10 +41,6 @@ Application
 
 │
 
-├── Database
-
-│
-
 ├── Framework Base Classes
 
 │
@@ -437,21 +433,6 @@ This provides several advantages.
 
 Localization scales naturally as applications grow.
 
----
-
-# Database Layer
-
-MCF keeps database-related classes together inside the framework.
-
-```text
-app/MCF/Database
-├── Models
-├── Migrations
-├── Factories
-└── Seeders
-```
-
-This organization keeps application code inside the MCF architecture while remaining fully compatible with Laravel's migration and Eloquent systems.
 
 ---
 
