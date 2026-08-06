@@ -9,9 +9,9 @@ use RuntimeException;
 class TranslationLoader
 {
     /**
-     * Load all module translations.
+     * Load all framework translations.
      *
-     * Structure:
+     * Supported locations:
      *
      * Modules/
      *   Module/
@@ -19,61 +19,83 @@ class TranslationLoader
      *       Lang/
      *         ar.json
      *         en.json
+     *
+     * MCF/
+     *   Mail/
+     *     Lang/
+     *       ar.json
+     *       en.json
      */
     public function load(string $modulesPath): array
     {
-        if (! is_dir($modulesPath)) {
-            return [];
-        }
-
         $translations = [];
         $registry = [];
 
-        foreach (glob($modulesPath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $modulePath) {
+        /*
+        |--------------------------------------------------------------------------
+        | Workflow Languages
+        |--------------------------------------------------------------------------
+        */
 
-            $module = basename($modulePath);
+        if (is_dir($modulesPath)) {
 
-            foreach (glob($modulePath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $workflowPath) {
+            foreach (glob($modulesPath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $modulePath) {
 
-                $workflow = basename($workflowPath);
+                $module = basename($modulePath);
 
-                $langPath = $workflowPath . DIRECTORY_SEPARATOR . 'Lang';
+                foreach (glob($modulePath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $workflowPath) {
 
-                if (! is_dir($langPath)) {
-                    continue;
-                }
+                    $workflow = basename($workflowPath);
 
-                foreach (glob($langPath . DIRECTORY_SEPARATOR . '*.json') as $jsonFile) {
+                    $langPath = $workflowPath . DIRECTORY_SEPARATOR . 'Lang';
 
-                    $locale = pathinfo($jsonFile, PATHINFO_FILENAME);
-
-                    $content = file_get_contents($jsonFile);
-
-                    $data = json_decode($content, true);
-
-                    if (json_last_error() !== JSON_ERROR_NONE) {
-                        throw new RuntimeException(
-                            "Invalid JSON:\n{$jsonFile}"
-                        );
+                    if (! is_dir($langPath)) {
+                        continue;
                     }
 
-                    if (! is_array($data)) {
-                        throw new RuntimeException(
-                            "Translation file must contain a JSON object:\n{$jsonFile}"
+                    foreach (glob($langPath . DIRECTORY_SEPARATOR . '*.json') as $jsonFile) {
+
+                        $this->loadJsonFile(
+                            jsonFile: $jsonFile,
+                            source: "{$module}::{$workflow}",
+                            registry: $registry,
                         );
-                    }
-
-                    foreach ($data as $key => $value) {
-
-                        $registry[$locale][$key][] = [
-                            'module' => $module,
-                            'workflow' => $workflow,
-                            'value' => $value,
-                        ];
                     }
                 }
             }
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Framework Mail Languages
+        |--------------------------------------------------------------------------
+        */
+
+        $frameworkPath = dirname($modulesPath);
+
+        $mailLangPath = $frameworkPath
+            . DIRECTORY_SEPARATOR
+            . 'Mail'
+            . DIRECTORY_SEPARATOR
+            . 'Lang';
+
+        if (is_dir($mailLangPath)) {
+
+            foreach (glob($mailLangPath . DIRECTORY_SEPARATOR . '*.json') as $jsonFile) {
+
+                $this->loadJsonFile(
+                    jsonFile: $jsonFile,
+                    source: 'MCF::Mail',
+                    registry: $registry,
+                );
+            }
+        }
+
+                /*
+        |--------------------------------------------------------------------------
+        | Merge Translations
+        |--------------------------------------------------------------------------
+        */
 
         $duplicates = [];
 
@@ -81,24 +103,36 @@ class TranslationLoader
 
             foreach ($keys as $key => $occurrences) {
 
-                // أول تعريف هو الذي يستخدم فعلياً
+                // Always use the first definition.
                 $translations[$locale][$key] = $occurrences[0]['value'];
 
-                if (count($occurrences) > 1) {
+                // Ignore duplicates when all values are identical.
+                $values = array_unique(
+                    array_column($occurrences, 'value')
+                );
 
-                    $duplicates[] = [
-                        'locale' => $locale,
-                        'key' => $key,
-                        'occurrences' => $occurrences,
-                    ];
+                if (count($values) <= 1) {
+                    continue;
                 }
+
+                $duplicates[] = [
+                    'locale' => $locale,
+                    'key' => $key,
+                    'occurrences' => $occurrences,
+                ];
             }
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Conflicting Translations
+        |--------------------------------------------------------------------------
+        */
 
         if (! empty($duplicates)) {
 
             $lines = [];
-            $lines[] = 'Duplicate translation keys detected.';
+            $lines[] = 'Conflicting translation keys detected.';
             $lines[] = '';
 
             foreach ($duplicates as $duplicate) {
@@ -110,7 +144,7 @@ class TranslationLoader
 
                 foreach ($duplicate['occurrences'] as $index => $item) {
 
-                    $lines[] = ($index + 1).". {$item['module']}::{$item['workflow']}";
+                    $lines[] = ($index + 1).'. '.$item['source'];
                     $lines[] = "   Value : {$item['value']}";
                     $lines[] = '';
                 }
@@ -122,5 +156,41 @@ class TranslationLoader
         }
 
         return $translations;
+    }
+
+    /**
+     * Load a JSON translation file.
+     */
+    protected function loadJsonFile(
+        string $jsonFile,
+        string $source,
+        array &$registry,
+    ): void {
+
+        $content = file_get_contents($jsonFile);
+
+        $data = json_decode($content, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new RuntimeException(
+                "Invalid JSON:\n{$jsonFile}"
+            );
+        }
+
+        if (! is_array($data)) {
+            throw new RuntimeException(
+                "Translation file must contain a JSON object:\n{$jsonFile}"
+            );
+        }
+
+        foreach ($data as $key => $value) {
+
+            $locale = pathinfo($jsonFile, PATHINFO_FILENAME);
+
+            $registry[$locale][$key][] = [
+                'source' => $source,
+                'value' => $value,
+            ];
+        }
     }
 }

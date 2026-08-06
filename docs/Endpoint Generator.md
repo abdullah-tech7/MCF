@@ -1,227 +1,477 @@
 # Endpoint Generator
 
-The Endpoint Generator automates the process of adding new endpoints to existing Workflows.
+The Endpoint Generator is the primary way to add functionality to an existing Workflow.
 
-Instead of manually updating Controllers, Routes and related classes, MCF generates the required boilerplate while preserving a consistent project structure.
+Rather than manually editing Controllers, Routes and Views, MCF updates the Workflow automatically while preserving its architecture.
 
-The generator reduces repetitive work and ensures every endpoint follows the same architectural conventions.
+The generator eliminates repetitive work and ensures every Workflow follows the same conventions.
+
+Business logic is intentionally **not generated**. Developers implement it manually according to their application's requirements.
 
 ---
 
 # Philosophy
 
-An endpoint represents one action performed by a Workflow.
+An Endpoint represents **one executable action** inside a Workflow.
 
-Examples include:
+It is **not** just a Controller method.
 
-- List records
-- Create records
-- Update records
-- Delete records
-- Export data
-- Search
-- Archive
-- Restore
+Creating one Endpoint may update multiple files across the Workflow.
 
-Endpoints belong to Workflows.
+For example, inside the Authentication Workflow:
 
-They should never exist independently.
+```text
+Authentication
+
+├── register
+├── registerPost
+├── login
+├── loginPost
+├── logout
+├── forgotPassword
+├── forgotPasswordPost
+├── resetPassword
+├── resetPasswordPost
+├── updatePassword
+├── updatePasswordPost
+├── verifyEmail
+└── resendVerification
+```
+
+Every Endpoint belongs to exactly one Workflow.
+
+Endpoints never exist independently.
+
+---
+
+# Generator First
+
+MCF follows a **Generator First** philosophy.
+
+Developers should generate Endpoints instead of manually editing:
+
+- Controllers
+- Routes
+- Views
+
+The generator owns the Workflow structure.
+
+Developers focus on implementing business logic rather than maintaining boilerplate code.
 
 ---
 
 # Create an Endpoint
 
-Generate a new endpoint.
+Generate a new Endpoint.
 
 ```bash
 php artisan mcf:endpoint:create
 ```
 
-The command is interactive and guides the developer through the required input.
+The command is fully interactive.
 
 Typical prompts include:
 
 - Module
 - Workflow
-- Endpoint name
+- Endpoint Name
+- Create View
+- HTTP Method
+- Return Type
+- Inject Workflow Request
+- Parameters
 
 ---
 
-# Generated Changes
+# What Does the Generator Update?
 
-The Endpoint Generator updates the Workflow automatically.
+Generating a single Endpoint automatically updates the Workflow.
 
-Depending on the endpoint type, generated changes may include:
+Depending on the selected options, MCF may update:
 
-- Controller methods
-- Route definitions
-- Service methods
-- Request classes (if required)
-- Policy methods (if required)
+- Workflow Routes
+- Workflow Controller
+- Workflow Views
 
-The goal is to eliminate repetitive manual edits.
+The generator updates existing files.
+
+It does **not** create duplicate Controllers.
+
+It does **not** generate Service methods.
+
+Business logic always remains under the developer's control.
 
 ---
 
 # Example
 
-Assume the following Workflow.
+Assume the following Workflow already exists.
 
 ```text
-Users
-└── Profile
+Modules
+
+└── Test
+    └── Auth
+        ├── Backend
+        │   ├── AuthController.php
+        │   ├── AuthRoutes.php
+        │   ├── AuthService.php
+        │   ├── AuthPolicy.php
+        │   └── AuthRequest.php
+        │
+        ├── Views
+        └── Lang
 ```
 
-Create a new endpoint.
+Create a new Endpoint.
 
 ```text
-export
+login
 ```
 
-After generation, the Workflow may contain:
+MCF automatically updates:
 
 ```text
-Profile
-└── Backend
-    ├── ProfileController.php
-    ├── ProfileRoutes.php
-    ├── ProfileService.php
-    ├── ProfileRequest.php
-    └── ProfilePolicy.php
+AuthController
+
++ login()
 ```
 
-The generator updates the existing files instead of creating duplicate classes.
+```text
+AuthRoutes
+
++ Route::get(...)
+```
+
+```text
+Views
+
++ login.blade.php
+```
+
+Notice that **AuthService is not modified**.
+
+If business logic is required, developers implement it manually.
 
 ---
 
-# Endpoint Naming
+# Interactive Options
 
-Endpoint names should describe an action.
-
-Good examples:
-
-- index
-- create
-- store
-- edit
-- update
-- delete
-- restore
-- archive
-- export
-- search
-
-Use verbs that clearly express the operation being performed.
+Every question asked by the generator affects the generated code.
 
 ---
 
-# Avoid Generic Names
+## Module
 
-Avoid endpoint names that do not communicate intent.
-
-Examples:
-
-- action
-- execute
-- process
-- test
-- run
-- temp
-
-Meaningful endpoint names improve readability throughout the project.
-
----
-
-# Workflow Ownership
-
-Every endpoint belongs to exactly one Workflow.
+Specifies the Module that owns the Workflow.
 
 Example:
 
 ```text
-User Management
-
-├── index
-├── create
-├── store
-├── edit
-├── update
-├── delete
-└── export
+Test
 ```
-
-Related actions remain together.
-
-Avoid spreading endpoints for the same business capability across multiple Workflows.
 
 ---
 
-# Route Registration
+## Workflow
 
-Generated endpoints automatically become part of the Workflow's route definitions.
+Specifies the Workflow to update.
 
-Routes remain inside:
+Example:
 
 ```text
-Backend
-└── WorkflowRoutes.php
+Auth
 ```
 
-MCF discovers and registers Workflow routes automatically during application startup.
+---
+
+## Endpoint Name
+
+The Endpoint name should describe a single action.
+
+Good examples:
+
+```text
+index
+
+login
+
+loginPost
+
+register
+
+registerPost
+
+logout
+
+forgotPassword
+
+forgotPasswordPost
+
+resetPassword
+
+resetPasswordPost
+
+updatePassword
+
+updatePasswordPost
+
+verifyEmail
+
+resendVerification
+
+export
+
+archive
+```
+
+Avoid generic names.
+
+Poor examples:
+
+```text
+action
+
+process
+
+execute
+
+run
+
+test
+
+temp
+```
+
+---
+
+## Create View
+
+Determines whether a Blade View should be generated.
+
+Choose **Yes** when the Endpoint displays a page.
+
+Examples:
+
+```text
+login
+
+register
+
+forgotPassword
+
+resetPassword
+
+updatePassword
+```
+
+Choose **No** when the Endpoint performs an action only.
+
+Examples:
+
+```text
+loginPost
+
+registerPost
+
+logout
+
+forgotPasswordPost
+
+resetPasswordPost
+
+updatePasswordPost
+
+verifyEmail
+
+resendVerification
+
+delete
+
+export
+```
+
+---
+
+## HTTP Method
+
+Defines the Route HTTP verb.
+
+Available options:
+
+```text
+GET
+
+POST
+
+PUT
+
+PATCH
+
+DELETE
+```
+
+Examples:
+
+```text
+login
+
+↓
+
+GET
+```
+
+```text
+loginPost
+
+↓
+
+POST
+```
+
+---
+
+## Return Type
+
+Defines the Controller return type.
+
+Available options include:
+
+```text
+View
+
+RedirectResponse
+
+JsonResponse
+
+BinaryFileResponse
+
+StreamedResponse
+
+Response
+```
+
+MCF automatically generates the correct Controller method signature.
+
+---
+
+## Inject Workflow Request
+
+Determines whether the Workflow Request should be injected.
+
+Without Request:
+
+```php
+public function login()
+```
+
+With Request:
+
+```php
+public function login(AuthRequest $request)
+```
+
+Validation remains centralized inside the Workflow Request.
+
+---
+
+## Parameters
+
+Optional Endpoint parameters.
+
+Example input:
+
+```text
+int $id
+```
+
+Generated Controller method:
+
+```php
+public function edit(int $id)
+```
+
+Another example:
+
+```text
+string $token
+```
+
+Generates:
+
+```php
+public function verifyEmail(string $token)
+```
+
+---
+
+# Generated Workflow
+
+Suppose the Workflow already exists.
+
+```text
+Auth
+
+Backend
+
+    AuthController.php
+
+    AuthRoutes.php
+
+    AuthService.php
+```
+
+Generate:
+
+```text
+login
+```
+
+The generator performs every structural change automatically.
+
+Result:
+
+```text
+AuthController
+
++ login()
+```
+
+```text
+AuthRoutes
+
++ Route::get(...)
+```
+
+```text
+Views
+
++ login.blade.php
+```
 
 No manual route registration is required.
 
----
+No manual Controller registration is required.
 
-# Controller Integration
-
-Generated endpoints add new Controller actions.
-
-Controllers remain responsible for:
-
-- Receiving requests.
-- Delegating to Services.
-- Returning responses.
-
-Business logic should continue to reside inside Workflow Services.
+Business logic remains inside the Workflow Service and is implemented manually by the developer.
 
 ---
 
-# Service Integration
+# Services
 
-When appropriate, the generator adds matching Service methods.
+The Endpoint Generator intentionally does **not** generate Service methods.
 
-Services contain:
+Business logic differs greatly between applications and cannot be generated reliably.
 
-- Business rules.
-- Workflow coordination.
-- Domain operations.
+When an Endpoint requires business logic, developers should create or extend the Workflow Service manually.
 
-Generated methods provide a consistent starting point for implementation.
-
----
-
-# Request Integration
-
-Endpoints requiring validation may use the Workflow Request.
-
-Validation remains centralized inside Request classes rather than being duplicated across Controller methods.
-
----
-
-# Policy Integration
-
-Endpoints requiring authorization should delegate permission checks through the Workflow Policy.
-
-Policies remain the single authorization entry point for the Workflow.
-
-Authorization logic should never be implemented directly inside Controllers.
+This keeps generated code clean while allowing Services to evolve naturally with the application's requirements.
 
 ---
 
 # Endpoint Lifecycle
 
-A generated endpoint follows the normal Workflow execution pipeline.
+Every generated Endpoint follows the same execution pipeline.
 
 ```text
 HTTP Request
@@ -236,7 +486,7 @@ Workflow Controller
 
 ↓
 
-Workflow Request
+Workflow Request (Optional)
 
 ↓
 
@@ -244,34 +494,113 @@ Workflow Policy
 
 ↓
 
-Workflow Service
+Workflow Service (Developer Implementation)
 
 ↓
 
 Response
 ```
 
-Each component performs a single responsibility before passing control to the next.
+Each layer performs one responsibility before passing execution to the next.
+
+---
+
+# Endpoint Naming Convention
+
+MCF recommends pairing page Endpoints and action Endpoints using the same base name.
+
+Examples:
+
+```text
+login
+loginPost
+```
+
+```text
+register
+registerPost
+```
+
+```text
+forgotPassword
+forgotPasswordPost
+```
+
+```text
+resetPassword
+resetPasswordPost
+```
+
+```text
+updatePassword
+updatePasswordPost
+```
+
+This convention keeps related actions together and makes large Workflows easier to navigate.
 
 ---
 
 # Remove an Endpoint
 
-Existing endpoints can be removed.
+Remove an existing Endpoint.
 
 ```bash
-php artisan mcf:endpoint:remove <module> <workflow> <endpoint>
+php artisan mcf:endpoint:remove
 ```
 
-Example:
+The command interactively asks for:
 
-```bash
-php artisan mcf:endpoint:remove Users Profile export
-```
+- Module
+- Workflow
+- Endpoint
 
-Only the selected endpoint is removed.
+Only the selected Endpoint is removed.
 
 The remaining Workflow structure remains unchanged.
+
+---
+
+# Example Session
+
+```text
+php artisan mcf:endpoint:create
+
+Module:
+> Test
+
+Workflow:
+> Auth
+
+Endpoint Name:
+> login
+
+Create View?
+Yes
+
+HTTP Method
+GET
+
+Return Type
+View
+
+Inject Workflow Request?
+No
+
+Parameters
+None
+```
+
+Generated automatically:
+
+```text
+✓ Route added
+
+✓ Controller method added
+
+✓ View created
+```
+
+The developer only implements business logic inside the Workflow Service when required.
 
 ---
 
@@ -280,34 +609,38 @@ The remaining Workflow structure remains unchanged.
 Using the Endpoint Generator provides several advantages.
 
 - Consistent code generation.
+- Zero manual route registration.
+- Zero manual Controller registration.
+- Automatic View generation.
+- Predictable Workflow structure.
 - Reduced boilerplate.
 - Faster feature development.
-- Predictable project structure.
-- Fewer manual errors.
 - Easier maintenance.
-
-Generated endpoints always follow the architectural conventions established by MCF.
 
 ---
 
 # Best Practices
 
-When creating endpoints:
+When creating Endpoints:
 
-- Keep endpoint names descriptive.
-- Group related actions inside one Workflow.
+- Create Endpoints using the Generator.
+- Keep Endpoint names descriptive.
+- One Endpoint should perform one action.
+- Pair GET and POST Endpoints using the same base name.
 - Keep Controllers thin.
 - Place business logic inside Services.
-- Centralize validation in Requests.
-- Delegate authorization through Policies.
-- Prefer generators over manual edits.
-
-Following these practices keeps Workflows consistent and maintainable.
+- Centralize validation in Workflow Requests.
+- Delegate authorization through Workflow Policies.
+- Avoid manually editing Workflow structure.
 
 ---
 
 # Summary
 
-The Endpoint Generator streamlines the creation of Workflow actions by automatically updating the appropriate backend classes while preserving MCF's architectural conventions.
+The Endpoint Generator is one of the core features of MCF.
 
-By generating Controllers, Routes and supporting code consistently, developers can focus on implementing business logic rather than maintaining repetitive framework boilerplate.
+Rather than manually editing Controllers, Routes and Views, developers describe the Endpoint through a short interactive wizard.
+
+MCF automatically updates the Workflow structure, generates the required boilerplate and keeps every Workflow consistent with the framework architecture.
+
+Business logic is intentionally left to the developer, allowing each application to implement its own requirements while MCF maintains a predictable and maintainable project structure.
