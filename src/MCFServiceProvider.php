@@ -22,6 +22,7 @@ use MCF\Commands\MakeLangCommand;
 use MCF\Commands\RemoveLangCommand;
 use MCF\Commands\CreateEndpointCommand;
 use MCF\Commands\RemoveEndpointCommand;
+use MCF\Support\Path;
 
 class MCFServiceProvider extends ServiceProvider
 {
@@ -32,13 +33,6 @@ class MCFServiceProvider extends ServiceProvider
             'mcf'
         );
 
-
-$this->app->singleton(MakeMigrationCommand::class, function ($app) {
-            return new MakeMigrationCommand(
-                $app['migration.creator'],
-                $app['composer'],
-            );
-        });
         
 $this->app->extend('view.finder', function ($finder, $app) {
 
@@ -70,6 +64,23 @@ $this->app->extend('view.finder', function ($finder, $app) {
 {
        
 $filesystem = new Filesystem();
+  /*
+     |--------------------------------------------------------------------------
+     | MCF Framework Views
+     |--------------------------------------------------------------------------
+     */
+
+    $this->loadViewsFrom(
+        Path::root(),
+        'MCF',
+    );
+
+
+    /*
+     |--------------------------------------------------------------------------
+     | MCF Modules
+     |--------------------------------------------------------------------------
+     */
 
 $modulesPath = app_path('MCF/Modules');
 
