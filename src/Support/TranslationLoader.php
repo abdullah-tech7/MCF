@@ -11,20 +11,15 @@ class TranslationLoader
     /**
      * Load all framework translations.
      *
-     * Supported locations:
-     *
-     * Modules/
-     *   Module/
-     *     Workflow/
-     *       Lang/
-     *         ar.json
-     *         en.json
+     * Translation files are stored centrally in:
      *
      * MCF/
-     *   Mail/
-     *     Lang/
-     *       ar.json
-     *       en.json
+     *   Language/
+     *     ar.json
+     *     en.json
+     *     ...
+     *
+     * Each locale must have one JSON file only.
      */
     public function load(string $modulesPath): array
     {
@@ -33,65 +28,35 @@ class TranslationLoader
 
         /*
         |--------------------------------------------------------------------------
-        | Workflow Languages
-        |--------------------------------------------------------------------------
-        */
-
-        if (is_dir($modulesPath)) {
-
-            foreach (glob($modulesPath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $modulePath) {
-
-                $module = basename($modulePath);
-
-                foreach (glob($modulePath . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) as $workflowPath) {
-
-                    $workflow = basename($workflowPath);
-
-                    $langPath = $workflowPath . DIRECTORY_SEPARATOR . 'Lang';
-
-                    if (! is_dir($langPath)) {
-                        continue;
-                    }
-
-                    foreach (glob($langPath . DIRECTORY_SEPARATOR . '*.json') as $jsonFile) {
-
-                        $this->loadJsonFile(
-                            jsonFile: $jsonFile,
-                            source: "{$module}::{$workflow}",
-                            registry: $registry,
-                        );
-                    }
-                }
-            }
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Framework Mail Languages
+        | Framework Language
         |--------------------------------------------------------------------------
         */
 
         $frameworkPath = dirname($modulesPath);
 
-        $mailLangPath = $frameworkPath
-            . DIRECTORY_SEPARATOR
-            . 'Mail'
-            . DIRECTORY_SEPARATOR
-            . 'Lang';
+        $languagePath = $frameworkPath
+            .DIRECTORY_SEPARATOR
+            .'Language';
 
-        if (is_dir($mailLangPath)) {
+        if (is_dir($languagePath)) {
 
-            foreach (glob($mailLangPath . DIRECTORY_SEPARATOR . '*.json') as $jsonFile) {
+            foreach (
+                glob(
+                    $languagePath
+                    .DIRECTORY_SEPARATOR
+                    .'*.json'
+                ) as $jsonFile
+            ) {
 
                 $this->loadJsonFile(
                     jsonFile: $jsonFile,
-                    source: 'MCF::Mail',
+                    source: 'MCF::Language',
                     registry: $registry,
                 );
             }
         }
 
-                /*
+        /*
         |--------------------------------------------------------------------------
         | Merge Translations
         |--------------------------------------------------------------------------
@@ -104,7 +69,8 @@ class TranslationLoader
             foreach ($keys as $key => $occurrences) {
 
                 // Always use the first definition.
-                $translations[$locale][$key] = $occurrences[0]['value'];
+                $translations[$locale][$key] =
+                    $occurrences[0]['value'];
 
                 // Ignore duplicates when all values are identical.
                 $values = array_unique(
@@ -132,6 +98,7 @@ class TranslationLoader
         if (! empty($duplicates)) {
 
             $lines = [];
+
             $lines[] = 'Conflicting translation keys detected.';
             $lines[] = '';
 
@@ -142,10 +109,19 @@ class TranslationLoader
                 $lines[] = "Key    : {$duplicate['key']}";
                 $lines[] = '';
 
-                foreach ($duplicate['occurrences'] as $index => $item) {
+                foreach (
+                    $duplicate['occurrences']
+                    as $index => $item
+                ) {
 
-                    $lines[] = ($index + 1).'. '.$item['source'];
-                    $lines[] = "   Value : {$item['value']}";
+                    $lines[] =
+                        ($index + 1)
+                        .'. '
+                        .$item['source'];
+
+                    $lines[] =
+                        "   Value : {$item['value']}";
+
                     $lines[] = '';
                 }
             }
@@ -169,11 +145,20 @@ class TranslationLoader
 
         $content = file_get_contents($jsonFile);
 
+        if ($content === false) {
+            throw new RuntimeException(
+                "Unable to read translation file:\n{$jsonFile}"
+            );
+        }
+
         $data = json_decode($content, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new RuntimeException(
                 "Invalid JSON:\n{$jsonFile}"
+                .PHP_EOL
+                .'Error: '
+                .json_last_error_msg()
             );
         }
 
@@ -183,14 +168,45 @@ class TranslationLoader
             );
         }
 
+        $locale = pathinfo(
+            $jsonFile,
+            PATHINFO_FILENAME
+        );
+
         foreach ($data as $key => $value) {
 
-            $locale = pathinfo($jsonFile, PATHINFO_FILENAME);
+            /*
+            |--------------------------------------------------------------------------
+            | Section Markers
+            |--------------------------------------------------------------------------
+            |
+            | Example:
+            |
+            | "--- User | Authentication ---":
+            |     "----------------------------------------"
+            |
+            | These entries are only for organizing the language file.
+            | They are not translation keys.
+            |
+            */
+
+            if ($this->isSectionMarker($key)) {
+                continue;
+            }
 
             $registry[$locale][$key][] = [
                 'source' => $source,
                 'value' => $value,
             ];
         }
+    }
+
+    /**
+     * Determine whether a JSON key is a language section marker.
+     */
+    protected function isSectionMarker(string $key): bool
+    {
+        return str_starts_with($key, '--- ')
+            && str_ends_with($key, ' ---');
     }
 }
