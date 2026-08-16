@@ -7,8 +7,6 @@ use MCF\Support\MCFViewFinder;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
 use MCF\Commands\MakeMailCommand;
-use MCF\Commands\MakeNotificationCommand;
-use MCF\Commands\MakeRuleCommand;
 use MCF\Support\MCFFileLoader;
 use MCF\Support\TranslationLoader;
 use MCF\Commands\InstallCommand;
@@ -18,8 +16,6 @@ use MCF\Commands\MakeWorkflowCrudCommand;
 use MCF\Commands\RemoveWorkFlowCommand;
 use MCF\Commands\MakeWorkflowLayoutCommand;
 use MCF\Commands\MakeMiddlewareCommand;
-use MCF\Commands\MakeLangCommand;
-use MCF\Commands\RemoveLangCommand;
 use MCF\Commands\CreateEndpointCommand;
 use MCF\Commands\RemoveEndpointCommand;
 use MCF\Support\Path;
@@ -102,10 +98,6 @@ if ($filesystem->exists($modulesPath)) {
             RemoveWorkFlowCommand::class,
             MakeMiddlewareCommand::class,
             MakeMailCommand::class,
-            MakeRuleCommand::class,
-            MakeNotificationCommand::class,
-            RemoveLangCommand::class,
-            MakeLangCommand::class,
             CreateEndpointCommand::class,
             RemoveEndpointCommand::class
         ]);
