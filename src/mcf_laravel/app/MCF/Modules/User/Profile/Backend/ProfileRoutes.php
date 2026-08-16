@@ -89,11 +89,13 @@ Route::post(
 
 /*
 |--------------------------------------------------------------------------
-| Access Control
+| Route Access
 |--------------------------------------------------------------------------
+|
+| Define the access rules for the routes in this workflow.
+|
 */
-
-$dataRouteList = [
+$accessRoutes = [
 
     new AuthRouteAccess(
         routeNames: [
@@ -114,5 +116,5 @@ $dataRouteList = [
 ];
 
 McfRouteDataRegistry::register(
-    $dataRouteList,
+    $accessRoutes,
 );

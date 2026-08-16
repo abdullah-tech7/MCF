@@ -114,13 +114,16 @@ Route::post(
     [AuthController::class, 'resendRestoreAccountVerification'],
 )->name('user.auth.resendRestoreAccountVerification');
 
+
 /*
 |--------------------------------------------------------------------------
-| Access
+| Route Access
 |--------------------------------------------------------------------------
+|
+| Define the access rules for the routes in this workflow.
+|
 */
-
-$dataRouteList = [
+$accessRoutes = [
 
     new GuestRouteAccess(
         routeNames: [
@@ -154,4 +157,4 @@ $dataRouteList = [
 
 ];
 
-McfRouteDataRegistry::register($dataRouteList);
+McfRouteDataRegistry::register($accessRoutes);

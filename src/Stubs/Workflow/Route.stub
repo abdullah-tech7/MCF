@@ -5,3 +5,20 @@ use {{ ControllerNamespace }}\{{ WorkflowName }}Controller;
 
 Route::get('/{{ WorkflowRoute }}', [{{ WorkflowName }}Controller::class, 'index'])
     ->name('{{ ModuleRoute }}.{{ WorkflowRoute }}.index');
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Route Access
+|--------------------------------------------------------------------------
+|
+| Define the access rules for the routes in this workflow.
+|
+*/
+
+$accessRoutes = [];
+
+McfRouteDataRegistry::register(
+    $accessRoutes,
+);

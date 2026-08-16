@@ -6,7 +6,9 @@ namespace MCF\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
+use MCF\Generators\RequestGenerator;
 use RuntimeException;
+use Throwable;
 
 class CreateEndpointCommand extends Command
 {
@@ -40,7 +42,11 @@ class CreateEndpointCommand extends Command
 
     protected string $returnType;
 
-    protected bool $injectWorkflowRequest;
+    protected bool $createRequest;
+
+    protected string $requestName = '';
+
+    protected string $requestFile = '';
 
     protected string $parameters = '';
 
@@ -51,87 +57,194 @@ class CreateEndpointCommand extends Command
         $this->files = new Filesystem();
     }
 
-    public function handle(): int
-    {
-        $this->askModule();
+    public function handle(
+        RequestGenerator $requestGenerator,
+    ): int {
+        try {
+            /*
+             * --------------------------------------------------------------
+             * Collect input
+             * --------------------------------------------------------------
+             */
 
-        $this->askWorkflow();
+            $this->askModule();
 
-        $this->preparePaths();
+            $this->askWorkflow();
 
-        $this->askEndpointName();
+            $this->preparePaths();
 
-        $this->askCreateView();
+            $this->askEndpointName();
 
-        $this->askHttpMethod();
+            $this->askCreateView();
 
-        $this->askReturnType();
+            $this->askHttpMethod();
 
-        $this->askWorkflowRequest();
+            $this->askReturnType();
 
-        $this->askParameters();
+            $this->askCreateRequest();
 
-        $this->generateControllerMethod();
+            $this->prepareRequest();
 
-        $this->generateRoute();
+            $this->askParameters();
 
-        if ($this->createView) {
-            $this->generateView();
+            /*
+             * --------------------------------------------------------------
+             * Validate everything before changing any file.
+             * --------------------------------------------------------------
+             */
+
+            $this->validateBeforeCreation();
+
+            /*
+             * --------------------------------------------------------------
+             * Keep the current state so an unexpected failure during
+             * generation can restore the files that were modified.
+             * --------------------------------------------------------------
+             */
+
+            $controllerBackup = $this->files->get(
+                $this->controllerFile,
+            );
+
+            $routesBackup = $this->files->get(
+                $this->routesFile,
+            );
+
+            $requestCreated = false;
+
+            $viewCreated = false;
+
+            try {
+                /*
+                 * ----------------------------------------------------------
+                 * Request
+                 * ----------------------------------------------------------
+                 */
+
+                if ($this->createRequest) {
+                    $requestGenerator->generate(
+                        moduleName: $this->moduleName,
+                        workflowName: $this->workflowName,
+                        requestName: $this->requestName,
+                    );
+
+                    $requestCreated = true;
+                }
+
+                /*
+                 * ----------------------------------------------------------
+                 * Controller
+                 * ----------------------------------------------------------
+                 */
+
+                $this->generateControllerMethod();
+
+                /*
+                 * ----------------------------------------------------------
+                 * Route
+                 * ----------------------------------------------------------
+                 */
+
+                $this->generateRoute();
+
+                /*
+                 * ----------------------------------------------------------
+                 * View
+                 * ----------------------------------------------------------
+                 */
+
+                if ($this->createView) {
+                    $this->generateView();
+
+                    $viewCreated = true;
+                }
+            } catch (Throwable $exception) {
+                /*
+                 * ----------------------------------------------------------
+                 * Roll back every change made during this operation.
+                 * ----------------------------------------------------------
+                 */
+
+                $this->rollbackCreation(
+                    controllerBackup: $controllerBackup,
+                    routesBackup: $routesBackup,
+                    requestCreated: $requestCreated,
+                    viewCreated: $viewCreated,
+                );
+
+                throw $exception;
+            }
+
+            $this->showSummary();
+
+            return self::SUCCESS;
+        } catch (Throwable $exception) {
+            $this->newLine();
+
+            $this->error(
+                'Endpoint creation failed.',
+            );
+
+            $this->error(
+                $exception->getMessage(),
+            );
+
+            return self::FAILURE;
         }
-
-        $this->showSummary();
-
-        return self::SUCCESS;
     }
 
     protected function askModule(): void
     {
-        $this->moduleName = $this->readInput('Module');
-
-        $this->modulePath = app_path(
-            "MCF/Modules/{$this->moduleName}"
+        $this->moduleName = $this->readInput(
+            'Module',
         );
 
-        if (! $this->files->exists($this->modulePath)) {
+        $this->modulePath = app_path(
+            "MCF/Modules/{$this->moduleName}",
+        );
+
+        if (! $this->files->isDirectory($this->modulePath)) {
             throw new RuntimeException(
-                "Module [{$this->moduleName}] does not exist."
+                "Module [{$this->moduleName}] does not exist.",
             );
         }
     }
 
     protected function askWorkflow(): void
     {
-        $this->workflowName = $this->readInput('Workflow');
+        $this->workflowName = $this->readInput(
+            'Workflow',
+        );
 
         $this->workflowPath =
             "{$this->modulePath}/{$this->workflowName}";
 
-        if (! $this->files->exists($this->workflowPath)) {
+        if (! $this->files->isDirectory($this->workflowPath)) {
             throw new RuntimeException(
-                "Workflow [{$this->workflowName}] does not exist in module [{$this->moduleName}]."
+                "Workflow [{$this->workflowName}] does not exist in module [{$this->moduleName}].",
             );
         }
     }
 
-protected function preparePaths(): void
-{
-    $this->backendPath =
-        "{$this->workflowPath}/Backend";
+    protected function preparePaths(): void
+    {
+        $this->backendPath =
+            "{$this->workflowPath}/Backend";
 
-    $this->viewsPath =
-        "{$this->workflowPath}/Views";
+        $this->viewsPath =
+            "{$this->workflowPath}/Views";
 
-    $this->controllerFile =
-        "{$this->backendPath}/{$this->workflowName}Controller.php";
+        $this->controllerFile =
+            "{$this->backendPath}/{$this->workflowName}Controller.php";
 
-    $this->routesFile =
-        "{$this->backendPath}/{$this->workflowName}Routes.php";
-}
+        $this->routesFile =
+            "{$this->backendPath}/{$this->workflowName}Routes.php";
+    }
 
     protected function askEndpointName(): void
     {
         $this->endpointName = $this->readInput(
-            'Endpoint Name'
+            'Endpoint Name',
         );
     }
 
@@ -143,7 +256,7 @@ protected function preparePaths(): void
                 'Yes',
                 'No',
             ],
-            1
+            1,
         ) === 1;
     }
 
@@ -160,12 +273,12 @@ protected function preparePaths(): void
         $this->httpMethod = $methods[
             $this->menu(
                 'HTTP Method',
-                $methods
+                $methods,
             ) - 1
         ];
     }
 
-        protected function askReturnType(): void
+    protected function askReturnType(): void
     {
         $types = [
             'View',
@@ -179,21 +292,82 @@ protected function preparePaths(): void
         $this->returnType = $types[
             $this->menu(
                 'Return Type',
-                $types
+                $types,
             ) - 1
         ];
     }
 
-    protected function askWorkflowRequest(): void
+    protected function askCreateRequest(): void
     {
-        $this->injectWorkflowRequest = $this->menu(
-            'Inject Workflow Request?',
+        $this->createRequest = $this->menu(
+            'Create Request?',
             [
                 'No',
                 'Yes',
             ],
-            1
+            1,
         ) === 2;
+    }
+
+    /**
+     * Prepare the Request name and path from the Endpoint name.
+     *
+     * Example:
+     *
+     * login
+     *     ↓
+     * LoginRequest.php
+     */
+    protected function prepareRequest(): void
+    {
+        if (! $this->createRequest) {
+            return;
+        }
+
+        $this->requestName = $this->normalizeRequestName(
+            $this->endpointName,
+        );
+
+        $this->requestFile =
+            "{$this->backendPath}/Request/{$this->requestName}Request.php";
+    }
+
+    /**
+     * Normalize the Request name.
+     *
+     * The first character is uppercase and all remaining
+     * characters are lowercase.
+     */
+    protected function normalizeRequestName(
+        string $requestName,
+    ): string {
+        $requestName = trim(
+            $requestName,
+        );
+
+        if ($requestName === '') {
+            throw new RuntimeException(
+                'Request name cannot be empty.',
+            );
+        }
+
+        $requestName = preg_replace(
+            '/[^A-Za-z0-9]+/',
+            '',
+            $requestName,
+        );
+
+        if ($requestName === '') {
+            throw new RuntimeException(
+                'Invalid request name.',
+            );
+        }
+
+        return ucfirst(
+            strtolower(
+                $requestName,
+            ),
+        );
     }
 
     protected function askParameters(): void
@@ -205,24 +379,119 @@ protected function preparePaths(): void
                     'None',
                     'Add Parameters',
                 ],
-                1
+                1,
             ) === 1
         ) {
             return;
         }
 
         $this->parameters = $this->readInput(
-            "Enter Parameters\nExample: int \$id, string \$name"
+            "Enter Parameters\nExample: int \$id, string \$name",
         );
     }
 
-    protected function readInput(string $title): string
+    /**
+     * Validate every possible conflict before writing anything.
+     */
+    protected function validateBeforeCreation(): void
     {
+        if (! $this->files->isDirectory($this->backendPath)) {
+            throw new RuntimeException(
+                "Backend directory for workflow [{$this->workflowName}] does not exist.",
+            );
+        }
+
+        if (! $this->files->isDirectory($this->viewsPath)) {
+            if ($this->createView) {
+                throw new RuntimeException(
+                    "Views directory for workflow [{$this->workflowName}] does not exist.",
+                );
+            }
+        }
+
+        if (! $this->files->isFile($this->controllerFile)) {
+            throw new RuntimeException(
+                "Controller file [{$this->controllerFile}] does not exist.",
+            );
+        }
+
+        if (! $this->files->isFile($this->routesFile)) {
+            throw new RuntimeException(
+                "Routes file [{$this->routesFile}] does not exist.",
+            );
+        }
+
+        $controller = $this->files->get(
+            $this->controllerFile,
+        );
+
+        if (
+            preg_match(
+                '/public\s+function\s+' .
+                preg_quote($this->endpointName, '/') .
+                '\s*\(/',
+                $controller,
+            )
+        ) {
+            throw new RuntimeException(
+                "Endpoint [{$this->endpointName}] already exists in controller.",
+            );
+        }
+
+        $routes = $this->files->get(
+            $this->routesFile,
+        );
+
+        if (
+            $this->routeAlreadyExists(
+                $routes,
+            )
+        ) {
+            throw new RuntimeException(
+                "Endpoint [{$this->endpointName}] already exists in routes.",
+            );
+        }
+
+        if ($this->createView) {
+            $viewFile = $this->viewFile();
+
+            if ($this->files->exists($viewFile)) {
+                throw new RuntimeException(
+                    "View [{$this->endpointName}] already exists.",
+                );
+            }
+        }
+
+        if ($this->createRequest) {
+            if ($this->files->exists($this->requestFile)) {
+                throw new RuntimeException(
+                    "Request [{$this->requestName}Request] already exists.",
+                );
+            }
+        }
+    }
+
+    protected function routeAlreadyExists(
+        string $routes,
+    ): bool {
+        return (bool) preg_match(
+            '/->name\(\s*[\'"][^\'"]*\.'
+            . preg_quote($this->endpointName, '/')
+            . '[\'"]\s*\)/',
+            $routes,
+        );
+    }
+
+    protected function readInput(
+        string $title,
+    ): string {
         while (true) {
             $this->newLine();
 
             $value = trim(
-                (string) $this->ask($title)
+                (string) $this->ask(
+                    $title,
+                ),
             );
 
             if ($value !== '') {
@@ -230,7 +499,7 @@ protected function preparePaths(): void
             }
 
             $this->error(
-                'Value cannot be empty.'
+                'Value cannot be empty.',
             );
         }
     }
@@ -238,18 +507,20 @@ protected function preparePaths(): void
     protected function menu(
         string $title,
         array $options,
-        int $default = 1
+        int $default = 1,
     ): int {
         while (true) {
             $this->newLine();
 
-            $this->line($title);
+            $this->line(
+                $title,
+            );
 
             $this->newLine();
 
             foreach ($options as $index => $option) {
                 $this->line(
-                    '[' . ($index + 1) . '] ' . $option
+                    '[' . ($index + 1) . '] ' . $option,
                 );
             }
 
@@ -258,8 +529,8 @@ protected function preparePaths(): void
             $choice = trim(
                 (string) $this->ask(
                     '>',
-                    (string) $default
-                )
+                    (string) $default,
+                ),
             );
 
             if (
@@ -271,369 +542,454 @@ protected function preparePaths(): void
             }
 
             $this->error(
-                'Invalid selection.'
+                'Invalid selection.',
             );
         }
     }
 
-  
-protected function generateControllerMethod(): void
-{
-    if (! $this->files->exists($this->controllerFile)) {
-        throw new RuntimeException(
-            "Controller file [{$this->controllerFile}] does not exist."
+    protected function generateControllerMethod(): void
+    {
+        $controller = $this->files->get(
+            $this->controllerFile,
+        );
+
+        $controller = $this->addControllerUses(
+            $controller,
+        );
+
+        $method = $this->buildControllerMethod();
+
+        $controller = preg_replace(
+            '/}\s*$/',
+            PHP_EOL .
+            $method .
+            PHP_EOL .
+            '}',
+            $controller,
+            1,
+        );
+
+        if ($controller === null) {
+            throw new RuntimeException(
+                'Unable to add the endpoint method to the controller.',
+            );
+        }
+
+        $this->files->put(
+            $this->controllerFile,
+            $controller,
         );
     }
 
-    $controller = $this->files->get(
-        $this->controllerFile
-    );
+    protected function buildControllerMethod(): string
+    {
+        return
+            '    public function ' .
+            $this->endpointName .
+            '(' .
+            $this->buildControllerParameters() .
+            '): ' .
+            $this->returnType .
+            PHP_EOL .
+            '    {' .
+            PHP_EOL .
+            $this->buildControllerBody() .
+            PHP_EOL .
+            '    }';
+    }
 
-    if (
-        preg_match(
-            '/public\s+function\s+' .
-            preg_quote($this->endpointName, '/') .
-            '\s*\(/',
-            $controller
-        )
-    ) {
-        throw new RuntimeException(
-            "Endpoint [{$this->endpointName}] already exists."
+    protected function buildControllerParameters(): string
+    {
+        $parameters = [];
+
+        if ($this->createRequest) {
+            $parameters[] =
+                $this->requestName .
+                'Request $request';
+        }
+
+        if ($this->parameters !== '') {
+            $parameters[] = $this->parameters;
+        }
+
+        return implode(
+            ', ',
+            $parameters,
         );
     }
 
-    $controller = $this->addControllerUses(
-        $controller
-    );
+    protected function buildControllerBody(): string
+    {
+        if ($this->createView) {
+            return
+                "        return view('{$this->moduleName}::{$this->workflowName}.{$this->endpointName}');";
+        }
 
-    $method = $this->buildControllerMethod();
+        return match ($this->returnType) {
+            'RedirectResponse' =>
+                "        return redirect()->back();",
 
-    $controller = preg_replace(
-        '/}\s*$/',
-        PHP_EOL .
-        $method .
-        PHP_EOL .
-        '}',
-        $controller,
-        1
-    );
+            'JsonResponse' =>
+                "        return response()->json([]);",
 
-    $this->files->put(
-        $this->controllerFile,
-        $controller
-    );
-}
+            'BinaryFileResponse' =>
+                "        abort(501);",
 
+            'StreamedResponse' =>
+                "        abort(501);",
 
-protected function buildControllerMethod(): string
-{
-    return
-        '    public function ' .
-        $this->endpointName .
-        '(' .
-        $this->buildControllerParameters() .
-        '): ' .
-        $this->returnType .
-        PHP_EOL .
-        '    {' .
-        PHP_EOL .
-        $this->buildControllerBody() .
-        PHP_EOL .
-        '    }';
-}
+            'Response' =>
+                "        return response('');",
 
-protected function buildControllerParameters(): string
-{
-    $parameters = [];
+            'View' =>
+                "        abort(501);",
 
-    if ($this->injectWorkflowRequest) {
-        $parameters[] =
+            default => throw new RuntimeException(
+                'Unsupported return type.',
+            ),
+        };
+    }
+
+    protected function addControllerUses(
+        string $controller,
+    ): string {
+        $uses = [];
+
+        if ($this->createRequest) {
+            $uses[] =
+                'use App\\MCF\\Modules\\' .
+                $this->moduleName .
+                '\\' .
+                $this->workflowName .
+                '\\Backend\\Request\\' .
+                $this->requestName .
+                'Request;';
+        }
+
+        $uses[] = match ($this->returnType) {
+            'View' =>
+                'use Illuminate\Contracts\View\View;',
+
+            'RedirectResponse' =>
+                'use Illuminate\Http\RedirectResponse;',
+
+            'JsonResponse' =>
+                'use Illuminate\Http\JsonResponse;',
+
+            'BinaryFileResponse' =>
+                'use Symfony\Component\HttpFoundation\BinaryFileResponse;',
+
+            'StreamedResponse' =>
+                'use Symfony\Component\HttpFoundation\StreamedResponse;',
+
+            'Response' =>
+                'use Illuminate\Http\Response;',
+        };
+
+        foreach ($uses as $use) {
+            if (str_contains($controller, $use)) {
+                continue;
+            }
+
+            $controller = preg_replace(
+                '/^(namespace\s+.*?;\R)/m',
+                "$1\n{$use}\n",
+                $controller,
+                1,
+            );
+
+            if ($controller === null) {
+                throw new RuntimeException(
+                    'Unable to add controller imports.',
+                );
+            }
+        }
+
+        return $controller;
+    }
+
+    protected function generateRoute(): void
+    {
+        $routes = $this->files->get(
+            $this->routesFile,
+        );
+
+        $routes = $this->addRouteControllerUse(
+            $routes,
+        );
+
+        $routes .=
+            PHP_EOL .
+            PHP_EOL .
+            $this->buildRoute();
+
+        $this->files->put(
+            $this->routesFile,
+            $routes,
+        );
+    }
+
+    protected function buildRoute(): string
+    {
+        return
+            'Route::' .
+            strtolower($this->httpMethod) .
+            '(' .
+            "'" .
+            $this->buildRouteUri() .
+            "', " .
+            '[' .
             $this->workflowName .
-            'Request $request';
+            "Controller::class, '" .
+            $this->endpointName .
+            "'])" .
+            PHP_EOL .
+            '    ->name(' .
+            "'" .
+            strtolower($this->moduleName) .
+            '.' .
+            strtolower($this->workflowName) .
+            '.' .
+            $this->endpointName .
+            "'" .
+            ');';
     }
 
-    if ($this->parameters !== '') {
-        $parameters[] = $this->parameters;
+    protected function buildRouteUri(): string
+    {
+        $uri = '/' . strtolower(
+            $this->endpointName,
+        );
+
+        if ($this->parameters === '') {
+            return $uri;
+        }
+
+        preg_match_all(
+            '/\$([A-Za-z_][A-Za-z0-9_]*)/',
+            $this->parameters,
+            $matches,
+        );
+
+        foreach ($matches[1] as $parameter) {
+            $uri .= '/{' . $parameter . '}';
+        }
+
+        return $uri;
     }
 
-    return implode(
-        ', ',
-        $parameters
-    );
-}
-
-protected function buildControllerBody(): string
-{
-
-if ($this->createView) {
-    return
-        "return view('{$this->moduleName}::{$this->workflowName}.{$this->endpointName}');";
-}
-
-    return match ($this->returnType) {
-        'RedirectResponse' =>
-            "        return redirect()->back();",
-
-        'JsonResponse' =>
-            "        return response()->json([]);",
-
-        'BinaryFileResponse' =>
-            "        abort(501);",
-
-        'StreamedResponse' =>
-            "        abort(501);",
-
-        'Response' =>
-            "        return response('');",
-
-        default => throw new RuntimeException(
-            'Unsupported return type.'
-        ),
-    };
-}
-
-protected function addControllerUses(
-    string $controller
-): string
-{
-    $uses = [];
-
-    if ($this->injectWorkflowRequest) {
-        $uses[] =
+    protected function addRouteControllerUse(
+        string $routes,
+    ): string {
+        $use =
             'use App\\MCF\\Modules\\' .
             $this->moduleName .
             '\\' .
             $this->workflowName .
             '\\Backend\\' .
             $this->workflowName .
-            'Request;';
-    }
+            'Controller;';
 
-    $uses[] = match ($this->returnType) {
-
-        'View' =>
-            'use Illuminate\Contracts\View\View;',
-
-        'RedirectResponse' =>
-            'use Illuminate\Http\RedirectResponse;',
-
-        'JsonResponse' =>
-            'use Illuminate\Http\JsonResponse;',
-
-        'BinaryFileResponse' =>
-            'use Symfony\Component\HttpFoundation\BinaryFileResponse;',
-
-        'StreamedResponse' =>
-            'use Symfony\Component\HttpFoundation\StreamedResponse;',
-
-        'Response' =>
-            'use Illuminate\Http\Response;',
-    };
-
-    foreach ($uses as $use) {
-
-        if (str_contains($controller, $use)) {
-            continue;
+        if (str_contains($routes, $use)) {
+            return $routes;
         }
 
-        $controller = preg_replace(
-            '/^(namespace\s+.*?;\R)/m',
-            "$1\n{$use}\n",
-            $controller,
-            1
-        );
-    }
+        if (
+            preg_match_all(
+                '/^use\s+.*?;$/m',
+                $routes,
+                $matches,
+                PREG_OFFSET_CAPTURE,
+            )
+        ) {
+            $last = end(
+                $matches[0],
+            );
 
-    return $controller;
-}
+            $position =
+                $last[1] +
+                strlen(
+                    $last[0],
+                );
 
-protected function generateRoute(): void
-{
-    if (! $this->files->exists($this->routesFile)) {
-        throw new RuntimeException(
-            "Routes file [{$this->routesFile}] does not exist."
-        );
-    }
+            return substr_replace(
+                $routes,
+                PHP_EOL . $use,
+                $position,
+                0,
+            );
+        }
 
-    $routes = $this->files->get(
-        $this->routesFile
-    );
-
-    if (
-        str_contains(
+        $result = preg_replace(
+            '/^<\?php\s*/',
+            "<?php\n\n{$use}\n\n",
             $routes,
-            "'" . $this->endpointName . "'"
-        )
-    ) {
-        throw new RuntimeException(
-            "Endpoint [{$this->endpointName}] already exists in routes."
+            1,
+        );
+
+        if ($result === null) {
+            throw new RuntimeException(
+                'Unable to add controller import to routes.',
+            );
+        }
+
+        return $result;
+    }
+
+    protected function generateView(): void
+    {
+        $viewFile = $this->viewFile();
+
+        $stub = $this->files->get(
+            __DIR__ . '/../Stubs/Endpoint/view.stub',
+        );
+
+        $this->files->put(
+            $viewFile,
+            $stub,
         );
     }
 
-    $routes = $this->addRouteControllerUse(
-        $routes
-    );
-
-    $routes .= PHP_EOL .
-        PHP_EOL .
-        $this->buildRoute();
-
-    $this->files->put(
-        $this->routesFile,
-        $routes
-    );
-}
-
-protected function buildRoute(): string
-{
-    return
-        'Route::' .
-        strtolower($this->httpMethod) .
-        '(' .
-        "'" .
-        $this->buildRouteUri() .
-        "', " .
-        '[' .
-        $this->workflowName .
-        "Controller::class, '" .
-        $this->endpointName .
-        "'])" .
-        PHP_EOL .
-        '    ->name(' .
-        "'" .
-        strtolower($this->moduleName) .
-        '.' .
-        strtolower($this->workflowName) .
-        '.' .
-        $this->endpointName .
-        "'" .
-        ');';
-}
-
-protected function buildRouteUri(): string
-{
-    $uri = '/' . strtolower(
-        $this->endpointName
-    );
-
-    if ($this->parameters === '') {
-        return $uri;
+    protected function viewFile(): string
+    {
+        return
+            $this->viewsPath .
+            '/' .
+            $this->endpointName .
+            '.blade.php';
     }
 
-    preg_match_all(
-        '/\$([A-Za-z_][A-Za-z0-9_]*)/',
-        $this->parameters,
-        $matches
-    );
+    /**
+     * Restore modified files and remove files created by this operation.
+     */
+    protected function rollbackCreation(
+        string $controllerBackup,
+        string $routesBackup,
+        bool $requestCreated,
+        bool $viewCreated,
+    ): void {
+        try {
+            $this->files->put(
+                $this->controllerFile,
+                $controllerBackup,
+            );
 
-    foreach ($matches[1] as $parameter) {
-        $uri .= '/{' . $parameter . '}';
+            $this->files->put(
+                $this->routesFile,
+                $routesBackup,
+            );
+
+            if (
+                $viewCreated &&
+                $this->files->exists(
+                    $this->viewFile(),
+                )
+            ) {
+                $this->files->delete(
+                    $this->viewFile(),
+                );
+            }
+
+            if (
+                $requestCreated &&
+                $this->files->exists(
+                    $this->requestFile,
+                )
+            ) {
+                $this->files->delete(
+                    $this->requestFile,
+                );
+
+                $requestDirectory = dirname(
+                    $this->requestFile,
+                );
+
+                if (
+                    $this->files->isDirectory(
+                        $requestDirectory,
+                    ) &&
+                    $this->files->isEmptyDirectory(
+                        $requestDirectory,
+                    )
+                ) {
+                    $this->files->deleteDirectory(
+                        $requestDirectory,
+                    );
+                }
+            }
+        } catch (Throwable) {
+            /*
+             * The original generation exception is more useful to the
+             * developer than a secondary rollback exception.
+             */
+        }
     }
 
-    return $uri;
-}
+    protected function showSummary(): void
+    {
+        $this->newLine();
 
-protected function addRouteControllerUse(
-    string $routes
-): string
-{
-    $use =
-        'use App\\MCF\\Modules\\' .
-        $this->moduleName .
-        '\\' .
-        $this->workflowName .
-        '\\Backend\\' .
-        $this->workflowName .
-        'Controller;';
-
-    if (str_contains($routes, $use)) {
-        return $routes;
-    }
-
-    if (
-        preg_match_all(
-            '/^use\s+.*?;$/m',
-            $routes,
-            $matches,
-            PREG_OFFSET_CAPTURE
-        )
-    ) {
-        $last = end($matches[0]);
-
-        $position =
-            $last[1] + strlen($last[0]);
-
-        return substr_replace(
-            $routes,
-            PHP_EOL . $use,
-            $position,
-            0
+        $this->info(
+            'Endpoint created successfully.',
         );
-    }
 
-    return preg_replace(
-        '/^<\?php\s*/',
-        "<?php\n\n{$use}\n\n",
-        $routes,
-        1
-    );
-}
+        $this->newLine();
 
-
-protected function generateView(): void
-{
-    $viewFile = $this->viewsPath
-        . '/'
-        . $this->endpointName
-        . '.blade.php';
-
-    if ($this->files->exists($viewFile)) {
-        throw new RuntimeException(
-            "View [{$this->endpointName}] already exists."
+        $this->line(
+            "Module    : {$this->moduleName}",
         );
+
+        $this->line(
+            "Workflow  : {$this->workflowName}",
+        );
+
+        $this->line(
+            "Endpoint  : {$this->endpointName}",
+        );
+
+        $this->line(
+            "Method    : {$this->httpMethod}",
+        );
+
+        $this->line(
+            "Return    : {$this->returnType}",
+        );
+
+        $this->line(
+            'View      : ' .
+            ($this->createView ? 'Yes' : 'No'),
+        );
+
+        $this->line(
+            'Request   : ' .
+            ($this->createRequest ? 'Yes' : 'No'),
+        );
+
+        if ($this->createRequest) {
+            $this->line(
+                "Request Name: {$this->requestName}Request",
+            );
+        }
+
+        if ($this->parameters !== '') {
+            $this->line(
+                "Parameters: {$this->parameters}",
+            );
+        }
+
+        $this->newLine();
+
+        $this->comment(
+            'To remove this endpoint, run:',
+        );
+
+        $this->line(
+            "php artisan mcf:endpoint:remove " .
+            "{$this->moduleName} " .
+            "{$this->workflowName} " .
+            "{$this->endpointName}",
+        );
+
+        $this->newLine();
     }
-
-    $stub = $this->files->get(
-        __DIR__ . '/../Stubs/Endpoint/view.stub'
-    );
-
-    $this->files->put($viewFile, $stub);
-}
-
-
-protected function showSummary(): void
-{
-    $this->newLine();
-
-    $this->info('Endpoint created successfully.');
-
-    $this->newLine();
-
-    $this->line("Module    : {$this->moduleName}");
-    $this->line("Workflow  : {$this->workflowName}");
-    $this->line("Endpoint  : {$this->endpointName}");
-    $this->line("Method    : {$this->httpMethod}");
-    $this->line("Return    : {$this->returnType}");
-    $this->line('View      : ' . ($this->createView ? 'Yes' : 'No'));
-    $this->line('Request   : ' . ($this->injectWorkflowRequest ? 'Yes' : 'No'));
-
-    if ($this->parameters !== '') {
-        $this->line("Parameters: {$this->parameters}");
-    }
-
-$this->newLine();
-
-$this->comment('To remove this endpoint, run:');
-
-$this->line(
-    "php artisan mcf:endpoint:remove " .
-    "{$this->moduleName} " .
-    "{$this->workflowName} " .
-    "{$this->endpointName}"
-);
-
-$this->newLine();
-}
-
-
 }

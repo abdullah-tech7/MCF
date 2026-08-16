@@ -21,7 +21,16 @@ Route::post('/userManagement/{user}/delete', [UserManagementController::class, '
 Route::post('/userManagement/{user}/restore', [UserManagementController::class, 'restore'])
     ->withTrashed()->name('user.userManagement.restore');
 
-$dataRouteList = [
+/*
+|--------------------------------------------------------------------------
+| Route Access
+|--------------------------------------------------------------------------
+|
+| Define the access rules for the routes in this workflow.
+|
+*/
+$accessRoutes = [
+
     new RoleRouteAccess(
         routeNames: [
             'user.userManagement.index',
@@ -34,6 +43,7 @@ $dataRouteList = [
             new RoleData(role: 1),
         ],
     ),
+    
 ];
 
-McfRouteDataRegistry::register($dataRouteList);
+McfRouteDataRegistry::register($accessRoutes);
