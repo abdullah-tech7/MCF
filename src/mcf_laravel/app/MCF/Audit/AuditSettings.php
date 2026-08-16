@@ -12,6 +12,14 @@ final class AuditSettings
 {
 
     /**
+     * Enable MCF Audit globally.
+     *
+     * When disabled, no Audit records or Audit notifications
+     * will be processed.
+     */
+    public static bool $enabled = true;
+
+    /**
      * Enable authentication auditing.
      */
     public static bool $authentication = true;

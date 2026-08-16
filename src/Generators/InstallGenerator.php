@@ -28,11 +28,6 @@ final class InstallGenerator
         |--------------------------------------------------------------------------
         | Prevent Reinstallation
         |--------------------------------------------------------------------------
-        |
-        | Check this before performing any filesystem operation.
-        | This prevents an already installed MCF application from being
-        | modified or having its owned directories replaced again.
-        |
         */
 
         if ($this->isInstalled($basePath)) {
@@ -49,12 +44,48 @@ final class InstallGenerator
 
         /*
         |--------------------------------------------------------------------------
+        | Validate Backup Directory
+        |--------------------------------------------------------------------------
+        |
+        | z_backup is created only for the affected Laravel files and
+        | directories. It is not a complete project backup.
+        |
+        */
+
+        $backupPath = $this->backupPath(
+            $basePath,
+        );
+
+        if ($this->files->exists($backupPath)) {
+            throw new RuntimeException(
+                'The z_backup directory already exists. '
+                . 'MCF will not overwrite an existing backup. '
+                . 'Review or rename the existing z_backup directory '
+                . 'before running the installation again.',
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create Backup
+        |--------------------------------------------------------------------------
+        |
+        | Everything that MCF will remove or replace is backed up first.
+        |
+        */
+
+        $this->createBackup(
+            basePath: $basePath,
+            sourcePath: $sourcePath,
+            backupPath: $backupPath,
+        );
+
+        /*
+        |--------------------------------------------------------------------------
         | app/MCF
         |--------------------------------------------------------------------------
         |
-        | Add the MCF framework to the application's app directory.
-        |
-        | Existing files outside the MCF source structure remain untouched.
+        | MCF is added to the application.
         |
         */
 
@@ -69,7 +100,6 @@ final class InstallGenerator
         |--------------------------------------------------------------------------
         |
         | MCF owns the Models directory.
-        |
         | The existing Laravel Models directory is replaced completely.
         |
         */
@@ -86,12 +116,6 @@ final class InstallGenerator
         |
         | MCF provides its own complete database structure.
         |
-        | The existing Laravel database directory is replaced completely
-        | during the initial installation.
-        |
-        | Database connection configuration and migrations are not handled
-        | by the installer.
-        |
         */
 
         $this->replaceDirectory(
@@ -104,8 +128,7 @@ final class InstallGenerator
         | config/mcf.php
         |--------------------------------------------------------------------------
         |
-        | Add the MCF configuration without touching Laravel's other
-        | configuration files.
+        | Add the MCF configuration.
         |
         */
 
@@ -119,7 +142,7 @@ final class InstallGenerator
         | config/mail.php
         |--------------------------------------------------------------------------
         |
-        | MCF provides its own mail configuration.
+        | MCF provides the mail configuration used by its mail system.
         |
         */
 
@@ -133,10 +156,10 @@ final class InstallGenerator
         | resources/views
         |--------------------------------------------------------------------------
         |
-        | Copy MCF views into Laravel's views directory.
+        | MCF views are added to Laravel's views directory.
         |
-        | Existing files that belong to MCF are replaced.
-        | Other project views remain untouched.
+        | Only files supplied by MCF are overwritten.
+        | Other application views remain untouched.
         |
         */
 
@@ -150,7 +173,7 @@ final class InstallGenerator
         | bootstrap/app.php
         |--------------------------------------------------------------------------
         |
-        | MCF provides the application's bootstrap configuration.
+        | MCF provides its own bootstrap configuration.
         |
         */
 
@@ -163,11 +186,6 @@ final class InstallGenerator
         |--------------------------------------------------------------------------
         | Remove Laravel Structures Replaced by MCF
         |--------------------------------------------------------------------------
-        |
-        | These directories are no longer used by the MCF architecture.
-        |
-        | Missing directories are ignored.
-        |
         */
 
         $this->removeLaravelDirectories(
@@ -179,11 +197,8 @@ final class InstallGenerator
         | Installation Marker
         |--------------------------------------------------------------------------
         |
-        | The marker is created only after every installation operation
-        | above has completed successfully.
-        |
-        | If any operation throws an exception, the marker is not created
-        | and the application is not considered successfully installed.
+        | The marker is created only after all installation operations
+        | have completed successfully.
         |
         */
 
@@ -193,16 +208,193 @@ final class InstallGenerator
     }
 
     /**
-     * Determine whether MCF has already been installed.
+     * Create a backup of all files and directories affected by MCF.
+     *
+     * The backup contains only affected Laravel structures.
+     * It is not a complete project backup and is not an automatic rollback.
      */
-    protected function isInstalled(
+    protected function createBackup(
         string $basePath,
-    ): bool {
-        return $this->files->isFile(
-            $this->installationMarkerPath(
-                $basePath,
-            ),
+        string $sourcePath,
+        string $backupPath,
+    ): void {
+        /*
+        |--------------------------------------------------------------------------
+        | Directories completely replaced or removed
+        |--------------------------------------------------------------------------
+        */
+
+        $directories = [
+            'app/Models',
+            'app/Http/Controllers',
+            'app/Http/Requests',
+            'app/Http/Middleware',
+            'app/Notifications',
+            'database',
+            'routes',
+        ];
+
+        foreach ($directories as $directory) {
+            $this->backupDirectoryIfExists(
+                basePath: $basePath,
+                backupPath: $backupPath,
+                relativePath: $directory,
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Files replaced by MCF
+        |--------------------------------------------------------------------------
+        */
+
+        $files = [
+            'bootstrap/app.php',
+            'config/mcf.php',
+            'config/mail.php',
+        ];
+
+        foreach ($files as $file) {
+            $this->backupFileIfExists(
+                basePath: $basePath,
+                backupPath: $backupPath,
+                relativePath: $file,
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | MCF Views
+        |--------------------------------------------------------------------------
+        |
+        | Only existing files that MCF will overwrite are backed up.
+        |
+        */
+
+        $this->backupOverwrittenViewFiles(
+            basePath: $basePath,
+            sourcePath: $sourcePath,
+            backupPath: $backupPath,
         );
+    }
+
+    /**
+     * Backup an existing directory.
+     */
+    protected function backupDirectoryIfExists(
+        string $basePath,
+        string $backupPath,
+        string $relativePath,
+    ): void {
+        $source = $basePath
+            . DIRECTORY_SEPARATOR
+            . $relativePath;
+
+        if (! $this->files->isDirectory($source)) {
+            return;
+        }
+
+        $destination = $backupPath
+            . DIRECTORY_SEPARATOR
+            . $relativePath;
+
+        $this->files->ensureDirectoryExists(
+            dirname($destination),
+        );
+
+        $this->files->copyDirectory(
+            $source,
+            $destination,
+        );
+    }
+
+    /**
+     * Backup an existing file.
+     */
+    protected function backupFileIfExists(
+        string $basePath,
+        string $backupPath,
+        string $relativePath,
+    ): void {
+        $source = $basePath
+            . DIRECTORY_SEPARATOR
+            . $relativePath;
+
+        if (! $this->files->isFile($source)) {
+            return;
+        }
+
+        $destination = $backupPath
+            . DIRECTORY_SEPARATOR
+            . $relativePath;
+
+        $this->files->ensureDirectoryExists(
+            dirname($destination),
+        );
+
+        $this->files->copy(
+            $source,
+            $destination,
+        );
+    }
+
+    /**
+     * Backup only existing application view files that MCF will overwrite.
+     */
+    protected function backupOverwrittenViewFiles(
+        string $basePath,
+        string $sourcePath,
+        string $backupPath,
+    ): void {
+        $sourceViews = $sourcePath
+            . DIRECTORY_SEPARATOR
+            . 'resources'
+            . DIRECTORY_SEPARATOR
+            . 'views';
+
+        if (! $this->files->isDirectory($sourceViews)) {
+            throw new RuntimeException(
+                'Required MCF views directory was not found: '
+                . $sourceViews,
+            );
+        }
+
+        $destinationViews = $basePath
+            . DIRECTORY_SEPARATOR
+            . 'resources'
+            . DIRECTORY_SEPARATOR
+            . 'views';
+
+        foreach ($this->files->allFiles($sourceViews) as $file) {
+            $relativePath = $this->files->relativePathname(
+                $file,
+            );
+
+            $existingFile = $destinationViews
+                . DIRECTORY_SEPARATOR
+                . $relativePath;
+
+            if (! $this->files->isFile($existingFile)) {
+                continue;
+            }
+
+            $backupFile = $backupPath
+                . DIRECTORY_SEPARATOR
+                . 'resources'
+                . DIRECTORY_SEPARATOR
+                . 'views'
+                . DIRECTORY_SEPARATOR
+                . $relativePath;
+
+            $this->files->ensureDirectoryExists(
+                dirname($backupFile),
+            );
+
+            $this->files->copy(
+                $existingFile,
+                $backupFile,
+            );
+        }
     }
 
     /**
@@ -232,8 +424,7 @@ final class InstallGenerator
     /**
      * Copy a directory recursively.
      *
-     * Existing files are overwritten.
-     * Files outside the source directory are untouched.
+     * Existing files outside the MCF source structure remain untouched.
      */
     protected function copyDirectory(
         string $source,
@@ -342,6 +533,17 @@ final class InstallGenerator
     }
 
     /**
+     * Get the installation backup directory.
+     */
+    protected function backupPath(
+        string $basePath,
+    ): string {
+        return $basePath
+            . DIRECTORY_SEPARATOR
+            . 'z_backup';
+    }
+
+    /**
      * Get the installation marker path.
      */
     protected function installationMarkerPath(
@@ -354,6 +556,19 @@ final class InstallGenerator
             . 'MCF'
             . DIRECTORY_SEPARATOR
             . '.mcf-installed';
+    }
+
+    /**
+     * Determine whether MCF has already been installed.
+     */
+    protected function isInstalled(
+        string $basePath,
+    ): bool {
+        return $this->files->isFile(
+            $this->installationMarkerPath(
+                $basePath,
+            ),
+        );
     }
 
     /**

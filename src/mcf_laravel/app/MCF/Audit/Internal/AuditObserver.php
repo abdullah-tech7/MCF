@@ -63,6 +63,11 @@ final class AuditObserver
         string $action,
         array $changedColumns = [],
     ): void {
+
+if (! AuditSettings::$enabled) {
+    return;
+}
+
         if (! in_array(
             McfAuditable::class,
             class_uses_recursive($model),

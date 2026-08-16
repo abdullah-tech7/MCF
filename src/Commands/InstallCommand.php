@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types=1);
 
 namespace MCF\Commands;
 
@@ -24,6 +24,18 @@ final class InstallCommand extends Command
 
         $this->line(
             'The installation will replace or remove specific Laravel files and directories.',
+        );
+
+        $this->line(
+            'A copy of the affected files and directories will be saved in z_backup before installation.',
+        );
+
+        $this->line(
+            'z_backup is not a complete project backup and cannot automatically restore the previous application.',
+        );
+
+        $this->line(
+            'It is provided only as a reference so you can review or reuse files that were replaced or removed.',
         );
 
         $this->line(
@@ -79,12 +91,30 @@ final class InstallCommand extends Command
 
         $this->newLine();
 
+        $this->info(
+            'A copy of the files and directories affected by the installation was saved in z_backup.',
+        );
+
+        $this->line(
+            'This backup is for reference and reuse only. It is not an automatic rollback of the application.',
+        );
+
+        $this->line(
+            'You may review or remove z_backup manually when it is no longer needed.',
+        );
+
+        $this->newLine();
+
         $this->warn(
             'Database configuration is not managed by MCF.',
         );
 
         $this->line(
             'Configure your database connection in the .env file before using the application.',
+        );
+
+        $this->line(
+            'Make sure DB_CONNECTION and the required database settings are configured for your application.',
         );
 
         $this->line(
@@ -128,6 +158,7 @@ final class InstallCommand extends Command
         $this->info(
             'You may modify your database, mail, and other environment settings as needed.',
         );
+
         return self::SUCCESS;
     }
 }
