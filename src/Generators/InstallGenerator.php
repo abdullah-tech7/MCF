@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace MCF\Generators;
 
@@ -147,11 +147,10 @@ final class InstallGenerator
      */
     protected function sourcePath(): string
     {
-        return dirname(__DIR__, 2)
+        return dirname(__DIR__)
             . DIRECTORY_SEPARATOR
             . 'mcf_laravel';
     }
-
     /**
      * Validate that the MCF Laravel source exists.
      */
