@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types = 1);
+declare(strict_types=1);
 
 namespace MCF\Generators;
 
@@ -17,13 +17,35 @@ final class InstallGenerator
     /**
      * Install the MCF framework structure
      * into the Laravel application.
+     *
+     * MCF installation is intended to be performed once
+     * on a Laravel application.
      */
     public function install(
         string $basePath,
     ): void {
+        /*
+        |--------------------------------------------------------------------------
+        | Prevent Reinstallation
+        |--------------------------------------------------------------------------
+        |
+        | Check this before performing any filesystem operation.
+        | This prevents an already installed MCF application from being
+        | modified or having its owned directories replaced again.
+        |
+        */
+
+        if ($this->isInstalled($basePath)) {
+            throw new RuntimeException(
+                'MCF is already installed in this Laravel application.',
+            );
+        }
+
         $sourcePath = $this->sourcePath();
 
-        $this->validateSource($sourcePath);
+        $this->validateSource(
+            $sourcePath,
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -31,6 +53,8 @@ final class InstallGenerator
         |--------------------------------------------------------------------------
         |
         | Add the MCF framework to the application's app directory.
+        |
+        | Existing files outside the MCF source structure remain untouched.
         |
         */
 
@@ -45,7 +69,8 @@ final class InstallGenerator
         |--------------------------------------------------------------------------
         |
         | MCF owns the Models directory.
-        | Replace the existing Laravel Models directory completely.
+        |
+        | The existing Laravel Models directory is replaced completely.
         |
         */
 
@@ -61,6 +86,12 @@ final class InstallGenerator
         |
         | MCF provides its own complete database structure.
         |
+        | The existing Laravel database directory is replaced completely
+        | during the initial installation.
+        |
+        | Database connection configuration and migrations are not handled
+        | by the installer.
+        |
         */
 
         $this->replaceDirectory(
@@ -73,8 +104,8 @@ final class InstallGenerator
         | config/mcf.php
         |--------------------------------------------------------------------------
         |
-        | Add the MCF configuration without touching
-        | Laravel's other configuration files.
+        | Add the MCF configuration without touching Laravel's other
+        | configuration files.
         |
         */
 
@@ -104,7 +135,7 @@ final class InstallGenerator
         |
         | Copy MCF views into Laravel's views directory.
         |
-        | Existing views that belong to MCF are replaced.
+        | Existing files that belong to MCF are replaced.
         | Other project views remain untouched.
         |
         */
@@ -130,15 +161,47 @@ final class InstallGenerator
 
         /*
         |--------------------------------------------------------------------------
-        | Remove Laravel structures replaced by MCF
+        | Remove Laravel Structures Replaced by MCF
         |--------------------------------------------------------------------------
         |
         | These directories are no longer used by the MCF architecture.
+        |
+        | Missing directories are ignored.
         |
         */
 
         $this->removeLaravelDirectories(
             $basePath,
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Installation Marker
+        |--------------------------------------------------------------------------
+        |
+        | The marker is created only after every installation operation
+        | above has completed successfully.
+        |
+        | If any operation throws an exception, the marker is not created
+        | and the application is not considered successfully installed.
+        |
+        */
+
+        $this->createInstallationMarker(
+            $basePath,
+        );
+    }
+
+    /**
+     * Determine whether MCF has already been installed.
+     */
+    protected function isInstalled(
+        string $basePath,
+    ): bool {
+        return $this->files->isFile(
+            $this->installationMarkerPath(
+                $basePath,
+            ),
         );
     }
 
@@ -151,6 +214,7 @@ final class InstallGenerator
             . DIRECTORY_SEPARATOR
             . 'mcf_laravel';
     }
+
     /**
      * Validate that the MCF Laravel source exists.
      */
@@ -275,5 +339,37 @@ final class InstallGenerator
                 $path,
             );
         }
+    }
+
+    /**
+     * Get the installation marker path.
+     */
+    protected function installationMarkerPath(
+        string $basePath,
+    ): string {
+        return $basePath
+            . DIRECTORY_SEPARATOR
+            . 'app'
+            . DIRECTORY_SEPARATOR
+            . 'MCF'
+            . DIRECTORY_SEPARATOR
+            . '.mcf-installed';
+    }
+
+    /**
+     * Create the MCF installation marker.
+     */
+    protected function createInstallationMarker(
+        string $basePath,
+    ): void {
+        $markerPath = $this->installationMarkerPath(
+            $basePath,
+        );
+
+        $this->files->put(
+            $markerPath,
+            'MCF installed successfully.'
+            . PHP_EOL,
+        );
     }
 }

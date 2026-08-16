@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace MCF\Commands;
 
@@ -27,7 +27,7 @@ final class InstallCommand extends Command
         );
 
         $this->line(
-            'This operation is not intended to be reversible automatically.',
+            'This operation is not automatically reversible.',
         );
 
         $this->line(
@@ -45,7 +45,7 @@ final class InstallCommand extends Command
             $this->newLine();
 
             $this->info(
-                'MCF installation cancelled.',
+                'MCF installation cancelled. No changes were made.',
             );
 
             return self::SUCCESS;
@@ -77,6 +77,57 @@ final class InstallCommand extends Command
             'MCF installed successfully.',
         );
 
+        $this->newLine();
+
+        $this->warn(
+            'Database configuration is not managed by MCF.',
+        );
+
+        $this->line(
+            'Configure your database connection in the .env file before using the application.',
+        );
+
+        $this->line(
+            'After configuring the database, run:',
+        );
+
+        $this->line(
+            'php artisan migrate --seed',
+        );
+
+        $this->newLine();
+
+        $this->warn(
+            'Mail configuration is not managed automatically by MCF.',
+        );
+
+        $this->line(
+            'Configure your mail settings in the .env file to enable email verification, authentication emails, and notifications.',
+        );
+
+        $this->line(
+            'Mail configuration is optional if your application does not require email features.',
+        );
+
+        $this->newLine();
+
+        $this->info(
+            'MCF documentation is available in app/MCF/z_Guide.',
+        );
+
+        $this->line(
+            'The Guide contains documentation for getting started and detailed documentation for each MCF component.',
+        );
+
+        $this->line(
+            'It is recommended to start with the README and Quick Start guides.',
+        );
+
+        $this->newLine();
+
+        $this->info(
+            'You may modify your database, mail, and other environment settings as needed.',
+        );
         return self::SUCCESS;
     }
 }

@@ -13,28 +13,44 @@ class MCFTestSeeder extends Seeder
 {
     public function run(): void
     {
-        Role::create([
-            'id' => 1,
-            'name' => 'Administrator',
-        ]);
+        /*
+        |--------------------------------------------------------------------------
+        | Roles
+        |--------------------------------------------------------------------------
+        */
 
-        Role::create([
-            'id' => 2,
-            'name' => 'Employee',
-        ]);
+        if (! Role::query()->exists()) {
+            Role::create([
+                'id' => 1,
+                'name' => 'Administrator',
+            ]);
 
-        User::create([
-            'name' => 'Administrator',
-            'email' => 'admin@example.com',
-            'password' => McfAuth::hashPassword('admin'),
-            'role_id' => 1,
-        ]);
+            Role::create([
+                'id' => 2,
+                'name' => 'Employee',
+            ]);
+        }
 
-        User::create([
-            'name' => 'Employee',
-            'email' => 'employee@example.com',
-            'password' => McfAuth::hashPassword('@Ee12345678'),
-            'role_id' => 2,
-        ]);
+        /*
+        |--------------------------------------------------------------------------
+        | Users
+        |--------------------------------------------------------------------------
+        */
+
+        if (! User::query()->exists()) {
+            User::create([
+                'name' => 'Administrator',
+                'email' => 'admin@example.com',
+                'password' => McfAuth::hashPassword('admin'),
+                'role_id' => 1,
+            ]);
+
+            User::create([
+                'name' => 'Employee',
+                'email' => 'employee@example.com',
+                'password' => McfAuth::hashPassword('@Ee12345678'),
+                'role_id' => 2,
+            ]);
+        }
     }
 }
