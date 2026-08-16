@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace MCF\Generators;
 
@@ -337,10 +337,9 @@ final class InstallGenerator
             $destination,
         );
     }
-
-    /**
-     * Backup only existing application view files that MCF will overwrite.
-     */
+/**
+ * Backup only existing application view files that MCF will overwrite.
+ */
     protected function backupOverwrittenViewFiles(
         string $basePath,
         string $sourcePath,
@@ -366,9 +365,7 @@ final class InstallGenerator
             . 'views';
 
         foreach ($this->files->allFiles($sourceViews) as $file) {
-            $relativePath = $this->files->relativePathname(
-                $file,
-            );
+            $relativePath = $file->getRelativePathname();
 
             $existingFile = $destinationViews
                 . DIRECTORY_SEPARATOR
