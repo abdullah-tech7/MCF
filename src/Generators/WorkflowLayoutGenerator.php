@@ -30,8 +30,6 @@ class WorkflowLayoutGenerator
 
         $this->generateController($modulePath, $moduleName, $workflowName);
         $this->generateService($modulePath, $moduleName, $workflowName);
-        $this->generateRequest($modulePath, $moduleName, $workflowName);
-        $this->generatePolicy($modulePath, $moduleName, $workflowName);
         $this->generateRoute($modulePath, $moduleName, $workflowName);
 
         $this->registerRoute($moduleName, $workflowName);
@@ -46,7 +44,6 @@ class WorkflowLayoutGenerator
         $directories = [
             $workflowName,
             "{$workflowName}/Backend",
-            "{$workflowName}/Lang",
             "{$workflowName}/Views",
             "{$workflowName}/Views/Components",
         ];
@@ -84,31 +81,6 @@ class WorkflowLayoutGenerator
         );
     }
 
-    protected function generateRequest(
-        string $modulePath,
-        string $moduleName,
-        string $workflowName
-    ): void {
-        $this->copyStub(
-            'Request.stub',
-            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Request.php",
-            $moduleName,
-            $workflowName
-        );
-    }
-
-    protected function generatePolicy(
-        string $modulePath,
-        string $moduleName,
-        string $workflowName
-    ): void {
-        $this->copyStub(
-            'Policy.stub',
-            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Policy.php",
-            $moduleName,
-            $workflowName
-        );
-    }
 
     protected function generateRoute(
         string $modulePath,
@@ -162,8 +134,6 @@ class WorkflowLayoutGenerator
             '{{ WorkflowRoute }}',
             '{{ ControllerNamespace }}',
             '{{ ServiceNamespace }}',
-            '{{ RequestNamespace }}',
-            '{{ PolicyNamespace }}',
         ], [
             $moduleName,
             $workflowName,

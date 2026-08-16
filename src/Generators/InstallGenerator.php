@@ -5,178 +5,276 @@ declare(strict_types=1);
 namespace MCF\Generators;
 
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Facades\Artisan;
+use RuntimeException;
 
-class InstallGenerator
+final class InstallGenerator
 {
     public function __construct(
-        protected Filesystem $files
+        protected Filesystem $files,
     ) {
     }
 
+    /**
+     * Install the MCF framework structure
+     * into the Laravel application.
+     */
     public function install(
         string $basePath,
-        bool $cleanupLaravel = false,
     ): void {
-        if ($cleanupLaravel) {
-            $this->cleanupLaravelDirectories($basePath);
-        }
+        $sourcePath = $this->sourcePath();
 
-        $this->publishConfig($basePath);
+        $this->validateSource($sourcePath);
 
-        $directories = [
-            'app/MCF',
-            'app/MCF/Modules',
-            'app/MCF/Middleware',
-            'app/MCF/Notifications',
-            'app/MCF/Rules',
-            'app/MCF/Mail',
-        ];
+        /*
+        |--------------------------------------------------------------------------
+        | app/MCF
+        |--------------------------------------------------------------------------
+        |
+        | Add the MCF framework to the application's app directory.
+        |
+        */
 
-        foreach ($directories as $directory) {
-            $this->files->ensureDirectoryExists(
-                $basePath . DIRECTORY_SEPARATOR . $directory
-            );
-        }
+        $this->copyDirectory(
+            source: $sourcePath . '/app/MCF',
+            destination: $basePath . '/app/MCF',
+        );
 
-        $this->publishBase($basePath);
-        $this->publishErrors($basePath);
-        $this->publishRoutes($basePath);
+        /*
+        |--------------------------------------------------------------------------
+        | app/Models
+        |--------------------------------------------------------------------------
+        |
+        | MCF owns the Models directory.
+        | Replace the existing Laravel Models directory completely.
+        |
+        */
 
-        $this->updateBootstrapApp($basePath);
+        $this->replaceDirectory(
+            source: $sourcePath . '/app/Models',
+            destination: $basePath . '/app/Models',
+        );
 
-        $this->createReadme($basePath);
-        $this->createQuickStart($basePath);
+        /*
+        |--------------------------------------------------------------------------
+        | database
+        |--------------------------------------------------------------------------
+        |
+        | MCF provides its own complete database structure.
+        |
+        */
 
-        Artisan::call('mcf:make:module', [
-    'name' => 'Shared',
-]);
+        $this->replaceDirectory(
+            source: $sourcePath . '/database',
+            destination: $basePath . '/database',
+        );
 
-Artisan::call('mcf:make:workflow:layout', [
-    'module' => 'Shared',
-    'workflow' => 'Layout',
-]);
+        /*
+        |--------------------------------------------------------------------------
+        | config/mcf.php
+        |--------------------------------------------------------------------------
+        |
+        | Add the MCF configuration without touching
+        | Laravel's other configuration files.
+        |
+        */
 
-    }
+        $this->copyFile(
+            source: $sourcePath . '/config/mcf.php',
+            destination: $basePath . '/config/mcf.php',
+        );
 
-    protected function publishConfig(string $basePath): void
-    {
-        $source = dirname(__DIR__, 2) . '/config/mcf.php';
+        /*
+        |--------------------------------------------------------------------------
+        | config/mail.php
+        |--------------------------------------------------------------------------
+        |
+        | MCF provides its own mail configuration.
+        |
+        */
 
-        $destination = $basePath . '/config/mcf.php';
+        $this->copyFile(
+            source: $sourcePath . '/config/mail.php',
+            destination: $basePath . '/config/mail.php',
+        );
 
-        if (! $this->files->exists($destination)) {
-            $this->files->copy($source, $destination);
-        }
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | resources/views
+        |--------------------------------------------------------------------------
+        |
+        | Copy MCF views into Laravel's views directory.
+        |
+        | Existing views that belong to MCF are replaced.
+        | Other project views remain untouched.
+        |
+        */
 
-protected function publishRoutes(string $basePath): void
-{
-    $source = dirname(__DIR__, 2) . '/src/Stubs/Routes/mcf_routes.php';
+        $this->copyDirectory(
+            source: $sourcePath . '/resources/views',
+            destination: $basePath . '/resources/views',
+        );
 
-    $destination = $basePath . '/app/MCF/mcf_routes.php';
+        /*
+        |--------------------------------------------------------------------------
+        | bootstrap/app.php
+        |--------------------------------------------------------------------------
+        |
+        | MCF provides the application's bootstrap configuration.
+        |
+        */
 
-    $this->files->copy($source, $destination);
-}
+        $this->copyFile(
+            source: $sourcePath . '/bootstrap/app.php',
+            destination: $basePath . '/bootstrap/app.php',
+        );
 
-protected function updateBootstrapApp(string $basePath): void
-{
-    $bootstrap = $basePath . '/bootstrap/app.php';
+        /*
+        |--------------------------------------------------------------------------
+        | Remove Laravel structures replaced by MCF
+        |--------------------------------------------------------------------------
+        |
+        | These directories are no longer used by the MCF architecture.
+        |
+        */
 
-    if (! $this->files->exists($bootstrap)) {
-        return;
-    }
-
-    $content = $this->files->get($bootstrap);
-
-if (str_contains($content, "app/MCF/mcf_routes.php")) {
-    return;
-}
-
-    $updated = preg_replace(
-        "/web:\s*__DIR__\s*\.\s*'\/\.\.\/routes\/web\.php'/",
-        "web: __DIR__.'/../app/MCF/mcf_routes.php'",
-        $content,
-        1,
-        $count
-    );
-
-    if ($count === 0) {
-        throw new \RuntimeException(
-            'Unable to update bootstrap/app.php. Laravel routing configuration was not found.'
+        $this->removeLaravelDirectories(
+            $basePath,
         );
     }
 
-    $this->files->put($bootstrap, $updated);
-}
-
-protected function createReadme(string $basePath): void
-{
-    $source = dirname(__DIR__, 2) . '/README.md';
-
-    $destination = $basePath . '/app/MCF/README.md';
-
-    if (! $this->files->exists($destination) && $this->files->exists($source)) {
-        $this->files->copy($source, $destination);
-    }
-}
-
-protected function createQuickStart(string $basePath): void
-{
-    $source = dirname(__DIR__, 2) . '/Quick Start.md';
-
-    $destination = $basePath . '/app/MCF/Quick Start.md';
-
-    if (! $this->files->exists($destination) && $this->files->exists($source)) {
-        $this->files->copy($source, $destination);
-    }
-}
-
-    protected function cleanupLaravelDirectories(string $basePath): void
+    /**
+     * Get the MCF Laravel source directory.
+     */
+    protected function sourcePath(): string
     {
-        $directories = [
-            'app/Http/Controllers',
-            'app/Http/Requests',
-            'routes',
-        ];
+        return dirname(__DIR__, 2)
+            . DIRECTORY_SEPARATOR
+            . 'mcf_laravel';
+    }
 
-        foreach ($directories as $directory) {
-            $path = $basePath . DIRECTORY_SEPARATOR . $directory;
-
-            if ($this->files->isDirectory($path)) {
-                $this->files->deleteDirectory($path);
-            }
+    /**
+     * Validate that the MCF Laravel source exists.
+     */
+    protected function validateSource(
+        string $sourcePath,
+    ): void {
+        if (! $this->files->isDirectory($sourcePath)) {
+            throw new RuntimeException(
+                'The MCF Laravel source directory was not found: '
+                . $sourcePath,
+            );
         }
     }
 
-    protected function publishBase(string $basePath): void
-{
-    $source = dirname(__DIR__, 2) . '/src/Base';
+    /**
+     * Copy a directory recursively.
+     *
+     * Existing files are overwritten.
+     * Files outside the source directory are untouched.
+     */
+    protected function copyDirectory(
+        string $source,
+        string $destination,
+    ): void {
+        if (! $this->files->isDirectory($source)) {
+            throw new RuntimeException(
+                'Required MCF directory was not found: '
+                . $source,
+            );
+        }
 
-    $destination = $basePath . '/app/MCF/Base';
+        $this->files->ensureDirectoryExists(
+            $destination,
+        );
 
-    if (! $this->files->isDirectory($source)) {
-        return;
+        $this->files->copyDirectory(
+            $source,
+            $destination,
+        );
     }
 
-    $this->files->ensureDirectoryExists($destination);
+    /**
+     * Replace a directory completely.
+     */
+    protected function replaceDirectory(
+        string $source,
+        string $destination,
+    ): void {
+        if (! $this->files->isDirectory($source)) {
+            throw new RuntimeException(
+                'Required MCF directory was not found: '
+                . $source,
+            );
+        }
 
-    $this->files->copyDirectory($source, $destination);
-}
+        if ($this->files->isDirectory($destination)) {
+            $this->files->deleteDirectory(
+                $destination,
+            );
+        }
 
-protected function publishErrors(string $basePath): void
-{
-    $source = dirname(__DIR__, 2) . '/src/errors';
-
-    $destination = $basePath . '/resources/views/errors';
-
-    if (! $this->files->isDirectory($source)) {
-        return;
+        $this->files->copyDirectory(
+            $source,
+            $destination,
+        );
     }
 
-    $this->files->ensureDirectoryExists($destination);
+    /**
+     * Copy a single file.
+     */
+    protected function copyFile(
+        string $source,
+        string $destination,
+    ): void {
+        if (! $this->files->isFile($source)) {
+            throw new RuntimeException(
+                'Required MCF file was not found: '
+                . $source,
+            );
+        }
 
-    $this->files->copyDirectory($source, $destination);
-}
+        $directory = dirname(
+            $destination,
+        );
 
+        $this->files->ensureDirectoryExists(
+            $directory,
+        );
+
+        $this->files->copy(
+            $source,
+            $destination,
+        );
+    }
+
+    /**
+     * Remove Laravel directories replaced by MCF.
+     *
+     * Missing directories are ignored.
+     */
+    protected function removeLaravelDirectories(
+        string $basePath,
+    ): void {
+        $directories = [
+            'routes',
+            'app/Http/Controllers',
+            'app/Http/Requests',
+            'app/Http/Middleware',
+            'app/Notifications',
+        ];
+
+        foreach ($directories as $directory) {
+            $path = $basePath
+                . DIRECTORY_SEPARATOR
+                . $directory;
+
+            if (! $this->files->isDirectory($path)) {
+                continue;
+            }
+
+            $this->files->deleteDirectory(
+                $path,
+            );
+        }
+    }
 }

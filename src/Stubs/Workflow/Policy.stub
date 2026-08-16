@@ -1,9 +1,0 @@
-<?php
-
-namespace {{ PolicyNamespace }};
-
-use App\MCF\Base\MfcPolicy;
-
-class {{ WorkflowName }}Policy extends MfcPolicy
-{
-}

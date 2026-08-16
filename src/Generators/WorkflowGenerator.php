@@ -30,8 +30,6 @@ class WorkflowGenerator
 
         $this->generateController($modulePath, $moduleName, $workflowName);
         $this->generateService($modulePath, $moduleName, $workflowName);
-        $this->generateRequest($modulePath, $moduleName, $workflowName);
-        $this->generatePolicy($modulePath, $moduleName, $workflowName);
         $this->generateRoute($modulePath, $moduleName, $workflowName);
         $this->registerRoute($moduleName, $workflowName);
 
@@ -44,7 +42,6 @@ class WorkflowGenerator
             $workflowName,
             "{$workflowName}/Backend",
             "{$workflowName}/Views",
-            "{$workflowName}/Lang",
         ];
 
         foreach ($directories as $directory) {
@@ -80,31 +77,7 @@ class WorkflowGenerator
         );
     }
 
-    protected function generateRequest(
-        string $modulePath,
-        string $moduleName,
-        string $workflowName
-    ): void {
-        $this->generateFromStub(
-            'Request.stub',
-            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Request.php",
-            $moduleName,
-            $workflowName
-        );
-    }
 
-    protected function generatePolicy(
-        string $modulePath,
-        string $moduleName,
-        string $workflowName
-    ): void {
-        $this->generateFromStub(
-            'Policy.stub',
-            "{$modulePath}/{$workflowName}/Backend/{$workflowName}Policy.php",
-            $moduleName,
-            $workflowName
-        );
-    }
 
     protected function generateRoute(
         string $modulePath,
@@ -146,8 +119,6 @@ class WorkflowGenerator
             '{{ WorkflowRoute }}',
             '{{ ControllerNamespace }}',
             '{{ ServiceNamespace }}',
-            '{{ RequestNamespace }}',
-            '{{ PolicyNamespace }}',
         ], [
             $moduleName,
             $workflowName,

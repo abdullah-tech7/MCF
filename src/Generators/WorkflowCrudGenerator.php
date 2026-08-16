@@ -17,8 +17,6 @@ class WorkflowCrudGenerator extends WorkflowGenerator
         $this->generateCrudController($modulePath, $moduleName, $workflowName);
 
         $this->generateService($modulePath, $moduleName, $workflowName);
-        $this->generateRequest($modulePath, $moduleName, $workflowName);
-        $this->generatePolicy($modulePath, $moduleName, $workflowName);
         $this->generateCrudRoute($modulePath, $moduleName, $workflowName);
         $this->registerRoute($moduleName, $workflowName);
 
