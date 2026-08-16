@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace MCF\Generators;
 
@@ -106,18 +106,8 @@ final class RequestGenerator
 
         $requestName = preg_replace(
             '/[^A-Za-z0-9]+/',
-            ' ',
-            $requestName,
-        );
-
-        $requestName = str_replace(
-            ' ',
             '',
-            ucwords(
-                strtolower(
-                    $requestName,
-                ),
-            ),
+            $requestName,
         );
 
         if ($requestName === '') {
@@ -126,7 +116,11 @@ final class RequestGenerator
             );
         }
 
-        return $requestName;
+        return ucfirst(
+            strtolower(
+                $requestName,
+            ),
+        );
     }
 
     /**
