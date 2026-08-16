@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 use MCF\Generators\RequestGenerator;
 use Throwable;
 
-final class MakeRequestCommand extends Command
+class MakeRequestCommand extends Command
 {
     protected $signature = 'mcf:make:request
                             {module : Module name}
