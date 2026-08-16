@@ -23,6 +23,7 @@ use MCF\Support\MCFFileLoader;
 use MCF\Support\MCFViewFinder;
 use MCF\Support\Path;
 use MCF\Support\TranslationLoader;
+use MCF\Commands\MakeRequestCommand;
 
 class MCFServiceProvider extends ServiceProvider
 {
@@ -133,6 +134,7 @@ class MCFServiceProvider extends ServiceProvider
                 MakeMailCommand::class,
                 CreateEndpointCommand::class,
                 RemoveEndpointCommand::class,
+                MakeRequestCommand::class,
             ]);
         }
     }
