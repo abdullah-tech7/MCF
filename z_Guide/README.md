@@ -469,7 +469,6 @@ Start with:
 
 ``` text
 README
-Quick Start
 ```
 
 Then use the individual guides for Authentication, Access Control,
