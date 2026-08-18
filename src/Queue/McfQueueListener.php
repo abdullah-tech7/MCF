@@ -6,7 +6,6 @@ namespace MCF\Queue;
 
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Support\Facades\Event;
-use MCF\Queue\McfQueueProcess;
 
 final class McfQueueListener
 {
@@ -19,7 +18,11 @@ final class McfQueueListener
         Event::listen(
             JobQueued::class,
             static function (): void {
+                logger()->info('MCF LISTENER BEFORE');
+
                 McfQueueProcess::start();
+
+                logger()->info('MCF LISTENER AFTER');
             },
         );
     }
