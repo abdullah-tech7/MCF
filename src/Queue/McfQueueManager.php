@@ -11,23 +11,9 @@ final class McfQueueManager
 {
     private bool $registered = false;
 
-    private function __construct()
+    public function __construct()
     {
     }
-
-    public static function make(): self
-    {
-        return new self();
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Register
-    |--------------------------------------------------------------------------
-    |
-    | Register the MCF queue listener globally.
-    |
-    */
 
     public function register(): void
     {

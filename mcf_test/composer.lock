@@ -2316,12 +2316,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/abdullah-tech7/MCF-Laravel.git",
-                "reference": "e354afbcfa7c47d6a05b9103210ac7ab63b4450f"
+                "reference": "a136dd4e07f4d243d5d26a7a8b9f20bd97109a5a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/abdullah-tech7/MCF-Laravel/zipball/e354afbcfa7c47d6a05b9103210ac7ab63b4450f",
-                "reference": "e354afbcfa7c47d6a05b9103210ac7ab63b4450f",
+                "url": "https://api.github.com/repos/abdullah-tech7/MCF-Laravel/zipball/a136dd4e07f4d243d5d26a7a8b9f20bd97109a5a",
+                "reference": "a136dd4e07f4d243d5d26a7a8b9f20bd97109a5a",
                 "shasum": ""
             },
             "require": {
@@ -2369,7 +2369,7 @@
                 "issues": "https://github.com/abdullah-tech7/MCF-Laravel/issues",
                 "source": "https://github.com/abdullah-tech7/MCF-Laravel/tree/main"
             },
-            "time": "2026-08-18T20:17:47+00:00"
+            "time": "2026-08-18T20:19:43+00:00"
         },
         {
             "name": "monolog/monolog",

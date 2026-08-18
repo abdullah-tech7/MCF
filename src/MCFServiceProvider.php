@@ -70,9 +70,8 @@ class MCFServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->app
-            ->make(McfQueueManager::class)
-            ->register();
+
+        McfQueueManager::make()->register();
 
         $filesystem = new Filesystem();
 
