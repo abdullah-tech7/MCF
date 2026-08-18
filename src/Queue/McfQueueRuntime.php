@@ -25,7 +25,7 @@ final class McfQueueRuntime
 
     public static function wake(): void
     {
-        if (!self::isEnabled()) {
+        if (! self::isEnabled()) {
             return;
         }
 
@@ -41,25 +41,26 @@ final class McfQueueRuntime
 
         try {
             /*
-            | Re-check after acquiring the lock.
+            |--------------------------------------------------------------------------
+            | Re-check
+            |--------------------------------------------------------------------------
             |
-            | Another request may have started the worker while this
-            | request was waiting for the lock.
+            | Another request may have started the worker while this request
+            | was waiting for the lock.
+            |
             */
 
             if (self::isWorkerRunning()) {
                 return;
             }
 
-            self::markWorkerAsRunning();
-
-            if (!self::startWorker()) {
-                self::clearWorkerState();
-
+            if (! McfQueueWorker::start()) {
                 throw new RuntimeException(
                     'MCF Queue Worker could not be started.',
                 );
             }
+
+            self::markWorkerAsRunning();
         } finally {
             McfQueueLock::release($lock);
         }
@@ -115,69 +116,5 @@ final class McfQueueRuntime
             'mcf.queue.auto',
             true,
         );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Worker
-    |--------------------------------------------------------------------------
-    */
-
-    private static function startWorker(): bool
-    {
-        $php = escapeshellarg(
-            PHP_BINARY,
-        );
-
-        $artisan = escapeshellarg(
-            base_path('artisan'),
-        );
-
-        $command = sprintf(
-            '%s %s mcf:queue:work',
-            $php,
-            $artisan,
-        );
-
-        return self::runInBackground(
-            $command,
-        );
-    }
-
-    private static function runInBackground(
-        string $command,
-    ): bool {
-        if (PHP_OS_FAMILY === 'Windows') {
-            $command = sprintf(
-                'start "" /B %s',
-                $command,
-            );
-
-            $process = popen(
-                $command,
-                'r',
-            );
-
-            if ($process === false) {
-                return false;
-            }
-
-            pclose($process);
-
-            return true;
-        }
-
-        $command = sprintf(
-            'nohup %s > /dev/null 2>&1 &',
-            $command,
-        );
-
-        exec(
-            $command,
-            $output,
-            $status,
-        );
-
-        return $status === 0;
     }
 }

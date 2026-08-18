@@ -24,7 +24,7 @@ final class McfQueueLock
             self::TTL,
         );
 
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             return null;
         }
 
