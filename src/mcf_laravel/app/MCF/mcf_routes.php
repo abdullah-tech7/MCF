@@ -30,6 +30,8 @@ Route::get('/', function () {
 
 });
 
+require_once __DIR__.'/Storage/Providers/Laravel/LaravelStorageRoute.php';
+
 require_once __DIR__ . '/Modules/Shared/Layout/Backend/LayoutRoutes.php';
 
 require_once __DIR__ . '/Modules/User/Auth/Backend/AuthRoutes.php';
@@ -37,3 +39,6 @@ require_once __DIR__ . '/Modules/User/Auth/Backend/AuthRoutes.php';
 require_once __DIR__ . '/Modules/User/Profile/Backend/ProfileRoutes.php';
 
 require_once __DIR__.'/Modules/User/UserManagement/Backend/UserManagementRoutes.php';
+
+require_once __DIR__.'/Modules/Shared/StorageTest/Backend/StorageTestRoutes.php';
+

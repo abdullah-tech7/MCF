@@ -205,6 +205,17 @@
 
     </div>
 
+    <br><br>
+     <div>
+
+            <a href="{{ route('shared.storageTest.index') }}">
+
+                {{ __('Go to storage test') }}
+
+            </a>
+
+        </div>
+
 </div>
 
 @endsection

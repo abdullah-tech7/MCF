@@ -17,7 +17,7 @@ final class McfMail
         string $to,
         Mailable $mail,
     ): void {
-        Mail::to($to)->send($mail);
+        Mail::to($to)->queue($mail);
     }
 
     public static function queue(

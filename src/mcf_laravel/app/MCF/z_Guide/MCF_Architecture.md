@@ -37,7 +37,6 @@ app/
     ├── Result/
     ├── Sms/
     ├── z_Guide/
-    ├── .mcf-installed
     └── mcf_routes.php
 ```
 
@@ -166,8 +165,267 @@ For example:
 -   Notification provides notification infrastructure.
 -   Result provides standardized result handling.
 -   Sms provides SMS-related functionality.
+-   Storage provides provider-independent file storage infrastructure.
 
 Each component has its own detailed documentation.
+
+------------------------------------------------------------------------
+
+# Storage
+
+MCF Storage provides a provider-independent file storage abstraction for
+application features.
+
+The purpose of MCF Storage is to keep application Modules independent
+from a concrete physical storage implementation while still providing a
+consistent API for file operations.
+
+The main concepts are:
+
+``` text
+McfStorage
+StorageReference
+StorageRecord
+McfFileData
+McfStorageResult
+McfStorageMultiResult
+StorageRegistry
+StorageProvider
+```
+
+The architectural separation is:
+
+``` text
+Application
+    ↓
+McfStorage
+    ├── StorageRegistry
+    │       ↓
+    │   MCF storage records
+    │
+    └── StorageProvider
+            ↓
+        Physical storage
+```
+
+The registry stores information about the file, while the provider
+performs the physical storage operation.
+
+## StorageReference
+
+`StorageReference` is the internal identity of a stored file.
+
+The original filename is not used as the physical storage identity.
+
+For example:
+
+``` text
+Original name:
+invoice.pdf
+
+Storage reference:
+20260818023227059301.pdf
+```
+
+The original name remains part of the storage record and is used for
+user-facing downloads.
+
+## StorageRecord
+
+`StorageRecord` represents the MCF registry information for a file.
+
+It can contain:
+
+-   Reference.
+-   Original name.
+-   Extension.
+-   Type.
+-   MIME type.
+-   Size.
+-   Folder.
+-   Provider.
+-   Storage root.
+-   Access policy.
+-   Creation and update timestamps.
+
+A record can be retrieved with:
+
+``` php
+$result = McfStorage::find($reference);
+```
+
+For bulk operations, MCF can retrieve records through a bulk lookup
+instead of repeatedly querying individual references.
+
+## StorageProvider
+
+`StorageProvider` is the contract implemented by a physical storage
+backend.
+
+A provider is responsible for:
+
+-   Uploading files.
+-   Generating public URLs.
+-   Generating temporary URLs.
+-   Downloading files.
+-   Deleting files.
+-   Checking file existence.
+-   Returning provider metadata.
+
+A provider may use Laravel Filesystem, S3, or another storage backend.
+
+The application does not need to know which backend is being used.
+
+## Multiple Providers
+
+MCF Storage supports multiple providers through the same abstraction:
+
+``` text
+                    McfStorage
+                        |
+                StorageProvider
+                  /     |      \
+                 v      v       v
+             Laravel    S3    Custom
+```
+
+A storage record identifies information such as:
+
+``` text
+provider
+storage_root
+folder
+reference
+```
+
+This allows different files to use different storage backends while the
+application continues to use the same MCF Storage API.
+
+Adding a new provider requires implementing the `StorageProvider`
+contract and registering it with the provider resolution mechanism.
+
+No application-level storage API needs to change.
+
+## Public and Protected Storage
+
+MCF Storage supports two storage access states:
+
+``` text
+public
+protected
+```
+
+A public file can use a permanent public source.
+
+A protected file uses a temporary source with a limited lifetime.
+
+Protected access is a storage access policy. It is not a replacement for
+application authorization.
+
+Application-level permissions remain the responsibility of the
+appropriate access-control layer.
+
+## Single Operations
+
+MCF Storage supports individual operations such as:
+
+``` php
+McfStorage::upload($data);
+McfStorage::find($reference);
+McfStorage::view($reference);
+McfStorage::download($reference);
+McfStorage::metadata($reference);
+McfStorage::exists($reference);
+McfStorage::delete($reference);
+McfStorage::makePublic($reference);
+McfStorage::makeProtected($reference);
+```
+
+## Multi Operations
+
+MCF Storage also supports bulk operations:
+
+``` php
+McfStorage::uploadMany($dataList);
+McfStorage::downloadMany($references);
+McfStorage::deleteMany($references);
+```
+
+The recommended application behavior is:
+
+``` text
+0 selected
+    → no operation
+
+1 selected
+    → single operation
+
+2+ selected
+    → multi operation
+```
+
+Bulk workflows use bulk registry lookup where appropriate to avoid
+unnecessary repeated database queries.
+
+## Download Names
+
+The physical storage identity is the reference, but downloads use the
+original filename.
+
+Therefore:
+
+``` text
+Physical storage:
+20260818023227059301.pdf
+
+User download:
+invoice.pdf
+```
+
+For multiple downloads, MCF creates a ZIP archive and preserves the
+original filenames inside the archive. Duplicate original filenames are
+resolved safely.
+
+## Results
+
+Single storage operations return:
+
+``` php
+McfStorageResult
+```
+
+Bulk storage operations return:
+
+``` php
+McfStorageMultiResult
+```
+
+This keeps storage failures and operation status consistent with the
+rest of the MCF Result architecture.
+
+## Provider Independence
+
+Application Modules should use:
+
+``` php
+McfStorage::upload($data);
+```
+
+rather than coupling themselves directly to a concrete storage
+implementation.
+
+The intended dependency direction is:
+
+``` text
+Workflow / Service
+        ↓
+   McfStorage
+        ↓
+StorageRegistry + StorageProvider
+```
+
+This allows the physical storage backend to change without requiring
+application features to be rewritten.
 
 ------------------------------------------------------------------------
 
@@ -617,6 +875,7 @@ The guide covers:
 -   Mail.
 -   Notifications.
 -   SMS.
+-   Storage.
 -   Other MCF systems.
 
 Start with:
