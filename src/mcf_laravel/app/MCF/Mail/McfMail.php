@@ -13,6 +13,15 @@ final class McfMail
     {
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Send
+    |--------------------------------------------------------------------------
+    |
+    | Queued email delivery.
+    |
+    */
+
     public static function send(
         string $to,
         Mailable $mail,
@@ -20,12 +29,30 @@ final class McfMail
         Mail::to($to)->queue($mail);
     }
 
-    public static function queue(
+    /*
+    |--------------------------------------------------------------------------
+    | Direct
+    |--------------------------------------------------------------------------
+    |
+    | Sends the email immediately without using the queue.
+    |
+    */
+
+    public static function direct(
         string $to,
         Mailable $mail,
     ): void {
-        Mail::to($to)->queue($mail);
+        Mail::to($to)->send($mail);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Later
+    |--------------------------------------------------------------------------
+    |
+    | Queued email delivery with a delay in seconds.
+    |
+    */
 
     public static function later(
         int $delay,

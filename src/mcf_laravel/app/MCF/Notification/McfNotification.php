@@ -11,9 +11,10 @@ use App\MCF\Sms\McfSms;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use LogicException;
 use Throwable;
+use App\MCF\Mail\McfMail;
+
 
 final class McfNotification
 {
@@ -243,7 +244,8 @@ final class McfNotification
             );
         }
 
-        Mail::to($email)->send(
+        McfMail::send(
+            $email,
             new $mailClass($data),
         );
     }
