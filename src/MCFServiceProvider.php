@@ -18,7 +18,7 @@ use MCF\Commands\MakeWorkflowCommand;
 use MCF\Commands\MakeWorkflowCrudCommand;
 use MCF\Commands\MakeWorkflowLayoutCommand;
 use MCF\Commands\RemoveEndpointCommand;
-use MCF\Commands\RemoveWorkFlowCommand;
+use MCF\Commands\RemoveWorkflowCommand;
 use MCF\Support\MCFFileLoader;
 use MCF\Support\MCFViewFinder;
 use MCF\Support\Path;
@@ -129,7 +129,7 @@ class MCFServiceProvider extends ServiceProvider
                 MakeWorkflowCommand::class,
                 MakeWorkflowCrudCommand::class,
                 MakeWorkflowLayoutCommand::class,
-                RemoveWorkFlowCommand::class,
+                RemoveWorkflowCommand::class,
                 MakeMiddlewareCommand::class,
                 MakeMailCommand::class,
                 CreateEndpointCommand::class,
