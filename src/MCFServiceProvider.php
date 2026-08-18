@@ -73,7 +73,6 @@ class MCFServiceProvider extends ServiceProvider
     {
 
 
-      McfQueueListener::register();
 
         $filesystem = new Filesystem();
 
