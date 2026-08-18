@@ -20,6 +20,7 @@ use MCF\Commands\MakeWorkflowCrudCommand;
 use MCF\Commands\MakeWorkflowLayoutCommand;
 use MCF\Commands\RemoveEndpointCommand;
 use MCF\Commands\RemoveWorkflowCommand;
+use MCF\Queue\McfQueueManager;
 use MCF\Support\MCFFileLoader;
 use MCF\Support\MCFViewFinder;
 use MCF\Support\Path;
@@ -29,30 +30,10 @@ class MCFServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-    
         $this->mergeConfigFrom(
             __DIR__ . '/../config/mcf.php',
             'mcf',
         );
-
-$this->app->afterResolving(
-    \Illuminate\Queue\QueueManager::class,
-    function (\Illuminate\Queue\QueueManager $manager): void {
-        $manager->extend(
-            'database',
-            function ($app, array $config) {
-                $connector = new \Illuminate\Queue\Connectors\DatabaseConnector(
-                    $app['db'],
-                );
-
-                return new \MCF\Queue\McfQueueConnection(
-                    connection: $connector->connect($config),
-                );
-            },
-        );
-    },
-);
-
 
         $this->app->extend(
             'view.finder',
@@ -89,6 +70,9 @@ $this->app->afterResolving(
 
     public function boot(): void
     {
+
+
+        McfQueueManager::register();
 
         $filesystem = new Filesystem();
 
