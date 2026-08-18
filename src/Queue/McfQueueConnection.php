@@ -4,189 +4,41 @@ declare(strict_types=1);
 
 namespace MCF\Queue;
 
-use DateInterval;
-use DateTimeInterface;
-use Illuminate\Contracts\Queue\Job;
-use Illuminate\Contracts\Queue\Queue;
+use Illuminate\Queue\Connectors\DatabaseConnector;
+use Illuminate\Queue\QueueManager;
 
-final class McfQueueConnection implements Queue
+final class McfQueueManager
 {
+    private bool $registered = false;
+
     public function __construct(
-        private readonly Queue $connection,
+        private readonly QueueManager $manager,
     ) {
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Queue
-    |--------------------------------------------------------------------------
-    */
-
-    public function size(
-        ?string $queue = null,
-    ): int {
-        return $this->connection->size($queue);
-    }
-
-    public function push(
-        object|string $job,
-        mixed $data = '',
-        ?string $queue = null,
-    ): mixed {
-        $result = $this->connection->push(
-            $job,
-            $data,
-            $queue,
-        );
-
-        McfQueueRuntime::wake();
-
-        return $result;
-    }
-
-    public function pushOn(
-        string $queue,
-        object|string $job,
-        mixed $data = '',
-    ): mixed {
-        $result = $this->connection->pushOn(
-            $queue,
-            $job,
-            $data,
-        );
-
-        McfQueueRuntime::wake();
-
-        return $result;
-    }
-
-    public function pushRaw(
-        string $payload,
-        ?string $queue = null,
-        array $options = [],
-    ): mixed {
-        $result = $this->connection->pushRaw(
-            $payload,
-            $queue,
-            $options,
-        );
-
-        McfQueueRuntime::wake();
-
-        return $result;
-    }
-
-    public function later(
-        DateTimeInterface|DateInterval|int $delay,
-        object|string $job,
-        mixed $data = '',
-        ?string $queue = null,
-    ): mixed {
-        $result = $this->connection->later(
-            $delay,
-            $job,
-            $data,
-            $queue,
-        );
-
-        McfQueueRuntime::wake();
-
-        return $result;
-    }
-
-    public function laterOn(
-        string $queue,
-        DateTimeInterface|DateInterval|int $delay,
-        object|string $job,
-        mixed $data = '',
-    ): mixed {
-        $result = $this->connection->laterOn(
-            $queue,
-            $job,
-            $data,
-        );
-
-        McfQueueRuntime::wake();
-
-        return $result;
-    }
-
-    public function bulk(
-        array $jobs,
-        mixed $data = '',
-        ?string $queue = null,
-    ): mixed {
-        $result = $this->connection->bulk(
-            $jobs,
-            $data,
-            $queue,
-        );
-
-        McfQueueRuntime::wake();
-
-        return $result;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Worker
-    |--------------------------------------------------------------------------
-    */
-
-    public function pop(
-        ?string $queue = null,
-    ): ?Job {
-        return $this->connection->pop($queue);
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Connection
-    |--------------------------------------------------------------------------
-    */
-
-    public function getConnectionName(): string
+    public function register(): void
     {
-        return $this->connection->getConnectionName();
-    }
+        if ($this->registered) {
+            return;
+        }
 
-    public function setConnectionName(
-        string $name,
-    ): static {
-        $this->connection->setConnectionName($name);
+        $this->registered = true;
 
-        return $this;
-    }
+        $this->manager->addConnector(
+            'database',
+            function ($app, array $config) {
+                $connector = new DatabaseConnector(
+                    $app['db'],
+                );
 
-    /*
-    |--------------------------------------------------------------------------
-    | Queue Statistics
-    |--------------------------------------------------------------------------
-    */
+                $connection = $connector->connect(
+                    $config,
+                );
 
-    public function pendingSize(
-        ?string $queue = null,
-    ): int {
-        return $this->connection->pendingSize($queue);
-    }
-
-    public function delayedSize(
-        ?string $queue = null,
-    ): int {
-        return $this->connection->delayedSize($queue);
-    }
-
-    public function reservedSize(
-        ?string $queue = null,
-    ): int {
-        return $this->connection->reservedSize($queue);
-    }
-
-    public function creationTimeOfOldestPendingJob(
-        ?string $queue = null,
-    ): ?int {
-        return $this->connection->creationTimeOfOldestPendingJob(
-            $queue,
+                return new McfQueueConnection(
+                    connection: $connection,
+                );
+            },
         );
     }
 }

@@ -25,20 +25,27 @@ use MCF\Support\MCFFileLoader;
 use MCF\Support\MCFViewFinder;
 use MCF\Support\Path;
 use MCF\Support\TranslationLoader;
+use Illuminate\Queue\QueueManager;
 
 class MCFServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-
-    $this->app
-    ->make(McfQueueManager::class)
-    ->register();
     
         $this->mergeConfigFrom(
             __DIR__ . '/../config/mcf.php',
             'mcf',
         );
+
+    $this->app->afterResolving(
+        QueueManager::class,
+        function (QueueManager $manager): void {
+            $this->app
+                ->make(McfQueueManager::class)
+                ->register();
+        },
+    );
+
 
         $this->app->extend(
             'view.finder',

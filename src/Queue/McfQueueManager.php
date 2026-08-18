@@ -26,11 +26,7 @@ final class McfQueueManager
 
         $this->manager->addConnector(
             'database',
-            function ($app) {
-                $config = $app['config']->get(
-                    'queue.connections.database',
-                );
-
+            function ($app, array $config) {
                 $connector = new DatabaseConnector(
                     $app['db'],
                 );
