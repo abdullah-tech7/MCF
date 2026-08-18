@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MCF\Queue;
 
-use Illuminate\Contracts\Queue\Queue;
+use Illuminate\Queue\Connectors\DatabaseConnector;
 use Illuminate\Queue\QueueManager;
 
 final class McfQueueManager
@@ -24,32 +24,23 @@ final class McfQueueManager
 
         $this->registered = true;
 
-        $driver = $this->manager->getDefaultDriver();
+        $this->manager->addConnector(
+            'database',
+            function ($app) {
+                $config = $app['config']->get(
+                    'queue.connections.database',
+                );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Resolve Original Connection
-        |--------------------------------------------------------------------------
-        |
-        | Resolve Laravel's original connection first.
-        |
-        */
+                $connector = new DatabaseConnector(
+                    $app['db'],
+                );
 
-        $original = $this->manager->connection(
-            $driver,
-        );
+                $connection = $connector->connect(
+                    $config,
+                );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Register MCF Connection
-        |--------------------------------------------------------------------------
-        */
-
-        $this->manager->extend(
-            $driver,
-            static function () use ($original): Queue {
                 return new McfQueueConnection(
-                    connection: $original,
+                    connection: $connection,
                 );
             },
         );

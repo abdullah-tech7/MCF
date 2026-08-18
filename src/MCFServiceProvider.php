@@ -30,6 +30,11 @@ class MCFServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+
+    $this->app
+    ->make(McfQueueManager::class)
+    ->register();
+    
         $this->mergeConfigFrom(
             __DIR__ . '/../config/mcf.php',
             'mcf',
@@ -70,10 +75,6 @@ class MCFServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-
-        $this->app
-            ->make(McfQueueManager::class)
-            ->register();
 
         $filesystem = new Filesystem();
 
