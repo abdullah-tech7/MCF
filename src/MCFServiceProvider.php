@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace MCF;
 
@@ -14,16 +14,17 @@ use MCF\Commands\InstallCommand;
 use MCF\Commands\MakeMailCommand;
 use MCF\Commands\MakeMiddlewareCommand;
 use MCF\Commands\MakeModuleCommand;
+use MCF\Commands\MakeRequestCommand;
 use MCF\Commands\MakeWorkflowCommand;
 use MCF\Commands\MakeWorkflowCrudCommand;
 use MCF\Commands\MakeWorkflowLayoutCommand;
 use MCF\Commands\RemoveEndpointCommand;
 use MCF\Commands\RemoveWorkflowCommand;
+use MCF\Queue\McfQueueManager;
 use MCF\Support\MCFFileLoader;
 use MCF\Support\MCFViewFinder;
 use MCF\Support\Path;
 use MCF\Support\TranslationLoader;
-use MCF\Commands\MakeRequestCommand;
 
 class MCFServiceProvider extends ServiceProvider
 {
@@ -69,6 +70,10 @@ class MCFServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->app
+            ->make(McfQueueManager::class)
+            ->register();
+
         $filesystem = new Filesystem();
 
         /*

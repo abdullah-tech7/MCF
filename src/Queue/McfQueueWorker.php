@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\MCF\Queue;
+namespace MCF\Queue;
 
 final class McfQueueWorker
 {

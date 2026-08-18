@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\MCF\Queue;
+namespace MCF\Queue;
 
 use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Queue\QueueManager;
+use MCF\Queue\McfQueueRuntime;
 
 final class McfQueueManager
 {
