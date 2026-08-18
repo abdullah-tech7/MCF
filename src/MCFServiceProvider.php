@@ -20,12 +20,10 @@ use MCF\Commands\MakeWorkflowCrudCommand;
 use MCF\Commands\MakeWorkflowLayoutCommand;
 use MCF\Commands\RemoveEndpointCommand;
 use MCF\Commands\RemoveWorkflowCommand;
-use MCF\Queue\McfQueueManager;
 use MCF\Support\MCFFileLoader;
 use MCF\Support\MCFViewFinder;
 use MCF\Support\Path;
 use MCF\Support\TranslationLoader;
-use Illuminate\Queue\QueueManager;
 
 class MCFServiceProvider extends ServiceProvider
 {
@@ -37,14 +35,23 @@ class MCFServiceProvider extends ServiceProvider
             'mcf',
         );
 
-    $this->app->afterResolving(
-        QueueManager::class,
-        function (QueueManager $manager): void {
-            $this->app
-                ->make(McfQueueManager::class)
-                ->register();
-        },
-    );
+$this->app->afterResolving(
+    \Illuminate\Queue\QueueManager::class,
+    function (\Illuminate\Queue\QueueManager $manager): void {
+        $manager->extend(
+            'database',
+            function ($app, array $config) {
+                $connector = new \Illuminate\Queue\Connectors\DatabaseConnector(
+                    $app['db'],
+                );
+
+                return new \MCF\Queue\McfQueueConnection(
+                    connection: $connector->connect($config),
+                );
+            },
+        );
+    },
+);
 
 
         $this->app->extend(

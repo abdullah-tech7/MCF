@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MCF\Queue;
 
-use Illuminate\Queue\Connectors\DatabaseConnector;
 use Illuminate\Queue\QueueManager;
+use MCF\Queue\McfQueueConnection;
 
 final class McfQueueManager
 {
@@ -24,10 +24,10 @@ final class McfQueueManager
 
         $this->registered = true;
 
-        $this->manager->addConnector(
+        $this->manager->extend(
             'database',
             function ($app, array $config) {
-                $connector = new DatabaseConnector(
+                $connector = new \Illuminate\Queue\Connectors\DatabaseConnector(
                     $app['db'],
                 );
 
