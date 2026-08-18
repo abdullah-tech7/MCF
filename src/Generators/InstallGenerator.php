@@ -139,6 +139,20 @@ final class InstallGenerator
 
         /*
         |--------------------------------------------------------------------------
+        | config/filesystems.php
+        |--------------------------------------------------------------------------
+        |
+        | MCF provides the filesystems configuration used by its storage system.
+        |
+        */
+
+        $this->copyFile(
+            source: $sourcePath . '/config/filesystems.php',
+            destination: $basePath . '/config/filesystems.php',
+        );
+
+         /*
+        |--------------------------------------------------------------------------
         | config/mail.php
         |--------------------------------------------------------------------------
         |
