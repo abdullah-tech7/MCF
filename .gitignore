@@ -1,5 +1,5 @@
 /vendor
-/mcf-test
+/mcf_test
 /.phpunit.result.cache
 /.phpunit.cache
 
