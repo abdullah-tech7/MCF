@@ -10,39 +10,22 @@ final class McfQueueWorker
     {
     }
 
-    public static function start(): bool
-    {
-        $php = escapeshellarg(PHP_BINARY);
-        $artisan = escapeshellarg(base_path('artisan'));
+   public static function start(): bool
+{
+    $php = escapeshellarg(
+        PHP_BINARY,
+    );
 
-        $command = sprintf(
-            '%s %s queue:work --stop-when-empty',
-            $php,
-            $artisan,
-        );
+    $artisan = escapeshellarg(
+        base_path('artisan'),
+    );
 
-        if (PHP_OS_FAMILY === 'Windows') {
-            exec(
-                sprintf(
-                    'start "" /B cmd /C "%s"',
-                    $command,
-                ),
-                $output,
-                $status,
-            );
+    $command = sprintf(
+        '%s %s queue:work --stop-when-empty',
+        $php,
+        $artisan,
+    );
 
-            return $status === 0;
-        }
-
-        exec(
-            sprintf(
-                'nohup %s > /dev/null 2>&1 &',
-                $command,
-            ),
-            $output,
-            $status,
-        );
-
-        return $status === 0;
-    }
+    dd($command);
+}
 }
