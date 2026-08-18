@@ -1,4 +1,4 @@
-# MCF --- Modular Code Framework
+# MCF Laravel — Modular Control Framework
 
 **MCF (Modular Code Framework)** is a feature-oriented application
 architecture built on top of Laravel.
@@ -10,104 +10,212 @@ architecture built on top of Laravel.
 
 ## Table of Contents
 
--   [What is MCF?](#what-is-mcf)
+- [Requirements](#requirements)
+- [Installation](#installation)
+  - [If You Do Not Have a Laravel Project](#if-you-do-not-have-a-laravel-project)
+  - [If You Already Have a Laravel Project](#if-you-already-have-a-laravel-project)
+  - [Run the MCF Installer](#run-the-mcf-installer)
+  - [Database Setup](#database-setup)
+  - [Installation Result](#installation-result)
+- [MCF CLI](#mcf-cli)
+  - [Installation](#installation-1)
+  - [Module](#module-1)
+  - [Standard Workflow](#standard-workflow)
+  - [CRUD Workflow](#crud-workflow)
+  - [Layout Workflow](#layout-workflow)
+  - [Request](#request)
+  - [Endpoint](#endpoint)
+  - [Remove Endpoint](#remove-endpoint)
+  - [Remove Workflow](#remove-workflow)
+  - [Middleware](#middleware)
+  - [Mail](#mail-1)
+- [What is MCF?](#what-is-mcf)
+- [Architecture at a Glance](#architecture-at-a-glance)
+- [What MCF Installs](#what-mcf-installs)
+- [Project Structure](#project-structure)
+- [Modules and Workflows](#modules-and-workflows)
+  - [Module](#module)
+  - [Workflow](#workflow)
+- [Framework Components](#framework-components)
+  - [Base](#1-base)
+    - [MfcController](#mfccontroller)
+    - [MfcRequest](#mfcrequest)
+    - [MfcService](#mfcservice)
+  - [Authentication](#2-authentication)
+  - [Access Control](#3-access-control)
+    - [Guards](#guards)
+    - [Access Modes](#access-modes)
+  - [Audit](#4-audit)
+  - [Language](#5-language)
+  - [Mail](#6-mail)
+  - [Notification](#7-notification)
+  - [SMS](#8-sms)
+  - [Middleware](#9-middleware)
+    - [McfAccessMiddleware](#mcfaccessmiddleware)
+    - [McfSessionSecurityMiddleware](#mcfsessionsecuritymiddleware)
+    - [SetLocaleMiddleware](#setlocalemiddleware)
+  - [Result](#10-result)
+  - [Storage](#11-storage)
+    - [StorageReference](#storagereference)
+    - [StorageRecord](#storagerecord)
+    - [StorageRegistry](#storageregistry)
+    - [StorageProvider](#storageprovider)
+    - [Multiple Providers](#multiple-providers)
+    - [Public and Protected Storage](#public-and-protected-storage)
+    - [Single Operations](#single-operations)
+    - [Multi Operations](#multi-operations)
+    - [Download Names](#download-names)
+    - [Storage Results](#storage-results)
+    - [Provider Independence](#provider-independence)
+- [Database](#database)
+  - [Database Principle](#database-principle)
+- [Routes](#routes)
+- [Resources and Public](#resources-and-public)
+- [Endpoint Generator](#endpoint-generator)
+  - [Generator First](#generator-first)
+  - [Request Integration](#request-integration)
+- [Requests and Data](#requests-and-data)
+- [What Developers Should and Should Not Change](#what-developers-should-and-should-not-change)
+  - [Keep Laravel's Standard Locations](#keep-laravels-standard-locations)
+  - [Keep the MCF Framework Structure](#keep-the-mcf-framework-structure)
+  - [Database Components](#database-components)
+  - [Modules and Workflows](#modules-and-workflows-1)
+- [Recommended Development Flow](#recommended-development-flow)
+- [Design Principles](#design-principles)
+  - [Laravel First](#laravel-first)
+  - [Feature-Oriented Architecture](#feature-oriented-architecture)
+  - [Separation of Responsibilities](#separation-of-responsibilities)
+  - [Provider Abstraction](#provider-abstraction)
+  - [Generator First](#generator-first-1)
+  - [Predictability](#predictability)
+- [Final Architecture Summary](#final-architecture-summary)
+- [Documentation](#documentation)
+- [License](#license)
 
--   [Architecture at a Glance](#architecture-at-a-glance)
+---
+# Requirements
 
--   [What MCF Installs](#what-mcf-installs)
+MCF is a Laravel package. A Laravel application must exist before MCF can be installed.
 
--   [Project Structure](#project-structure)
+Requirements:
 
--   [Modules and Workflows](#modules-and-workflows)
-    -   [Module](#module)
-    -   [Workflow](#workflow)
+- PHP 8.4+
+- Laravel 12.x or 13.x
+---
 
--   [Framework Components](#framework-components)
-    -   [Base](#1-base)
-        -   [MfcController](#mfccontroller)
-        -   [MfcRequest](#mfcrequest)
-        -   [MfcService](#mfcservice)
-    -   [Authentication](#2-authentication)
-    -   [Access Control](#3-access-control)
-        -   [Guards](#guards)
-        -   [Access Modes](#access-modes)
-    -   [Audit](#4-audit)
-    -   [Language](#5-language)
-    -   [Mail](#6-mail)
-    -   [Notification](#7-notification)
-    -   [SMS](#8-sms)
-    -   [Middleware](#9-middleware)
-        -   [McfAccessMiddleware](#mcfaccessmiddleware)
-        -   [McfSessionSecurityMiddleware](#mcfsessionsecuritymiddleware)
-        -   [SetLocaleMiddleware](#setlocalemiddleware)
-    -   [Result](#10-result)
-    -   [Storage](#11-storage)
-        -   [StorageReference](#storagereference)
-        -   [StorageRecord](#storagerecord)
-        -   [StorageRegistry](#storageregistry)
-        -   [StorageProvider](#storageprovider)
-        -   [Multiple Providers](#multiple-providers)
-        -   [Public and Protected
-            Storage](#public-and-protected-storage)
-        -   [Single Operations](#single-operations)
-        -   [Multi Operations](#multi-operations)
-        -   [Download Names](#download-names)
-        -   [Storage Results](#storage-results)
-        -   [Provider Independence](#provider-independence)
+# Installation
 
--   [Database](#database)
-    -   [Database Principle](#database-principle)
+## If You Do Not Have a Laravel Project
 
--   [Routes](#routes)
+Create a new Laravel application first:
 
--   [Resources and Public](#resources-and-public)
+```bash
+composer create-project laravel/laravel my-app
+```
 
--   [Endpoint Generator](#endpoint-generator)
-    -   [Generator First](#generator-first)
-    -   [Request Integration](#request-integration)
+Enter the project:
 
--   [Requests and Data](#requests-and-data)
+```bash
+cd my-app
+```
 
--   [MCF CLI](#mcf-cli)
-    -   [Installation](#installation-1)
-    -   [Module](#module-1)
-    -   [Standard Workflow](#standard-workflow)
-    -   [CRUD Workflow](#crud-workflow)
-    -   [Layout Workflow](#layout-workflow)
-    -   [Request](#request)
-    -   [Endpoint](#endpoint)
-    -   [Remove Endpoint](#remove-endpoint)
-    -   [Remove Workflow](#remove-workflow)
-    -   [Middleware](#middleware)
-    -   [Mail](#mail-1)
+Install MCF:
 
--   [Installation](#installation)
+```bash
+composer require mcf/laravel
+```
 
--   [What Developers Should and Should Not
-    Change](#what-developers-should-and-should-not-change)
-    -   [Keep Laravel's standard
-        locations](#keep-laravels-standard-locations)
-    -   [Keep the MCF framework
-        structure](#keep-the-mcf-framework-structure)
-    -   [Database Components](#database-components)
-    -   [Modules and Workflows](#modules-and-workflows-1)
+Then run the MCF installer:
 
--   [Recommended Development Flow](#recommended-development-flow)
+```bash
+php artisan mcf:install
+```
 
--   [Design Principles](#design-principles)
-    -   [Laravel First](#laravel-first)
-    -   [Feature-Oriented Architecture](#feature-oriented-architecture)
-    -   [Separation of
-        Responsibilities](#separation-of-responsibilities)
-    -   [Provider Abstraction](#provider-abstraction)
-    -   [Generator First](#generator-first-1)
-    -   [Predictability](#predictability)
+## If You Already Have a Laravel Project
 
--   [Final Architecture Summary](#final-architecture-summary)
+Enter the existing Laravel project:
 
--   [Documentation](#documentation)
+```bash
+cd my-app
+```
 
--   ## [License](#license)
+Install MCF directly:
+
+```bash
+composer require mcf/laravel
+```
+
+Then run:
+
+```bash
+php artisan mcf:install
+```
+
+MCF uses the stable Composer package for normal installation. No development branch is required.
+
+## Run the MCF Installer
+
+The installer prepares the MCF application structure:
+
+```bash
+php artisan mcf:install
+```
+
+Installation is intended to run once per Laravel project.
+
+MCF uses an installation marker:
+
+```text
+app/MCF/.mcf-installed
+```
+
+A project that already contains the MCF installation marker should not be installed again.
+
+## Database Setup
+
+After installation, configure the project's database connection in `.env`.
+
+Then run:
+
+```bash
+php artisan migrate --seed
+```
+
+The exact database requirements depend on the MCF components being used.
+
+Mail configuration is optional unless the application uses email features such as authentication emails, notifications, or other mail delivery.
+
+## Installation Result
+
+After installation, the main MCF root is:
+
+```text
+app/
+└── MCF/
+    ├── AccessControl/
+    ├── Audit/
+    ├── Authentication/
+    ├── Base/
+    ├── Language/
+    ├── Mail/
+    ├── Middleware/
+    ├── Modules/
+    ├── Notification/
+    ├── Result/
+    ├── Sms/
+    ├── Storage/
+    ├── z_Guide/
+    ├── .mcf-installed
+    └── mcf_routes.php
+```
+
+The installed MCF documentation is available under:
+
+```text
+app/MCF/z_Guide
+```
+
+---
 
 # What is MCF?
 
@@ -1613,12 +1721,11 @@ the old shared Workflow Request structure.
 
 # MCF CLI
 
-All MCF Artisan commands use the `mcf:` prefix so they remain clearly
-distinguishable from Laravel's native commands.
+All MCF Artisan commands use the `mcf:` prefix so they remain clearly distinguishable from Laravel's native commands.
 
 Current commands:
 
-``` text
+```text
 mcf:install
 mcf:make:module
 mcf:make:workflow
@@ -1634,26 +1741,15 @@ mcf:make:mail
 
 ## Installation
 
-``` bash
+```bash
 php artisan mcf:install
 ```
 
-The installer prepares the MCF application structure.
-
-Installation is intended to run once per Laravel project.
-
-MCF uses an installation marker:
-
-``` text
-app/MCF/.mcf-installed
-```
-
-A project that already contains the MCF installation marker should not
-be installed again.
+Prepares the MCF application structure.
 
 ## Module
 
-``` bash
+```bash
 php artisan mcf:make:module
 ```
 
@@ -1661,7 +1757,7 @@ Creates a top-level application Module.
 
 ## Standard Workflow
 
-``` bash
+```bash
 php artisan mcf:make:workflow
 ```
 
@@ -1669,7 +1765,7 @@ Creates a standard Workflow inside an existing Module.
 
 Typical structure:
 
-``` text
+```text
 User/Profile/
 ├── Backend/
 ├── Lang/
@@ -1678,13 +1774,13 @@ User/Profile/
 
 ## CRUD Workflow
 
-``` bash
+```bash
 php artisan mcf:make:workflow:crud
 ```
 
 Use this for resource-oriented features such as:
 
-``` text
+```text
 Products
 Customers
 Employees
@@ -1693,7 +1789,7 @@ Categories
 
 ## Layout Workflow
 
-``` bash
+```bash
 php artisan mcf:make:workflow:layout
 ```
 
@@ -1703,7 +1799,7 @@ The initial MCF installation includes a shared Layout Workflow.
 
 ## Request
 
-``` bash
+```bash
 php artisan mcf:make:request User Auth Login
 ```
 
@@ -1711,7 +1807,7 @@ Creates an independent Request inside the selected Workflow.
 
 ## Endpoint
 
-``` bash
+```bash
 php artisan mcf:endpoint:create
 ```
 
@@ -1719,7 +1815,7 @@ Creates a complete Endpoint structure interactively.
 
 ## Remove Endpoint
 
-``` bash
+```bash
 php artisan mcf:endpoint:remove
 ```
 
@@ -1727,7 +1823,7 @@ Removes an Endpoint from its Workflow structure.
 
 ## Remove Workflow
 
-``` bash
+```bash
 php artisan mcf:remove:workflow
 ```
 
@@ -1735,7 +1831,7 @@ Removes an existing Workflow.
 
 ## Middleware
 
-``` bash
+```bash
 php artisan mcf:make:middleware
 ```
 
@@ -1743,52 +1839,13 @@ Creates MCF Middleware using the framework's conventions.
 
 ## Mail
 
-``` bash
+```bash
 php artisan mcf:make:mail
 ```
 
 Creates an MCF Mail class following the framework structure.
 
-------------------------------------------------------------------------
-
-# Installation
-
-MCF is designed to be installed into a Laravel application.
-
-After the package is available to the project, run:
-
-``` bash
-php artisan mcf:install
-```
-
-The installer warns that installation modifies the Laravel application's
-structure.
-
-MCF installation is intended for a new Laravel project or a project
-where the developer understands the structural changes being made.
-
-After installation, configure the project's database connection in
-`.env`.
-
-Then run:
-
-``` bash
-php artisan migrate --seed
-```
-
-The exact database requirements depend on the MCF components being used.
-
-Mail configuration is optional unless the application uses email
-features such as authentication emails, notifications, or other mail
-delivery.
-
-After installation, MCF documentation is available under:
-
-``` text
-app/MCF/z_Guide
-```
-
-------------------------------------------------------------------------
+---
 
 # What Developers Should and Should Not Change
 
