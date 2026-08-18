@@ -36,22 +36,17 @@ final class McfQueueWorker
     ): bool {
         if (PHP_OS_FAMILY === 'Windows') {
             $command = sprintf(
-                'start "" /B %s',
+                'start "" /B cmd /C "%s"',
                 $command,
             );
 
-            $process = popen(
+            exec(
                 $command,
-                'r',
+                $output,
+                $status,
             );
 
-            if ($process === false) {
-                return false;
-            }
-
-            pclose($process);
-
-            return true;
+            return $status === 0;
         }
 
         $command = sprintf(
