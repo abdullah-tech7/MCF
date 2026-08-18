@@ -6,8 +6,9 @@ namespace MCF\Queue;
 
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Support\Facades\Event;
+use MCF\Queue\McfQueueProcess;
 
-final class McfQueueManager
+final class McfQueueListener
 {
     private function __construct()
     {
@@ -18,7 +19,7 @@ final class McfQueueManager
         Event::listen(
             JobQueued::class,
             static function (): void {
-                McfQueueRuntime::wake();
+                McfQueueProcess::start();
             },
         );
     }

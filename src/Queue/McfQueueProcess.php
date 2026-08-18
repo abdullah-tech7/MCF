@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace MCF\Queue;
 
-final class McfQueueWorker
+final class McfQueueProcess
 {
     private function __construct()
     {
@@ -17,7 +17,7 @@ final class McfQueueWorker
 
         if (PHP_OS_FAMILY === 'Windows') {
             $command = sprintf(
-                'start "" /B cmd /D /S /C ""%s" "%s" queue:work --stop-when-empty"',
+                'start "" /B cmd /D /S /C ""%s" "%s" queue:work --once > NUL 2>&1"',
                 $php,
                 $artisan,
             );
@@ -32,7 +32,7 @@ final class McfQueueWorker
         }
 
         $command = sprintf(
-            'nohup %s %s queue:work --stop-when-empty > /dev/null 2>&1 &',
+            'nohup %s %s queue:work --once > /dev/null 2>&1 &',
             escapeshellarg($php),
             escapeshellarg($artisan),
         );

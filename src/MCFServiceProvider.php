@@ -20,11 +20,12 @@ use MCF\Commands\MakeWorkflowCrudCommand;
 use MCF\Commands\MakeWorkflowLayoutCommand;
 use MCF\Commands\RemoveEndpointCommand;
 use MCF\Commands\RemoveWorkflowCommand;
-use MCF\Queue\McfQueueManager;
 use MCF\Support\MCFFileLoader;
 use MCF\Support\MCFViewFinder;
 use MCF\Support\Path;
 use MCF\Support\TranslationLoader;
+use MCF\Queue\McfQueueListener;
+
 
 class MCFServiceProvider extends ServiceProvider
 {
@@ -72,7 +73,7 @@ class MCFServiceProvider extends ServiceProvider
     {
 
 
-        McfQueueManager::register();
+      McfQueueListener::register();
 
         $filesystem = new Filesystem();
 
