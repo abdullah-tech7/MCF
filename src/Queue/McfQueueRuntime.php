@@ -40,16 +40,6 @@ final class McfQueueRuntime
         }
 
         try {
-            /*
-            |--------------------------------------------------------------------------
-            | Re-check
-            |--------------------------------------------------------------------------
-            |
-            | Another request may have started the worker while this request
-            | was waiting for the lock.
-            |
-            */
-
             if (self::isWorkerRunning()) {
                 return;
             }
