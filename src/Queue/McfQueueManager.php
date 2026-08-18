@@ -11,10 +11,6 @@ final class McfQueueManager
 {
     private bool $registered = false;
 
-    public function __construct()
-    {
-    }
-
     public function register(): void
     {
         if ($this->registered) {
