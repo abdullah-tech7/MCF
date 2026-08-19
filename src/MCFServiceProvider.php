@@ -36,15 +36,7 @@ class MCFServiceProvider extends ServiceProvider
             'mcf',
         );
 
-        class_alias(
-            \App\MCF\Authentication\McfAuth::class,
-            'McfAuth',
-        );
-
-        class_alias(
-            \App\MCF\AccessControl\McfAccess::class,
-            'McfAccess',
-        );
+        $this->registerMcfClassAliases();
 
         $this->app->extend(
             'view.finder',
@@ -219,5 +211,28 @@ class MCFServiceProvider extends ServiceProvider
                 );
             },
         );
+    }
+
+    protected function registerMcfClassAliases(): void
+    {
+        if (
+            class_exists(\App\MCF\Authentication\McfAuth::class)
+            && ! class_exists('McfAuth', false)
+        ) {
+            class_alias(
+                \App\MCF\Authentication\McfAuth::class,
+                'McfAuth',
+            );
+        }
+
+        if (
+            class_exists(\App\MCF\AccessControl\McfAccess::class)
+            && ! class_exists('McfAccess', false)
+        ) {
+            class_alias(
+                \App\MCF\AccessControl\McfAccess::class,
+                'McfAccess',
+            );
+        }
     }
 }
