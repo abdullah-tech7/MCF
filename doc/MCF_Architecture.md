@@ -34,8 +34,10 @@ app/
     ├── Middleware/
     ├── Modules/
     ├── Notification/
+    ├── Realtime/
     ├── Result/
     ├── Sms/
+    ├── Storage/
     ├── z_Guide/
     └── mcf_routes.php
 ```
@@ -94,7 +96,37 @@ app/MCF
 └── MCF Integration Files
 ```
 
-### Framework Components
+## 
+
+------------------------------------------------------------------------
+
+# MCF Framework Integrity Rule
+
+The `app/MCF` directory is part of the installed MCF framework and
+application foundation.
+
+**Do not delete MCF classes, framework directories, or connected
+Workflow files simply because a feature is not currently being used.**
+
+MCF components are connected and some classes may be used directly or
+indirectly by other components.
+
+The recommended approach is:
+
+``` text
+Keep
+Configure
+Disable when supported
+Customize through the provided settings
+```
+
+Feature usage is optional where the architecture allows it. The
+framework structure itself should remain intact.
+
+If a component is not needed, configure or disable it where supported
+instead of deleting its classes.
+
+# Framework Components
 
 These provide reusable infrastructure for the application:
 
@@ -107,13 +139,86 @@ Language
 Mail
 Middleware
 Notification
+Realtime
 Result
 Sms
+Storage
 ```
 
-### Modules
+##  {#-1}
 
-`Modules` contains the application's feature-oriented structure.
+------------------------------------------------------------------------
+
+# Realtime
+
+MCF Realtime provides a simple application-level realtime API without
+requiring every Blade View to implement its own polling logic.
+
+The application-facing API is:
+
+``` javascript
+MCF.realtime('notifications', {
+    onUpdate: function (state) {
+        // Update the UI from the received state.
+    }
+});
+```
+
+The runtime is managed by MCF and handles:
+
+``` text
+Polling
+Request scheduling
+Duplicate channel handling
+Error retry backoff
+Visibility handling
+State change detection
+```
+
+The default polling interval is:
+
+``` text
+15000 ms
+```
+
+The developer may override it when necessary:
+
+``` javascript
+MCF.realtime('notifications', {
+    interval: 5000,
+
+    onUpdate: function (state) {
+        // ...
+    }
+});
+```
+
+The interval is therefore optional. The runtime provides the default.
+
+A Realtime Channel is registered by the MCF framework. Application code
+registers the channel\'s behavior and consumes its state; it should not
+reimplement the polling runtime in every View.
+
+The intended separation is:
+
+``` text
+MCF Realtime Runtime
+        ↓
+   Channel / State
+        ↓
+Application View
+```
+
+The View is responsible for presentation, while MCF owns the runtime
+behavior.
+
+The Realtime runtime is loaded through MCF\'s server-side framework
+integration. Developers should not manually duplicate the runtime script
+in every Blade View.
+
+# Modules
+
+`Modules` contains the application\'s feature-oriented structure.
 
 ### Documentation
 
@@ -595,7 +700,7 @@ Example:
 php artisan mcf:make:request User Auth Login
 ```
 
-The Request is created inside the Workflow's `Request` directory.
+The Request is created inside the Workflow\'s `Request` directory.
 
 If the directory does not exist, MCF creates it.
 
@@ -637,7 +742,7 @@ connect:
 -   A Request specific to the Endpoint.
 
 When an Endpoint uses a Request, that Request is connected directly to
-the Endpoint's Controller method.
+the Endpoint\'s Controller method.
 
 Endpoint generation is treated as a complete operation rather than a
 collection of unrelated partial operations.
@@ -790,6 +895,90 @@ developer has a clear replacement.
 
 ------------------------------------------------------------------------
 
+------------------------------------------------------------------------
+
+# Queue and Jobs
+
+MCF supports Laravel Queue and Jobs for background work.
+
+Typical uses include:
+
+``` text
+Email delivery
+Notifications
+Long-running processing
+External service calls
+Background application tasks
+```
+
+The architectural relationship is:
+
+``` text
+Workflow / Service
+        ↓
+      Job
+        ↓
+Laravel Queue
+        ↓
+Queue Worker
+```
+
+The distinction is:
+
+``` text
+Queue = execution mechanism
+Job   = unit of background work
+Workflow / Service = application behavior
+```
+
+MCF integrates with Laravel\'s existing Queue system rather than
+creating a separate queue engine.
+
+Queue support is intended for work that should not block the current
+HTTP request.
+
+### Example Modules and Workflows
+
+The installed MCF application includes a small working example structure
+intended for learning, testing, and customization.
+
+The default examples contain two Modules, with three Workflows in each:
+
+``` text
+Modules/
+├── Shared/
+│   ├── Layout/
+│   ├── RealtimeTest/
+│   └── StorageTest/
+│
+└── User/
+    ├── Auth/
+    ├── Profile/
+    └── UserManagement/
+```
+
+These examples are intentionally simple.
+
+They demonstrate how MCF components can be used together, including
+authentication, access control, audit, notifications, mail, storage,
+realtime, language, results, middleware, and other framework services.
+
+The example Workflows are useful for:
+
+-   Learning the MCF structure.
+-   Understanding how Controller, Routes, Service, Request, and Views
+    fit together.
+-   Testing framework components.
+-   Using a working reference when creating application features.
+-   Customizing the examples for a real project.
+
+`RealtimeTest` and `StorageTest` are test/example Workflows and may be
+customized as needed.
+
+`Shared/Layout` is more structural. It provides the shared layout
+pattern used by Views and Workflow generation, so it is recommended to
+keep it unless the project has a deliberate replacement.
+
 # Database and MCF Architecture
 
 The MCF architecture also includes database structures used by its
@@ -803,9 +992,9 @@ MCF provides:
     structure.
 
 The database is not physically located under `app/MCF`; it remains part
-of the Laravel application's database structure.
+of the Laravel application\'s database structure.
 
-The developer controls the application's database connection through
+The developer controls the application\'s database connection through
 `.env`:
 
 ``` env
@@ -827,6 +1016,41 @@ should understand the dependencies before removing or replacing MCF
 database structures.
 
 ------------------------------------------------------------------------
+
+### Database and Migration Rules
+
+Laravel\'s core database foundation is required.
+
+MCF feature migrations are optional according to the components used by
+the project. However, applying the provided migrations initially is
+recommended so developers can understand the intended MCF data model
+before customizing it.
+
+``` bash
+php artisan migrate --seed
+```
+
+After understanding the model, migrations can be customized for the
+application\'s requirements.
+
+If the `users` table is customized, especially when a column used by MCF
+Authentication is removed or renamed, the related authentication
+settings and user-resolution logic must also be updated.
+
+The dependency should remain consistent:
+
+``` text
+Database schema
+      ↕
+User Model
+      ↕
+McfAuth / User Settings
+      ↕
+Application
+```
+
+Removing a User column without updating the corresponding MCF
+Authentication configuration can break authentication behavior.
 
 # MCF Installation Marker
 
@@ -902,6 +1126,8 @@ app/MCF
 │   ├── AccessControl
 │   ├── Mail
 │   ├── Notification
+│   ├── Realtime
+│   ├── Storage
 │   └── ...
 │
 └── Modules
@@ -985,6 +1211,66 @@ app/MCF/Modules
 
 ------------------------------------------------------------------------
 
+------------------------------------------------------------------------
+
+# MCF APIs in Blade
+
+MCF exposes its main authentication and access APIs directly to Blade.
+
+Developers can use:
+
+``` blade
+McfAuth::check()
+McfAuth::user()
+McfAuth::id()
+
+McfAccess::can('permission')
+```
+
+Example:
+
+``` blade
+@if (McfAuth::check())
+    {{ McfAuth::user()->name }}
+@endif
+
+@if (McfAccess::can('users.view'))
+    <a href="{{ route('users.index') }}">
+        {{ __('Users') }}
+    </a>
+@endif
+```
+
+For MCF Views, prefer `McfAuth` and `McfAccess` as the application\'s
+public authentication and access APIs instead of coupling the View
+directly to Laravel authentication/authorization implementation details.
+
+------------------------------------------------------------------------
+
+# MCF Registration and Automatic Discovery
+
+MCF uses its service provider and application integration layer to
+register framework behavior automatically.
+
+Developers should not manually register every MCF component in each
+Blade View or feature.
+
+Framework-level registration can include:
+
+-   Service registration.
+-   Module and Workflow discovery.
+-   Workflow route registration.
+-   Workflow view registration.
+-   Language resource registration.
+-   Realtime channel registration.
+-   Other framework infrastructure.
+
+Application feature usage remains explicit where appropriate, while
+framework wiring is centralized.
+
+This keeps the application entry points clean and prevents repeated
+manual setup across Views and Modules.
+
 # Request Lifecycle
 
 A typical MCF HTTP request can follow:
@@ -1032,7 +1318,7 @@ from implementing its own domain requirements.
 
 # Laravel Compatibility
 
-MCF is built on Laravel and continues to use Laravel's ecosystem.
+MCF is built on Laravel and continues to use Laravel\'s ecosystem.
 
 Applications can use Laravel functionality such as:
 
@@ -1050,8 +1336,8 @@ Applications can use Laravel functionality such as:
 -   Broadcasting.
 -   Scheduling.
 
-Laravel packages can also be used when compatible with the application's
-Laravel version.
+Laravel packages can also be used when compatible with the
+application\'s Laravel version.
 
 ------------------------------------------------------------------------
 
@@ -1076,6 +1362,35 @@ This keeps the architecture predictable as the project grows.
 
 ------------------------------------------------------------------------
 
+------------------------------------------------------------------------
+
+# Optional Feature Usage
+
+MCF is modular in usage, not in framework integrity.
+
+A project may use only the components it needs:
+
+``` text
+Authentication
+AccessControl
+Audit
+Notification
+Mail
+Storage
+Realtime
+Queue / Jobs
+...
+```
+
+Not every project needs every feature.
+
+However, unused MCF components should remain installed unless the
+framework explicitly provides a supported removal mechanism.
+
+This allows a project to enable a feature later without reconstructing
+the framework structure and avoids breaking dependencies between
+components.
+
 # Design Principles
 
 MCF follows these principles:
@@ -1093,6 +1408,12 @@ MCF follows these principles:
 -   Long-term maintainability.
 -   Prefer configuration and disabling over deletion of framework
     components.
+-   Keep framework components intact even when their application-level
+    usage is optional.
+-   Keep realtime runtime behavior inside MCF rather than duplicating
+    polling logic in Views.
+-   Keep background execution on Laravel Queue / Jobs.
+-   Expose authentication and access through MCF public APIs in Views.
 
 ------------------------------------------------------------------------
 
@@ -1122,9 +1443,9 @@ Modules and Workflows organize application features, while the
 framework-level directories provide shared infrastructure used across
 those features.
 
-MCF also integrates routes, views, language resources, database
-structures, configuration, installation state, and framework services
-into the Laravel application.
+MCF also integrates routes, views, language resources, realtime
+channels, queue/jobs, database structures, configuration, installation
+state, and framework services into the Laravel application.
 
 Laravel remains the underlying application framework. MCF provides a
 consistent feature-oriented application architecture on top of it.

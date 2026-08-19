@@ -1,4 +1,4 @@
-# MCF Laravel — Modular Control Framework
+# MCF Laravel --- Modular Control Framework {#mcf-laravel--modular-control-framework}
 
 **MCF (Modular Code Framework)** is a feature-oriented application
 architecture built on top of Laravel.
@@ -8,100 +8,151 @@ architecture built on top of Laravel.
 
 ------------------------------------------------------------------------
 
+# Key Features
+
+MCF is a modular application framework built on Laravel, designed to
+provide a complete and predictable foundation for real applications
+while keeping Laravel underneath.
+
+Key features include:
+
+-   **Authentication** through the unified `McfAuth` API.
+-   **Access Control** through route guards, roles, access modes, and
+    permissions.
+-   **Audit** logging for important application operations.
+-   **Notifications** built on Laravel\'s native notification system.
+-   **Realtime** updates through a simple AJAX-based polling runtime
+    with a clean `MCF.realtime()` API.
+-   **Queue / Jobs** support for background work.
+-   **Mail** through a lightweight MCF API on top of Laravel Mail.
+-   **SMS** through provider-independent SMS services.
+-   **Storage** through provider-independent storage abstractions.
+-   **Language** through centralized JSON translations.
+-   **Result** objects for predictable operation states.
+-   **Middleware** for framework-level request behavior.
+-   **Generators** for Modules, Workflows, Requests, Endpoints,
+    Middleware, Mail, and other structural tasks.
+-   **Workflow Layouts** for shared presentation structures.
+-   **Modular application architecture** that keeps business features
+    organized.
+-   **Laravel compatibility** without replacing Laravel\'s core systems.
+
+MCF also includes example application Modules and Workflows that
+demonstrate how the framework components work together. These examples
+are intentionally simple so they can be studied and customized.
+
+------------------------------------------------------------------------
+
 ## Table of Contents
 
-- [Requirements](#requirements)
-- [Installation](#installation)
-  - [If You Do Not Have a Laravel Project](#if-you-do-not-have-a-laravel-project)
-  - [If You Already Have a Laravel Project](#if-you-already-have-a-laravel-project)
-  - [Run the MCF Installer](#run-the-mcf-installer)
-  - [Database Setup](#database-setup)
-  - [Installation Result](#installation-result)
-- [MCF CLI](#mcf-cli)
-  - [Installation](#installation-1)
-  - [Module](#module-1)
-  - [Standard Workflow](#standard-workflow)
-  - [CRUD Workflow](#crud-workflow)
-  - [Layout Workflow](#layout-workflow)
-  - [Request](#request)
-  - [Endpoint](#endpoint)
-  - [Remove Endpoint](#remove-endpoint)
-  - [Remove Workflow](#remove-workflow)
-  - [Middleware](#middleware)
-  - [Mail](#mail-1)
-- [What is MCF?](#what-is-mcf)
-- [Architecture at a Glance](#architecture-at-a-glance)
-- [What MCF Installs](#what-mcf-installs)
-- [Project Structure](#project-structure)
-- [Modules and Workflows](#modules-and-workflows)
-  - [Module](#module)
-  - [Workflow](#workflow)
-- [Framework Components](#framework-components)
-  - [Base](#1-base)
-    - [MfcController](#mfccontroller)
-    - [MfcRequest](#mfcrequest)
-    - [MfcService](#mfcservice)
-  - [Authentication](#2-authentication)
-  - [Access Control](#3-access-control)
-    - [Guards](#guards)
-    - [Access Modes](#access-modes)
-  - [Audit](#4-audit)
-  - [Language](#5-language)
-  - [Mail](#6-mail)
-  - [Notification](#7-notification)
-  - [SMS](#8-sms)
-  - [Middleware](#9-middleware)
-    - [McfAccessMiddleware](#mcfaccessmiddleware)
-    - [McfSessionSecurityMiddleware](#mcfsessionsecuritymiddleware)
-    - [SetLocaleMiddleware](#setlocalemiddleware)
-  - [Result](#10-result)
-  - [Storage](#11-storage)
-    - [StorageReference](#storagereference)
-    - [StorageRecord](#storagerecord)
-    - [StorageRegistry](#storageregistry)
-    - [StorageProvider](#storageprovider)
-    - [Multiple Providers](#multiple-providers)
-    - [Public and Protected Storage](#public-and-protected-storage)
-    - [Single Operations](#single-operations)
-    - [Multi Operations](#multi-operations)
-    - [Download Names](#download-names)
-    - [Storage Results](#storage-results)
-    - [Provider Independence](#provider-independence)
-- [Database](#database)
-  - [Database Principle](#database-principle)
-- [Routes](#routes)
-- [Resources and Public](#resources-and-public)
-- [Endpoint Generator](#endpoint-generator)
-  - [Generator First](#generator-first)
-  - [Request Integration](#request-integration)
-- [Requests and Data](#requests-and-data)
-- [What Developers Should and Should Not Change](#what-developers-should-and-should-not-change)
-  - [Keep Laravel's Standard Locations](#keep-laravels-standard-locations)
-  - [Keep the MCF Framework Structure](#keep-the-mcf-framework-structure)
-  - [Database Components](#database-components)
-  - [Modules and Workflows](#modules-and-workflows-1)
-- [Recommended Development Flow](#recommended-development-flow)
-- [Design Principles](#design-principles)
-  - [Laravel First](#laravel-first)
-  - [Feature-Oriented Architecture](#feature-oriented-architecture)
-  - [Separation of Responsibilities](#separation-of-responsibilities)
-  - [Provider Abstraction](#provider-abstraction)
-  - [Generator First](#generator-first-1)
-  - [Predictability](#predictability)
-- [Final Architecture Summary](#final-architecture-summary)
-- [Documentation](#documentation)
-- [License](#license)
+-   [Key Features](#key-features)
+-   [Important Framework Rule](#important-framework-rule)
+-   [MCF Example Application](#mcf-example-application)
+-   [Requirements](#requirements)
+-   [Installation](#installation)
+    -   [If You Do Not Have a Laravel
+        Project](#if-you-do-not-have-a-laravel-project)
+    -   [If You Already Have a Laravel
+        Project](#if-you-already-have-a-laravel-project)
+    -   [Run the MCF Installer](#run-the-mcf-installer)
+    -   [Database Setup](#database-setup)
+    -   [Installation Result](#installation-result)
+-   [MCF CLI](#mcf-cli)
+    -   [Installation](#installation-1)
+    -   [Module](#module-1)
+    -   [Standard Workflow](#standard-workflow)
+    -   [CRUD Workflow](#crud-workflow)
+    -   [Layout Workflow](#layout-workflow)
+    -   [Request](#request)
+    -   [Endpoint](#endpoint)
+    -   [Remove Endpoint](#remove-endpoint)
+    -   [Remove Workflow](#remove-workflow)
+    -   [Middleware](#middleware)
+    -   [Mail](#mail-1)
+-   [What is MCF?](#what-is-mcf)
+-   [Architecture at a Glance](#architecture-at-a-glance)
+-   [What MCF Installs](#what-mcf-installs)
+-   [Project Structure](#project-structure)
+-   [Modules and Workflows](#modules-and-workflows)
+    -   [Module](#module)
+    -   [Workflow](#workflow)
+-   [Framework Components](#framework-components)
+-   [Realtime](#12-realtime)
+-   [Queue and Jobs](#13-queue-and-jobs)
+-   [Using MCF APIs in Blade](#using-mcf-apis-in-blade)
+    -   [Base](#1-base)
+        -   [MfcController](#mfccontroller)
+        -   [MfcRequest](#mfcrequest)
+        -   [MfcService](#mfcservice)
+    -   [Authentication](#2-authentication)
+    -   [Access Control](#3-access-control)
+        -   [Guards](#guards)
+        -   [Access Modes](#access-modes)
+    -   [Audit](#4-audit)
+    -   [Language](#5-language)
+    -   [Mail](#6-mail)
+    -   [Notification](#7-notification)
+    -   [SMS](#8-sms)
+    -   [Middleware](#9-middleware)
+        -   [McfAccessMiddleware](#mcfaccessmiddleware)
+        -   [McfSessionSecurityMiddleware](#mcfsessionsecuritymiddleware)
+        -   [SetLocaleMiddleware](#setlocalemiddleware)
+    -   [Result](#10-result)
+    -   [Storage](#11-storage)
+        -   [StorageReference](#storagereference)
+        -   [StorageRecord](#storagerecord)
+        -   [StorageRegistry](#storageregistry)
+        -   [StorageProvider](#storageprovider)
+        -   [Multiple Providers](#multiple-providers)
+        -   [Public and Protected
+            Storage](#public-and-protected-storage)
+        -   [Single Operations](#single-operations)
+        -   [Multi Operations](#multi-operations)
+        -   [Download Names](#download-names)
+        -   [Storage Results](#storage-results)
+        -   [Provider Independence](#provider-independence)
+-   [Database](#database)
+    -   [Database Principle](#database-principle)
+-   [Routes](#routes)
+-   [Resources and Public](#resources-and-public)
+-   [Endpoint Generator](#endpoint-generator)
+    -   [Generator First](#generator-first)
+    -   [Request Integration](#request-integration)
+-   [Requests and Data](#requests-and-data)
+-   [What Developers Should and Should Not
+    Change](#what-developers-should-and-should-not-change)
+    -   [Keep Laravel\'s Standard
+        Locations](#keep-laravels-standard-locations)
+    -   [Keep the MCF Framework
+        Structure](#keep-the-mcf-framework-structure)
+    -   [Database Components](#database-components)
+    -   [Modules and Workflows](#modules-and-workflows-1)
+-   [Recommended Development Flow](#recommended-development-flow)
+-   [Design Principles](#design-principles)
+    -   [Laravel First](#laravel-first)
+    -   [Feature-Oriented Architecture](#feature-oriented-architecture)
+    -   [Separation of
+        Responsibilities](#separation-of-responsibilities)
+    -   [Provider Abstraction](#provider-abstraction)
+    -   [Generator First](#generator-first-1)
+    -   [Predictability](#predictability)
+-   [Final Architecture Summary](#final-architecture-summary)
+-   [Documentation](#documentation)
+-   [License](#license)
 
----
+------------------------------------------------------------------------
+
 # Requirements
 
-MCF is a Laravel package. A Laravel application must exist before MCF can be installed.
+MCF is a Laravel package. A Laravel application must exist before MCF
+can be installed.
 
 Requirements:
 
-- PHP 8.4+
-- Laravel 12.x or 13.x
----
+-   PHP 8.4+
+-   Laravel 12.x or 13.x
+
+------------------------------------------------------------------------
 
 # Installation
 
@@ -109,25 +160,25 @@ Requirements:
 
 Create a new Laravel application first:
 
-```bash
+``` bash
 composer create-project laravel/laravel my-app
 ```
 
 Enter the project:
 
-```bash
+``` bash
 cd my-app
 ```
 
 Install MCF:
 
-```bash
+``` bash
 composer require mcf/laravel
 ```
 
 Then run the MCF installer:
 
-```bash
+``` bash
 php artisan mcf:install
 ```
 
@@ -135,29 +186,30 @@ php artisan mcf:install
 
 Enter the existing Laravel project:
 
-```bash
+``` bash
 cd my-app
 ```
 
 Install MCF directly:
 
-```bash
+``` bash
 composer require mcf/laravel
 ```
 
 Then run:
 
-```bash
+``` bash
 php artisan mcf:install
 ```
 
-MCF uses the stable Composer package for normal installation. No development branch is required.
+MCF uses the stable Composer package for normal installation. No
+development branch is required.
 
 ## Run the MCF Installer
 
 The installer prepares the MCF application structure:
 
-```bash
+``` bash
 php artisan mcf:install
 ```
 
@@ -165,31 +217,73 @@ Installation is intended to run once per Laravel project.
 
 MCF uses an installation marker:
 
-```text
+``` text
 app/MCF/.mcf-installed
 ```
 
-A project that already contains the MCF installation marker should not be installed again.
+A project that already contains the MCF installation marker should not
+be installed again.
 
-## Database Setup
+# 
 
-After installation, configure the project's database connection in `.env`.
+# Using MCF APIs in Blade
+
+MCF exposes its main authentication and access APIs directly to Blade.
+
+No `use` statement or manual class definition is required.
+
+``` blade
+@if (McfAuth::check())
+    {{ McfAuth::user()->name }}
+@endif
+
+@if (McfAccess::can('users.view'))
+    <a href="{{ route('users.index') }}">
+        {{ __('Users') }}
+    </a>
+@endif
+```
+
+For MCF Views, prefer:
+
+``` blade
+McfAuth::check()
+McfAuth::user()
+McfAuth::id()
+
+McfAccess::can('permission')
+```
+
+over direct Laravel authentication or authorization calls.
+
+The purpose is to keep Views dependent on the MCF public API rather than
+on internal authentication/access implementation details.
+
+# Database Setup
+
+After installation, configure the project\'s database connection in
+`.env`.
 
 Then run:
 
-```bash
+``` bash
 php artisan migrate --seed
 ```
 
-The exact database requirements depend on the MCF components being used.
+Laravel\'s core database foundation is required. MCF feature migrations
+are optional according to the features used by the project, although
+running the provided migrations initially is recommended for learning
+and customization.
 
-Mail configuration is optional unless the application uses email features such as authentication emails, notifications, or other mail delivery.
+Mail configuration is optional unless the application uses email
+features such as authentication emails, notifications, or other mail
+delivery.
 
 ## Installation Result
 
 After installation, the main MCF root is:
 
-```text
+``` text
 app/
 └── MCF/
     ├── AccessControl/
@@ -211,11 +305,36 @@ app/
 
 The installed MCF documentation is available under:
 
-```text
+``` text
 app/MCF/z_Guide
 ```
 
----
+------------------------------------------------------------------------
+
+# Important Framework Rule
+
+The `app/MCF` directory is the installed MCF framework and application
+foundation.
+
+**Do not delete MCF classes, framework directories, or Module/Workflow
+files simply because a particular feature is not currently used.**
+
+MCF components are connected and some framework classes may be used
+indirectly by other components.
+
+The recommended approach is:
+
+``` text
+Keep
+Configure
+Enable when needed
+Disable when not needed
+Customize through the provided settings
+```
+
+Feature usage is optional where the architecture allows it, but the MCF
+framework structure should remain intact. If a component is not needed,
+configure or disable it instead of deleting its classes.
 
 # What is MCF?
 
@@ -247,6 +366,55 @@ MCF focuses on:
     developers to remove framework directories.
 
 ------------------------------------------------------------------------
+
+# MCF Example Application
+
+The installed MCF structure also contains a small example application.
+It demonstrates how MCF Modules, Workflows, and framework components are
+intended to work together.
+
+The example structure includes:
+
+``` text
+Modules/
+├── Shared/
+│   ├── Layout/
+│   ├── RealtimeTest/
+│   └── StorageTest/
+│
+└── User/
+    ├── Auth/
+    ├── Profile/
+    └── UserManagement/
+```
+
+These are intentionally simple examples and test-oriented Workflows.
+They are useful for:
+
+1.  **Learning** how MCF Modules and Workflows are structured.
+2.  **Customizing** the patterns for a real project.
+
+The examples demonstrate or exercise framework features such as:
+
+``` text
+Authentication
+Access Control
+Audit
+Notification
+Storage
+Realtime
+Mail
+Queue / Jobs
+Language
+Results
+Middleware
+```
+
+The example Workflows are part of the MCF installation and should not be
+treated as disposable framework files. In particular, the shared
+`Layout` Workflow is useful because it provides the reusable
+presentation structure used by the framework\'s View/Workflow generation
+approach.
 
 # Architecture at a Glance
 
@@ -314,10 +482,10 @@ The MCF root is intentionally broader than `Modules`.
 
 It contains:
 
-1.  **Framework Components** --- reusable application infrastructure.
-2.  **Modules** --- application feature organization.
-3.  **Documentation** --- the installed MCF Guide.
-4.  **Integration Files** --- files that connect MCF to Laravel.
+1.  **Framework Components** \-\-- reusable application infrastructure.
+2.  **Modules** \-\-- application feature organization.
+3.  **Documentation** \-\-- the installed MCF Guide.
+4.  **Integration Files** \-\-- files that connect MCF to Laravel.
 
 ------------------------------------------------------------------------
 
@@ -429,7 +597,7 @@ responsibility.
 
 ------------------------------------------------------------------------
 
-## 1. Base
+## 1. Base {#1-base}
 
 `Base` is the mandatory foundation of MCF.
 
@@ -462,14 +630,14 @@ class UserController extends MfcController
 }
 ```
 
-It currently extends Laravel's Controller and gives MCF a single base
+It currently extends Laravel\'s Controller and gives MCF a single base
 point for future framework behavior.
 
 ### MfcRequest
 
 Provides the common base for MCF Form Requests.
 
-It extends Laravel's `FormRequest`.
+It extends Laravel\'s `FormRequest`.
 
 MCF Requests can optionally define a Data class:
 
@@ -509,9 +677,9 @@ operation used to convert Data objects into Eloquent Models.
 
 ------------------------------------------------------------------------
 
-## 2. Authentication
+## 2. Authentication {#2-authentication}
 
-MCF Authentication is a structured layer on top of Laravel's native
+MCF Authentication is a structured layer on top of Laravel\'s native
 authentication system.
 
 It does not replace Laravel Auth.
@@ -571,7 +739,7 @@ if ($result->is(AuthenticationResult::SUCCESS)) {
 
 ------------------------------------------------------------------------
 
-## 3. Access Control
+## 3. Access Control {#3-access-control}
 
 MCF Access Control separates two concerns:
 
@@ -664,7 +832,7 @@ The important rule is:
 
 ------------------------------------------------------------------------
 
-## 4. Audit
+## 4. Audit {#4-audit}
 
 MCF Audit provides structured audit logging for important operations.
 
@@ -727,7 +895,7 @@ audit_logs
 
 ------------------------------------------------------------------------
 
-## 5. Language
+## 5. Language {#5-language}
 
 MCF Language provides one centralized translation layer.
 
@@ -736,7 +904,7 @@ The main rules are:
 -   one JSON file per language;
 -   files live in the MCF Language directory;
 -   MCF automatically discovers and loads them;
--   Laravel's translation system remains the underlying system;
+-   Laravel\'s translation system remains the underlying system;
 -   the original text is used as the translation key;
 -   optional Section Markers can organize large files.
 
@@ -780,7 +948,7 @@ keys.
 
 ------------------------------------------------------------------------
 
-## 6. Mail
+## 6. Mail {#6-mail}
 
 MCF Mail is a lightweight wrapper around Laravel Mail.
 
@@ -828,14 +996,14 @@ McfMail::later(
 );
 ```
 
-MCF does not recreate Laravel's Mailable system. Mail content remains
+MCF does not recreate Laravel\'s Mailable system. Mail content remains
 inside Laravel `Mailable` classes.
 
 ------------------------------------------------------------------------
 
-## 7. Notification
+## 7. Notification {#7-notification}
 
-MCF Notification wraps Laravel's native Notification system.
+MCF Notification wraps Laravel\'s native Notification system.
 
 The goal is a unified MCF API without replacing Laravel Notifications.
 
@@ -863,14 +1031,14 @@ Example:
 $notification = NotificationData::passwordUpdated();
 ```
 
-The User model should use Laravel's native:
+The User model should use Laravel\'s native:
 
 ``` php
 use Illuminate\Notifications\Notifiable;
 ```
 
-MCF uses Laravel's standard `notifications` table rather than creating a
-separate notification table.
+MCF uses Laravel\'s standard `notifications` table rather than creating
+a separate notification table.
 
 Stored notifications remain accessible through Laravel relationships:
 
@@ -880,11 +1048,79 @@ $user->unreadNotifications;
 $user->readNotifications;
 ```
 
-This keeps MCF compatible with Laravel's notification infrastructure.
+This keeps MCF compatible with Laravel\'s notification infrastructure.
 
 ------------------------------------------------------------------------
 
-## 8. SMS
+## 12. Realtime {#12-realtime}
+
+MCF Realtime provides a simple application-level realtime API without
+requiring developers to implement polling logic in every Blade View.
+
+The default implementation uses AJAX polling through an MCF-managed
+JavaScript runtime.
+
+The application developer uses:
+
+``` javascript
+MCF.realtime('notifications', {
+    onUpdate: function (state) {
+        // Update the UI with the received state.
+    }
+});
+```
+
+The runtime handles:
+
+``` text
+Polling
+Request scheduling
+Duplicate channel handling
+Error retry backoff
+Visibility handling
+State change detection
+```
+
+The default polling interval is:
+
+``` text
+15000 ms
+```
+
+The developer can override it when necessary:
+
+``` javascript
+MCF.realtime('notifications', {
+    interval: 5000,
+
+    onUpdate: function (state) {
+        // ...
+    }
+});
+```
+
+The interval is optional; MCF provides the default automatically.
+
+A Realtime Channel is registered by the MCF framework and exposes a
+state for a named channel.
+
+The Blade View should not implement its own `setInterval`, fetch loop,
+retry logic, or connection management for an MCF Realtime channel.
+
+MCF owns the runtime behavior while the View owns presentation.
+
+``` text
+MCF.realtime(channel, options)
+        ↓
+      state
+        ↓
+    Blade / UI
+```
+
+Realtime is designed to remain simple for application developers and
+does not require the runtime to be manually included in every View.
+
+## 8. SMS {#8-sms}
 
 MCF SMS separates application logic from the SMS provider.
 
@@ -926,7 +1162,7 @@ This is the core benefit of the Provider abstraction.
 
 ------------------------------------------------------------------------
 
-## 9. Storage
+## 9. Storage {#9-storage}
 
 MCF Storage provides a provider-independent file storage abstraction for
 application features.
@@ -947,7 +1183,7 @@ StorageRegistry
 StorageProvider
 ```
 
-### 11. Storage Architecture
+### 11. Storage Architecture {#11-storage-architecture}
 
 ``` text
 Application
@@ -971,7 +1207,7 @@ The `StorageProvider` performs the physical storage operations.
 
 The physical file is not stored in the registry.
 
-### 11. StorageReference
+### 11. StorageReference {#11-storagereference}
 
 `StorageReference` is the internal identity of a stored file.
 
@@ -990,7 +1226,7 @@ Storage reference:
 The original filename remains part of the storage record and is used for
 user-facing downloads.
 
-### 11. StorageRecord
+### 11. StorageRecord {#11-storagerecord}
 
 `StorageRecord` represents the MCF registry information for one stored
 file.
@@ -1018,10 +1254,10 @@ A single record can be retrieved with:
 $result = McfStorage::find($reference);
 ```
 
-Bulk workflows should use the registry's bulk lookup capability where
+Bulk workflows should use the registry\'s bulk lookup capability where
 appropriate instead of repeatedly querying one reference at a time.
 
-### 11. StorageRegistry
+### 11. StorageRegistry {#11-storageregistry}
 
 `StorageRegistry` is responsible for storing and retrieving MCF storage
 records.
@@ -1047,7 +1283,7 @@ $registry->exists($reference);
 The registry represents metadata and storage identity. It does not
 replace the physical storage provider.
 
-### 11. StorageProvider
+### 11. StorageProvider {#11-storageprovider}
 
 `StorageProvider` is the contract implemented by a physical storage
 backend.
@@ -1104,7 +1340,7 @@ This allows different files to use different storage backends while the
 application continues to use the same MCF Storage API.
 
 Adding another provider requires implementing the `StorageProvider`
-contract and registering the provider with MCF's provider resolution
+contract and registering the provider with MCF\'s provider resolution
 mechanism.
 
 Application-level storage calls do not need to change.
@@ -1302,7 +1538,7 @@ Bulk operations return:
 McfStorageMultiResult
 ```
 
-This keeps Storage consistent with MCF's Result architecture.
+This keeps Storage consistent with MCF\'s Result architecture.
 
 #### Provider Independence
 
@@ -1330,7 +1566,7 @@ Workflow / Service
 This allows the physical storage backend to change without rewriting
 application features.
 
-## 10. Middleware
+## 10. Middleware {#10-middleware}
 
 MCF provides framework-level Middleware:
 
@@ -1354,7 +1590,8 @@ Handles Session Security integration.
 Sets the Locale used during the request and integrates with MCF
 Language.
 
-The Middleware are integrated through Laravel's Bootstrap configuration.
+The Middleware are integrated through Laravel\'s Bootstrap
+configuration.
 
 Their usage is configurable.
 
@@ -1373,7 +1610,7 @@ currently using the related feature.
 
 ------------------------------------------------------------------------
 
-## 11. Result
+## 11. Result {#11-result}
 
 MCF Result provides an optional pattern for standardized operation
 results.
@@ -1432,7 +1669,7 @@ standardized operation states improve clarity.
 
 # Database
 
-MCF deliberately follows Laravel's standard database architecture.
+MCF deliberately follows Laravel\'s standard database architecture.
 
 Migrations remain in:
 
@@ -1473,7 +1710,7 @@ Model and database structure must remain compatible with that component.
 
 ### Database Principle
 
-MCF does not attempt to replace Laravel's database layer.
+MCF does not attempt to replace Laravel\'s database layer.
 
 ``` text
 Laravel Database
@@ -1486,6 +1723,44 @@ Modules / Workflows
 The database remains part of the normal Laravel application.
 
 ------------------------------------------------------------------------
+
+## Database Usage in MCF Projects
+
+The database setup is intentionally flexible.
+
+Laravel\'s core database foundation is required. MCF feature migrations
+are optional according to the features used by the project.
+
+For a new project, it is recommended to run the provided migrations
+first so the intended MCF data model can be understood:
+
+``` bash
+php artisan migrate --seed
+```
+
+After that, the project can customize its migrations and tables to match
+its own requirements.
+
+### User Table Customization
+
+The User model and its database schema are important to MCF
+Authentication.
+
+If you remove or rename a User column used by MCF Authentication, you
+must also update the related Authentication/User Settings configuration
+and any dependent code.
+
+Keep these layers consistent:
+
+``` text
+Database schema
+      ↕
+User Model
+      ↕
+McfAuth / User Settings
+      ↕
+Application
+```
 
 # Routes
 
@@ -1537,7 +1812,7 @@ require_once __DIR__
 ```
 
 The main Route file is therefore a collector, not a place to put every
-application's Route definition.
+application\'s Route definition.
 
 This keeps Routes close to the Workflow that owns them.
 
@@ -1547,7 +1822,7 @@ This keeps Routes close to the Workflow that owns them.
 
 MCF does not create a separate Resource or Public file system.
 
-Laravel's standard locations remain authoritative:
+Laravel\'s standard locations remain authoritative:
 
 ``` text
 resources/
@@ -1577,7 +1852,7 @@ public/
 This is intentional.
 
 MCF organizes application architecture without unnecessarily changing
-Laravel's standard resource conventions.
+Laravel\'s standard resource conventions.
 
 ------------------------------------------------------------------------
 
@@ -1721,11 +1996,12 @@ the old shared Workflow Request structure.
 
 # MCF CLI
 
-All MCF Artisan commands use the `mcf:` prefix so they remain clearly distinguishable from Laravel's native commands.
+All MCF Artisan commands use the `mcf:` prefix so they remain clearly
+distinguishable from Laravel\'s native commands.
 
 Current commands:
 
-```text
+``` text
 mcf:install
 mcf:make:module
 mcf:make:workflow
@@ -1741,7 +2017,7 @@ mcf:make:mail
 
 ## Installation
 
-```bash
+``` bash
 php artisan mcf:install
 ```
 
@@ -1749,7 +2025,7 @@ Prepares the MCF application structure.
 
 ## Module
 
-```bash
+``` bash
 php artisan mcf:make:module
 ```
 
@@ -1757,7 +2033,7 @@ Creates a top-level application Module.
 
 ## Standard Workflow
 
-```bash
+``` bash
 php artisan mcf:make:workflow
 ```
 
@@ -1765,7 +2041,7 @@ Creates a standard Workflow inside an existing Module.
 
 Typical structure:
 
-```text
+``` text
 User/Profile/
 ├── Backend/
 ├── Lang/
@@ -1774,13 +2050,13 @@ User/Profile/
 
 ## CRUD Workflow
 
-```bash
+``` bash
 php artisan mcf:make:workflow:crud
 ```
 
 Use this for resource-oriented features such as:
 
-```text
+``` text
 Products
 Customers
 Employees
@@ -1789,7 +2065,7 @@ Categories
 
 ## Layout Workflow
 
-```bash
+``` bash
 php artisan mcf:make:workflow:layout
 ```
 
@@ -1799,7 +2075,7 @@ The initial MCF installation includes a shared Layout Workflow.
 
 ## Request
 
-```bash
+``` bash
 php artisan mcf:make:request User Auth Login
 ```
 
@@ -1807,7 +2083,7 @@ Creates an independent Request inside the selected Workflow.
 
 ## Endpoint
 
-```bash
+``` bash
 php artisan mcf:endpoint:create
 ```
 
@@ -1815,7 +2091,7 @@ Creates a complete Endpoint structure interactively.
 
 ## Remove Endpoint
 
-```bash
+``` bash
 php artisan mcf:endpoint:remove
 ```
 
@@ -1823,36 +2099,36 @@ Removes an Endpoint from its Workflow structure.
 
 ## Remove Workflow
 
-```bash
+``` bash
 php artisan mcf:remove:workflow
 ```
 
 Removes an existing Workflow.
 
-## Middleware
+## Middleware {#middleware}
 
-```bash
+``` bash
 php artisan mcf:make:middleware
 ```
 
-Creates MCF Middleware using the framework's conventions.
+Creates MCF Middleware using the framework\'s conventions.
 
-## Mail
+## Mail {#mail}
 
-```bash
+``` bash
 php artisan mcf:make:mail
 ```
 
 Creates an MCF Mail class following the framework structure.
 
----
+------------------------------------------------------------------------
 
 # What Developers Should and Should Not Change
 
 MCF is intended to provide conventions, not to take ownership of the
 entire Laravel application.
 
-## Keep Laravel's standard locations
+## Keep Laravel\'s standard locations
 
 Keep these in their normal Laravel locations:
 
@@ -1889,6 +2165,16 @@ them.
 Before removing an optional MCF migration, Model, or component, confirm
 that the related feature is not being used and that no other component
 depends on it.
+
+### MCF Modules Are Framework Assets
+
+The directories under `app/MCF` are part of the framework installation.
+Do not remove classes from a Module or framework component simply
+because the project is not currently using that feature.
+
+The example Modules/Workflows are intentionally lightweight and can be
+customized. Their purpose is to make the framework easier to learn and
+to provide working structural references.
 
 ## Modules and Workflows
 
@@ -1989,7 +2275,7 @@ MCF adds organization, conventions, wrappers, and framework-level
 abstractions where they provide value.
 
 For file storage, MCF Storage adds a provider-independent abstraction
-and registry/reference layer on top of Laravel's underlying storage
+and registry/reference layer on top of Laravel\'s underlying storage
 capabilities; it does not replace Laravel Filesystem.
 
 ## Feature-Oriented Architecture
@@ -2058,7 +2344,7 @@ Requests
 Views
 ```
 
-consistent with the framework's conventions.
+consistent with the framework\'s conventions.
 
 ## Predictability
 
@@ -2096,7 +2382,8 @@ MCF can be understood as four connected layers:
 │                                             │
 │ Base · Authentication · Access · Audit      │
 │ Language · Mail · Notification · SMS        │
-│ Middleware · Result                         │
+│ Realtime · Queue / Jobs · Middleware        │
+│ Result                                      │
 └──────────────────────┬──────────────────────┘
                        │
                        ▼
@@ -2118,7 +2405,7 @@ MCF can be understood as four connected layers:
 └─────────────────────────────────────────────┘
 ```
 
-**MCF's purpose is not to replace Laravel. Its purpose is to make a
+**MCF\'s purpose is not to replace Laravel. Its purpose is to make a
 Laravel application easier to structure, extend, and maintain as the
 application grows.**
 

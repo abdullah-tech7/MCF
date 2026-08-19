@@ -347,5 +347,25 @@
     "The user deleted their own account.": "قام المستخدم بحذف حسابه.",
     "The user account was deleted by an authorized actor.": "تم حذف حساب المستخدم بواسطة مستخدم موثق.",
     "The user restored their own account.": "قام المستخدم باستعادة حسابه.",
-    "The user account was restored by an authorized actor.": "تمت استعادة حساب المستخدم بواسطة مستخدم موثق."
+    "The user account was restored by an authorized actor.": "تمت استعادة حساب المستخدم بواسطة مستخدم موثق.",
+
+    "--- Shared ---": "----------------------------------------",
+     "Realtime Test": "اختبار الوقت الحقيقي",
+    "Unread": "غير مقروء",
+    "Add Random Notification": "إضافة تنبيه عشوائي",
+    "Mark All As Read": "وضع الكل كمقروء",
+    "Delete All": "حذف الكل",
+    "Mark Selected As Read": "وضع المحدد كمقروء",
+    "Selected": "المحدد",
+    "Title": "العنوان",
+    "Message": "الرسالة",
+    "Date": "التاريخ",
+    "Open": "فتح",
+    "Mark As Read": "وضع كمقروء",
+    "No unread notifications.": "لا توجد تنبيهات غير مقروءة.",
+    "Go to realtime list":"اذهب الى اختبار الليست اللحظية",
+    "Mark All As Unread":"وضع الكل ك غير مقروء"
+
+
+
 }

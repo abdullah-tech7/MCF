@@ -6,6 +6,7 @@ namespace MCF;
 
 use App\MCF\Audit\AuditSettings;
 use App\MCF\Audit\Internal\AuditObserver;
+use App\MCF\Realtime\RealtimeChannel;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -20,13 +21,11 @@ use MCF\Commands\MakeWorkflowCrudCommand;
 use MCF\Commands\MakeWorkflowLayoutCommand;
 use MCF\Commands\RemoveEndpointCommand;
 use MCF\Commands\RemoveWorkflowCommand;
+use MCF\Queue\McfQueueListener;
 use MCF\Support\MCFFileLoader;
 use MCF\Support\MCFViewFinder;
 use MCF\Support\Path;
 use MCF\Support\TranslationLoader;
-use MCF\Queue\McfQueueListener;
-use App\MCF\Realtime\RealtimeChannel;
-
 
 class MCFServiceProvider extends ServiceProvider
 {
@@ -35,6 +34,16 @@ class MCFServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(
             __DIR__ . '/../config/mcf.php',
             'mcf',
+        );
+
+        class_alias(
+            \App\MCF\Authentication\McfAuth::class,
+            'McfAuth',
+        );
+
+        class_alias(
+            \App\MCF\AccessControl\McfAccess::class,
+            'McfAccess',
         );
 
         $this->app->extend(
@@ -73,10 +82,8 @@ class MCFServiceProvider extends ServiceProvider
     public function boot(): void
     {
 
-
-      McfQueueListener::register();
-      RealtimeChannel::register();
-     
+        McfQueueListener::register();
+        RealtimeChannel::register();
 
         $filesystem = new Filesystem();
 

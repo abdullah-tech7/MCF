@@ -13,29 +13,181 @@ layer that makes email usage easier inside Workflows and modules.
 
 # Core Concept
 
-Instead of calling Laravel Mail directly everywhere:
+MCF provides one stable entry point for email delivery:
 
-``` php
-Mail::to($to)->send($mail);
-```
-
-MCF provides:
-
-``` php
+```php
 McfMail::send($to, $mail);
 ```
 
-This gives the framework a consistent entry point for email delivery.
+The important design decision is that **`send()` is the default MCF
+delivery entry point**, while its implementation is controlled centrally
+inside `McfMail`.
 
-Internally, the module uses Laravel Mail:
+The current default is queued delivery:
 
-``` php
-Mail::to($to)->send($mail);
+```php
+public static function send(
+    string $to,
+    Mailable $mail,
+): void {
+    self::queued(
+        $to,
+        $mail,
+    );
+}
 ```
 
-It does not recreate Laravel’s mail system.
+Therefore:
 
-------------------------------------------------------------------------
+```text
+McfMail::send()
+        ↓
+McfMail::queued()
+        ↓
+Laravel Mail Queue
+```
+
+This makes the delivery strategy dynamic without changing every caller
+throughout the framework.
+
+---
+
+# Dynamic `send()` Behavior
+
+The framework uses:
+
+```php
+McfMail::send(...)
+```
+
+as its normal email API.
+
+If the queue mechanism does not work or is not suitable for a particular
+deployment, the developer does **not** need to search the entire project
+and replace every occurrence of:
+
+```php
+McfMail::send(...)
+```
+
+The developer changes the implementation of `send()` in **one place**.
+
+Queued:
+
+```php
+public static function send(
+    string $to,
+    Mailable $mail,
+): void {
+    self::queued(
+        $to,
+        $mail,
+    );
+}
+```
+
+Direct:
+
+```php
+public static function send(
+    string $to,
+    Mailable $mail,
+): void {
+    self::direct(
+        $to,
+        $mail,
+    );
+}
+```
+
+All existing calls remain:
+
+```php
+McfMail::send(...)
+```
+
+This is intentional.
+
+```text
+Many framework calls
+        ↓
+McfMail::send()
+        ↓
+ONE implementation point
+        ↓
+Queued OR Direct
+```
+
+This keeps the framework API stable while allowing the delivery strategy
+to change centrally.
+
+---
+
+# Important: Configure Mail First
+
+Before using or testing MCF Mail, Laravel's mail configuration must be
+valid.
+
+MCF does not replace Laravel's mail configuration.
+
+The application must configure the required mail environment values,
+for example:
+
+```text
+MAIL_MAILER
+MAIL_HOST
+MAIL_PORT
+MAIL_USERNAME
+MAIL_PASSWORD
+MAIL_ENCRYPTION
+MAIL_FROM_ADDRESS
+MAIL_FROM_NAME
+```
+
+The exact values depend on the mail provider.
+
+After changing environment or mail configuration, clear Laravel's
+cached configuration when necessary:
+
+```bash
+php artisan optimize:clear
+```
+
+The first test should confirm that Laravel itself can send email.
+
+MCF Mail is a layer on top of Laravel Mail. If Laravel mail configuration
+is incorrect, MCF Mail cannot deliver the email correctly.
+
+---
+
+# Queue Integration
+
+When `send()` uses its default queued implementation:
+
+```text
+McfMail::send()
+        ↓
+McfMail::queued()
+        ↓
+Laravel Mail Queue
+        ↓
+jobs table
+        ↓
+MCF Queue Listener
+        ↓
+Background Process
+        ↓
+queue:work --once
+```
+
+The `jobs` table and automatic background processing are documented in:
+
+```text
+MCF_QUEUE.md
+```
+
+Read that document when investigating queue behavior, job storage, or
+background processing.
 
 # MCF Mail Service
 
@@ -52,14 +204,24 @@ final class McfMail
         string $to,
         Mailable $mail,
     ): void {
-        Mail::to($to)->send($mail);
+        self::queued(
+            $to,
+            $mail,
+        );
     }
 
-    public static function queue(
+    public static function queued(
         string $to,
         Mailable $mail,
     ): void {
         Mail::to($to)->queue($mail);
+    }
+
+    public static function direct(
+        string $to,
+        Mailable $mail,
+    ): void {
+        Mail::to($to)->send($mail);
     }
 
     public static function later(
@@ -73,56 +235,66 @@ final class McfMail
 }
 ```
 
-It provides three basic operations:
+It provides the main delivery operations:
 
-``` text
+```text
 send
-queue
+queued
+direct
 later
 ```
+
+`send()` is the stable default entry point. The actual strategy can be
+changed centrally between queued and direct delivery.
 
 ------------------------------------------------------------------------
 
 # send
 
-To send an email immediately:
+`send()` is the main MCF email API:
 
-``` php
+```php
 McfMail::send(
     $user->email,
     new VerifyEmailLinkMail($user),
 );
 ```
 
-Use this when the email should be sent during the current operation.
+By default, `send()` uses queued delivery.
 
-Internally:
-
-``` php
-Mail::to($to)->send($mail);
+```text
+send()
+  ↓
+queued()
+  ↓
+Laravel Queue
 ```
+
+If the queue is unsuitable for a deployment, change `send()` centrally
+to call `direct()` instead. Existing calls throughout the framework do
+not need to be changed.
 
 ------------------------------------------------------------------------
 
-# queue
+# queued
 
-To queue an email:
+To explicitly request queued delivery:
 
-``` php
-McfMail::queue(
+```php
+McfMail::queued(
     $user->email,
     new VerifyEmailCodeMail($user),
 );
 ```
 
-This is useful when the current Request should not wait for the complete
-email delivery operation.
-
 Internally:
 
-``` php
+```php
 Mail::to($to)->queue($mail);
 ```
+
+The job is stored in Laravel's `jobs` table and processed by the MCF
+Queue integration.
 
 ------------------------------------------------------------------------
 
@@ -405,11 +577,16 @@ channels.
 
 # Rules
 
-1.  `McfMail` is a wrapper around Laravel Mail.
-2.  It does not rebuild Laravel’s mail system.
-3.  `send` is for immediate delivery.
-4.  `queue` is for queued delivery.
-5.  `later` is for delayed delivery.
+1. `McfMail` is a wrapper around Laravel Mail.
+2. It does not rebuild Laravel's mail system.
+3. `send()` is the stable default MCF entry point.
+4. `send()` currently defaults to queued delivery.
+5. `queued()` explicitly requests Laravel Queue.
+6. `direct()` explicitly requests synchronous delivery.
+7. `later()` is for delayed queued delivery.
+8. If queue processing is unsuitable for a deployment, change the
+   implementation of `send()` in one place instead of modifying every
+   caller.
 6.  Mailables remain Laravel `Mailable` classes.
 7.  Organizing Mailables by Module or Workflow is recommended, not
     mandatory.
@@ -439,3 +616,27 @@ Mail Transport
 This keeps the Mail module small and clear. It does not compete with
 Laravel; it provides an organized convenience layer over an existing
 Laravel service.
+
+
+---
+
+# Recommended Default
+
+For MCF framework code and normal application workflows, prefer:
+
+```php
+McfMail::send(...)
+```
+
+The default strategy is queue-based.
+
+This keeps email delivery separate from the HTTP request and allows the
+MCF Queue layer to process the job independently.
+
+If the deployment cannot use the MCF automatic queue mechanism, change
+only the implementation of `send()` to use `direct()`.
+
+Do not replace every `McfMail::send()` call throughout the project.
+
+The purpose of the abstraction is specifically to avoid that maintenance
+cost.

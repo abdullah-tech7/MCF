@@ -18,6 +18,7 @@ return Application::configure(
                 'setlocale' => \App\MCF\Middleware\SetLocaleMiddleware::class,
                 'session.security' => \App\MCF\Middleware\McfSessionSecurityMiddleware::class,
                 'access' => \App\MCF\Middleware\McfAccessMiddleware::class,
+                'realtime' => \App\MCF\Middleware\McfRealtimeMiddleware::class,
             ]);
         },
     )

@@ -283,6 +283,10 @@
             {{ __('Update Password') }}
         </a>
 
+              <a href="{{ route('shared.realtimeTest.index') }}">
+            {{ __('Go to realtime list') }}
+        </a>
+
         <form
             method="POST"
             action="{{ route('user.auth.logout') }}"

@@ -103,4 +103,101 @@ final class McfNotificationCenter
     {
         $this->user->notifications()->delete();
     }
+
+    /**
+ * Mark one notification as unread.
+ *
+ * @throws LogicException
+ */
+public function markAsUnread(
+    string $notificationId,
+): void {
+    $notification = $this->find(
+        notificationId: $notificationId,
+    );
+
+    if ($notification === null) {
+        throw new LogicException(
+            sprintf(
+                'Notification "%s" was not found.',
+                $notificationId,
+            ),
+        );
+    }
+
+    $notification->update([
+        'read_at' => null,
+    ]);
+}
+
+/**
+ * Mark all notifications as unread.
+ */
+public function markAllAsUnread(): void
+{
+    $this->user
+        ->notifications()
+        ->update([
+            'read_at' => null,
+        ]);
+}
+
+    /**
+     * Get the realtime read state.
+     *
+     * Returns a transport-safe array that can be
+     * sent directly to a realtime client.
+     *
+     * @return array{
+     *     count: int,
+     *     notifications: array<int, array{
+     *         id: string,
+     *         title: string|null,
+     *         message: string,
+     *         url: string|null,
+     *         created_at: string|null
+     *     }>
+     * }**/
+
+  public function readState(): array
+{
+    return [
+        'count' => $this->count(),
+
+        'notifications' => $this->user
+            ->unreadNotifications()
+            ->get()
+            ->map(
+                static function (
+                    DatabaseNotification $notification,
+                ): array {
+                    $data = is_array($notification->data)
+                        ? $notification->data
+                        : [];
+
+                    return [
+                        'id' => (string) $notification->id,
+
+                        'title' => isset($data['title'])
+                            ? (string) $data['title']
+                            : null,
+
+                        'message' => isset($data['message'])
+                            ? (string) $data['message']
+                            : '',
+
+                        'url' => isset($data['url'])
+                            ? (string) $data['url']
+                            : null,
+
+                        'created_at' => $notification
+                            ->created_at
+                            ?->toISOString(),
+                    ];
+                },
+            )
+            ->values()
+            ->all(),
+    ];
+}
 }

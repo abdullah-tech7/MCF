@@ -264,7 +264,7 @@ final class InstallGenerator
 
         $files = [
             'bootstrap/app.php',
-            'config/mcf.php',
+            'config/filesystems.php',
             'config/mail.php',
         ];
 
