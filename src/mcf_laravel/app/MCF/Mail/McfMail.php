@@ -18,11 +18,30 @@ final class McfMail
     | Send
     |--------------------------------------------------------------------------
     |
-    | Queued email delivery.
+    | Default email delivery.
+    |
+    | Change the implementation here if the framework/application
+    | needs to switch between queued and direct delivery.
     |
     */
 
     public static function send(
+        string $to,
+        Mailable $mail,
+    ): void {
+        self::queued(
+            $to,
+            $mail,
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Queued
+    |--------------------------------------------------------------------------
+    */
+
+    public static function queued(
         string $to,
         Mailable $mail,
     ): void {
@@ -33,9 +52,6 @@ final class McfMail
     |--------------------------------------------------------------------------
     | Direct
     |--------------------------------------------------------------------------
-    |
-    | Sends the email immediately without using the queue.
-    |
     */
 
     public static function direct(
@@ -49,9 +65,6 @@ final class McfMail
     |--------------------------------------------------------------------------
     | Later
     |--------------------------------------------------------------------------
-    |
-    | Queued email delivery with a delay in seconds.
-    |
     */
 
     public static function later(
@@ -59,6 +72,9 @@ final class McfMail
         string $to,
         Mailable $mail,
     ): void {
-        Mail::to($to)->later($delay, $mail);
+        Mail::to($to)->later(
+            $delay,
+            $mail,
+        );
     }
 }

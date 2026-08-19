@@ -25,6 +25,8 @@ use MCF\Support\MCFViewFinder;
 use MCF\Support\Path;
 use MCF\Support\TranslationLoader;
 use MCF\Queue\McfQueueListener;
+use App\MCF\Realtime\Internal\RealtimeBlade;
+use App\MCF\Realtime\RealtimeChannel;
 
 
 class MCFServiceProvider extends ServiceProvider
@@ -74,6 +76,8 @@ class MCFServiceProvider extends ServiceProvider
 
 
       McfQueueListener::register();
+      RealtimeChannel::register();
+      RealtimeBlade::register();
 
         $filesystem = new Filesystem();
 

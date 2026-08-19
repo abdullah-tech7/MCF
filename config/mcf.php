@@ -22,6 +22,11 @@ return [
         'middleware' => app_path('MCF/Middleware'),
         'notifications' => app_path('MCF/Notifications'),
         'rules' => app_path('MCF/Rules'),
+        
+       'queue' => [
+       'auto' => true,
+       'max_processes' => 4,
+        ],
 
     ],
 

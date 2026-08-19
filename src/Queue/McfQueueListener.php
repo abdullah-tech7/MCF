@@ -18,11 +18,9 @@ final class McfQueueListener
         Event::listen(
             JobQueued::class,
             static function (): void {
-                logger()->info('MCF LISTENER BEFORE');
 
                 McfQueueProcess::start();
 
-                logger()->info('MCF LISTENER AFTER');
             },
         );
     }
