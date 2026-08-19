@@ -6,7 +6,6 @@ namespace MCF;
 
 use App\MCF\Audit\AuditSettings;
 use App\MCF\Audit\Internal\AuditObserver;
-use App\MCF\Realtime\RealtimeChannel;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -75,8 +74,13 @@ class MCFServiceProvider extends ServiceProvider
     {
 
         McfQueueListener::register();
-        RealtimeChannel::register();
-
+        if (
+            class_exists(
+                \App\MCF\Realtime\RealtimeChannel::class
+            )
+        ) {
+            \App\MCF\Realtime\RealtimeChannel::register();
+        }
         $filesystem = new Filesystem();
 
         /*
