@@ -1,4 +1,4 @@
-# MCF Laravel --- Modular Control Framework {#mcf-laravel--modular-control-framework}
+# MCF Laravel
 
 **MCF (Modular Code Framework)** is a feature-oriented application
 architecture built on top of Laravel.
