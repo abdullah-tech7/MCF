@@ -5,6 +5,7 @@ namespace {{ ControllerNamespace }};
 use App\MCF\Base\MfcController;
 use Illuminate\Contracts\View\View;
 
+
 class {{ WorkflowName }}Controller extends MfcController
 {
     public function index(): View
@@ -17,7 +18,7 @@ class {{ WorkflowName }}Controller extends MfcController
         return view('{{ ModuleName }}::{{ WorkflowName }}.create');
     }
 
-    public function store({{ WorkflowName }}Request $request): RedirectResponse
+    public function store(StoreRequest $request): RedirectResponse
     {
         //
     }
@@ -32,12 +33,12 @@ class {{ WorkflowName }}Controller extends MfcController
         return view('{{ ModuleName }}::{{ WorkflowName }}.edit');
     }
 
-    public function update({{ WorkflowName }}Request $request, int $id): RedirectResponse
+    public function update(UpdateRequest $request, int $id): RedirectResponse
     {
         //
     }
 
-    public function destroy(int $id): RedirectResponse
+    public function delete(int $id): RedirectResponse
     {
         //
     }

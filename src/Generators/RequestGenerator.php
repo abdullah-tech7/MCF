@@ -117,9 +117,7 @@ final class RequestGenerator
         }
 
         return ucfirst(
-            strtolower(
                 $requestName,
-            ),
         );
     }
 

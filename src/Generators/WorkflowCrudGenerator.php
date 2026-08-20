@@ -1,13 +1,16 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types = 1);
 
 namespace MCF\Generators;
 
+use Illuminate\Filesystem\Filesystem;
+use MCF\Generators\RequestGenerator;
 use RuntimeException;
 
 class WorkflowCrudGenerator extends WorkflowGenerator
 {
+
     public function generate(string $moduleName, string $workflowName): void
     {
         $modulePath = app_path("MCF/Modules/{$moduleName}");
@@ -24,6 +27,8 @@ class WorkflowCrudGenerator extends WorkflowGenerator
         $this->generateCreateView($modulePath, $workflowName);
         $this->generateEditView($modulePath, $workflowName);
         $this->generateDetailsView($modulePath, $workflowName);
+
+        $this->generateRequests($modulePath, $moduleName, $workflowName);
     }
 
     protected function generateCrudController(
@@ -69,7 +74,7 @@ class WorkflowCrudGenerator extends WorkflowGenerator
         );
     }
 
-   protected function generateCrudRoute(
+    protected function generateCrudRoute(
         string $modulePath,
         string $moduleName,
         string $workflowName
@@ -82,6 +87,65 @@ class WorkflowCrudGenerator extends WorkflowGenerator
         );
     }
 
+    protected function generateRequests(
+        string $modulePath,
+        string $moduleName,
+        string $workflowName,
+        RequestGenerator $requestGenerator
+    ) {
+        $requestGenerator->generate(
+            moduleName: $moduleName,
+            workflowName: $workflowName,
+            requestName: "Store",
+        );
+
+        $requestGenerator->generate(
+            moduleName: $moduleName,
+            workflowName: $workflowName,
+            requestName: "Update",
+        );
+        $uses[] =
+            'use App\\MCF\\Modules\\' .
+            $moduleName .
+            '\\' .
+            $workflowName .
+            '\\Backend\\Request\\' .
+            'StoreRequest;';
+        $uses[] =
+            'use App\\MCF\\Modules\\' .
+            $moduleName .
+            '\\' .
+            $workflowName .
+            '\\Backend\\Request\\' .
+            'UpdateRequest;';
+
+        $controllerFile =
+            "{$modulePath}/{$workflowName}Controller.php";
+
+        $files      = new Filesystem();
+        $controller = $files->get(
+            $this->controllerFile,
+        );
+
+        foreach ($uses as $use) {
+            if (str_contains($controller, $use)) {
+                continue;
+            }
+
+            $controller = preg_replace(
+                '/^(namespace\s+.*?;\R)/m',
+                "$1\n{$use}\n",
+                $controller,
+                1,
+            );
+
+            if ($controller === null) {
+                throw new RuntimeException(
+                    'Unable to add controller imports.',
+                );
+            }
+        }
+    }
     protected function registerRoute(
         string $moduleName,
         string $workflowName

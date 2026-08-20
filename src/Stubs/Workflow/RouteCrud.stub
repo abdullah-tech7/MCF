@@ -24,6 +24,22 @@ Route::put('/{{ WorkflowRoute }}/{id}', [{{ WorkflowName }}Controller::class, 'u
     ->whereNumber('id')
     ->name('{{ ModuleRoute }}.{{ WorkflowRoute }}.update');
 
-Route::delete('/{{ WorkflowRoute }}/{id}', [{{ WorkflowName }}Controller::class, 'destroy'])
+Route::delete('/{{ WorkflowRoute }}/{id}', [{{ WorkflowName }}Controller::class, 'delete'])
     ->whereNumber('id')
-    ->name('{{ ModuleRoute }}.{{ WorkflowRoute }}.destroy');
+    ->name('{{ ModuleRoute }}.{{ WorkflowRoute }}.delete');
+
+
+/*
+|--------------------------------------------------------------------------
+| Route Access
+|--------------------------------------------------------------------------
+|
+| Define the access rules for the routes in this workflow.
+|
+*/
+
+$accessRoutes = [];
+
+McfRouteDataRegistry::register(
+    $accessRoutes,
+);

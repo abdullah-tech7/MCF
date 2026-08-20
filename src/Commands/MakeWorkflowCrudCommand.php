@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use MCF\Generators\WorkflowCrudGenerator;
 use Throwable;
 
+
 class MakeWorkflowCrudCommand extends Command
 {
     protected $signature = 'mcf:make:workflow:crud
