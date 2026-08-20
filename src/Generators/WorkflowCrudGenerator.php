@@ -36,7 +36,7 @@ class WorkflowCrudGenerator extends WorkflowGenerator
         $this->generateEditView($modulePath, $workflowName);
         $this->generateDetailsView($modulePath, $workflowName);
 
-        $this->generateRequests($modulePath, $moduleName, $workflowName);
+        $this->generateRequests($moduleName, $workflowName);
     }
 
     protected function generateCrudController(
@@ -96,7 +96,6 @@ class WorkflowCrudGenerator extends WorkflowGenerator
     }
 
     protected function generateRequests(
-        string $modulePath,
         string $moduleName,
         string $workflowName
             ) {
@@ -127,9 +126,22 @@ class WorkflowCrudGenerator extends WorkflowGenerator
             'UpdateRequest;';
 
 
+           $modulePath =
+            app_path(
+                'MCF/Modules/' .
+                $moduleName .
+                '/' .
+                $workflowName,
+            );
+
+        $backendPath =
+            $modulePath .
+            '/Backend';
+
+
         $files = new Filesystem();
         $controller = $files->get(
-           "{$modulePath}/{$workflowName}Controller.php"
+           "{$backendPath}/{$workflowName}Controller.php"
         );
 
         foreach ($uses as $use) {
