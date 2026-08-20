@@ -126,12 +126,10 @@ class WorkflowCrudGenerator extends WorkflowGenerator
             '\\Backend\\Request\\' .
             'UpdateRequest;';
 
-        $controllerFile =
-            "{$modulePath}/{$workflowName}Controller.php";
 
-        $files      = new Filesystem();
+        $files = new Filesystem();
         $controller = $files->get(
-            $this->controllerFile,
+           "{$modulePath}/{$workflowName}Controller.php"
         );
 
         foreach ($uses as $use) {
