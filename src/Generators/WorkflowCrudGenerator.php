@@ -162,6 +162,11 @@ class WorkflowCrudGenerator extends WorkflowGenerator
                 );
             }
         }
+        
+        $this->files->put(
+            "{$backendPath}/{$workflowName}Controller.php",
+            $controller,
+        );
     }
     protected function registerRoute(
         string $moduleName,
