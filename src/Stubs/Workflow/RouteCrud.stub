@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\MCF\AccessControl\Registry\McfRouteDataRegistry;
 use {{ ControllerNamespace }}\{{ WorkflowName }}Controller;
 
 Route::get('/{{ WorkflowRoute }}', [{{ WorkflowName }}Controller::class, 'index'])
