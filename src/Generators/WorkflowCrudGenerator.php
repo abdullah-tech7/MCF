@@ -11,6 +11,13 @@ use RuntimeException;
 class WorkflowCrudGenerator extends WorkflowGenerator
 {
 
+    protected RequestGenerator $requestGenerator;
+
+    public function __construct(RequestGenerator $requestGenerator)
+    {
+        $this->requestGenerator = $requestGenerator;
+    }
+
     public function generate(string $moduleName, string $workflowName): void
     {
         $modulePath = app_path("MCF/Modules/{$moduleName}");
@@ -90,16 +97,15 @@ class WorkflowCrudGenerator extends WorkflowGenerator
     protected function generateRequests(
         string $modulePath,
         string $moduleName,
-        string $workflowName,
-        RequestGenerator $requestGenerator
-    ) {
-        $requestGenerator->generate(
+        string $workflowName
+            ) {
+         $this->requestGenerator->generate(
             moduleName: $moduleName,
             workflowName: $workflowName,
             requestName: "Store",
         );
 
-        $requestGenerator->generate(
+         $this->requestGenerator->generate(
             moduleName: $moduleName,
             workflowName: $workflowName,
             requestName: "Update",
