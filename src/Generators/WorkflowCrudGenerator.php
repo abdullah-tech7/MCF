@@ -15,6 +15,7 @@ class WorkflowCrudGenerator extends WorkflowGenerator
 
     public function __construct(RequestGenerator $requestGenerator)
     {
+        parent::__construct();
         $this->requestGenerator = $requestGenerator;
     }
 
